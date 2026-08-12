@@ -1,0 +1,66 @@
+{
+  "name": "@owlstackapp/mcp",
+  "version": "0.2.0",
+  "description": "OwlStack MCP server — manage social media posts, accounts, and AI from Claude / ChatGPT / Cursor / any MCP-aware client.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "owlstack-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/owlstacks/owlstack-mcp.git"
+  },
+  "homepage": "https://owlstack.app",
+  "bugs": {
+    "url": "https://github.com/owlstacks/owlstack-mcp/issues"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "lint": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.24.0",
+    "zod-to-json-schema": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "prettier": "^3.4.2",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "owlstack",
+    "social-media",
+    "claude",
+    "cursor",
+    "chatgpt"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

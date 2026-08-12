@@ -1,0 +1,78 @@
+name: Release
+
+# Tag the commit as v<version> matching package.json, e.g. v0.2.0.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm install
+
+      - name: Verify tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION=$(node -p "require('./package.json').version")
+          [ "$VERSION" = "$TAG" ] || { echo "::error::package.json is $VERSION but tag is $TAG"; exit 1; }
+
+      - run: npm run lint
+      - run: npm run build
+
+      # Installs the tarball the way a user would and drives a real MCP
+      # handshake, so a broken bin or an empty tool list cannot ship.
+      - name: Smoke test packed tarball
+        run: |
+          TARBALL=$(npm pack --pack-destination /tmp | tail -1)
+          mkdir -p /tmp/smoke && cd /tmp/smoke && npm init -y >/dev/null
+          npm i "/tmp/$TARBALL"
+          COUNT=$(printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
+            | OWLSTACK_API_KEY=ci_smoke_key node node_modules/.bin/owlstack-mcp 2>/dev/null \
+            | node -e "
+              let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{
+                for (const l of d.split('\n').filter(Boolean)) {
+                  const m = JSON.parse(l);
+                  if (m.id === 2) { console.log(m.result.tools.length); return; }
+                }
+                console.log(0);
+              });")
+          echo "MCP exposed $COUNT tools"
+          [ "$COUNT" -gt 0 ] || { echo '::error::MCP server listed no tools'; exit 1; }
+
+      - name: Publish
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::NPM_TOKEN secret is not set"
+            exit 1
+          fi
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@owlstackapp/mcp@$VERSION" version >/dev/null 2>&1; then
+            echo "@owlstackapp/mcp@$VERSION already published, skipping"
+          else
+            npm publish --access public --provenance
+          fi
