@@ -1,11 +1,11 @@
 {
-  "name": "@owlstackapp/mcp",
+  "name": "@fopost/mcp",
   "version": "0.2.0",
-  "description": "OwlStack MCP server — manage social media posts, accounts, and AI from Claude / ChatGPT / Cursor / any MCP-aware client.",
+  "description": "FoPost MCP server: manage social media posts, accounts, and AI from Claude / ChatGPT / Cursor / any MCP-aware client.",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "owlstack-mcp": "./dist/index.js"
+    "fopost-mcp": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,11 +22,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/owlstacks/owlstack-mcp.git"
+    "url": "git+https://github.com/fopost/fopost-mcp.git"
   },
-  "homepage": "https://owlstack.app",
+  "homepage": "https://fopost.com",
   "bugs": {
-    "url": "https://github.com/owlstacks/owlstack-mcp/issues"
+    "url": "https://github.com/fopost/fopost-mcp/issues"
   },
   "scripts": {
     "build": "tsup",
@@ -54,7 +54,7 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "owlstack",
+    "fopost",
     "social-media",
     "claude",
     "cursor",

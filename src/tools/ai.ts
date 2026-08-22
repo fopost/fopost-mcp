@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { OwlStackClient } from '../client.js';
+import type { FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const PLATFORM_ENUM = z.enum([
@@ -25,7 +25,7 @@ const PLATFORM_ENUM = z.enum([
   'kick',
 ]);
 
-export function aiTools(client: OwlStackClient): ToolDefinition[] {
+export function aiTools(client: FoPostClient): ToolDefinition[] {
   return [
     {
       name: 'generate_caption',

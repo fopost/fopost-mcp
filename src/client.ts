@@ -1,30 +1,30 @@
 /**
- * Thin HTTP client for the OwlStack REST API. Authenticates with the
- * user-provided API key (set as OWLSTACK_API_KEY env var). The MCP server
+ * Thin HTTP client for the FoPost REST API. Authenticates with the
+ * user-provided API key (set as FOPOST_API_KEY env var). The MCP server
  * passes the same key on every call — scope checks happen server-side.
  */
 
-export type OwlStackClientOptions = {
+export type FoPostClientOptions = {
   apiKey: string;
   baseUrl: string;
 };
 
-export class OwlStackApiError extends Error {
+export class FoPostApiError extends Error {
   status: number;
   code?: string;
   constructor(message: string, status: number, code?: string) {
     super(message);
     this.status = status;
     this.code = code;
-    this.name = 'OwlStackApiError';
+    this.name = 'FoPostApiError';
   }
 }
 
-export class OwlStackClient {
+export class FoPostClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
 
-  constructor(opts: OwlStackClientOptions) {
+  constructor(opts: FoPostClientOptions) {
     this.apiKey = opts.apiKey;
     // Normalise — no trailing slash so path concatenation is predictable.
     this.baseUrl = opts.baseUrl.replace(/\/$/, '');
@@ -48,7 +48,7 @@ export class OwlStackClient {
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': this.apiKey,
-        'User-Agent': '@owlstackapp/mcp',
+        'User-Agent': '@fopost/mcp',
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -57,9 +57,9 @@ export class OwlStackClient {
     if (!contentType.includes('application/json')) {
       if (!res.ok) {
         const text = await res.text();
-        throw new OwlStackApiError(text || `HTTP ${res.status}`, res.status);
+        throw new FoPostApiError(text || `HTTP ${res.status}`, res.status);
       }
-      throw new OwlStackApiError(`Unexpected response: ${contentType}`, res.status);
+      throw new FoPostApiError(`Unexpected response: ${contentType}`, res.status);
     }
 
     const json = (await res.json()) as Record<string, unknown>;
@@ -69,7 +69,7 @@ export class OwlStackClient {
         (typeof json.message === 'string' && json.message) ||
         (typeof json.error === 'string' && json.error) ||
         `HTTP ${res.status}`;
-      throw new OwlStackApiError(message, res.status, json.error as string | undefined);
+      throw new FoPostApiError(message, res.status, json.error as string | undefined);
     }
 
     // Most endpoints wrap in `{ data: ... }`. Unwrap when single-key.

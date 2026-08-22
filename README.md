@@ -1,8 +1,8 @@
-# @owlstackapp/mcp
+# @fopost/mcp
 
-MCP server for [OwlStack](https://owlstack.app) — manage social media posts, accounts, and AI usage from any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue, etc.).
+MCP server for [FoPost](https://fopost.com): manage social media posts, accounts, and AI usage from any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue, etc.).
 
-Runs via `npx -y @owlstackapp/mcp`, no install step. Requires Node 18 or newer.
+Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 
 > **0.x release.** Tool names and arguments may still change between minor
 > versions. Pin an exact version if that matters to you.
@@ -30,7 +30,7 @@ Runs via `npx -y @owlstackapp/mcp`, no install step. Requires Node 18 or newer.
 
 ### 1. Get an API key
 
-Generate one at <https://app.owlstack.app/api-keys> with the scopes you need (`posts`, `accounts`, `workspaces` are most common).
+Generate one at <https://app.fopost.com/api-keys> with the scopes you need (`posts`, `accounts`, `workspaces` are most common).
 
 ### 2. Add to your MCP client
 
@@ -41,11 +41,11 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 ```json
 {
   "mcpServers": {
-    "owlstack": {
+    "fopost": {
       "command": "npx",
-      "args": ["-y", "@owlstackapp/mcp"],
+      "args": ["-y", "@fopost/mcp"],
       "env": {
-        "OWLSTACK_API_KEY": "your-api-key"
+        "FOPOST_API_KEY": "your-api-key"
       }
     }
   }
@@ -54,16 +54,16 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 
 #### Cursor / Continue / Other
 
-Use the same `npx -y @owlstackapp/mcp` command with `OWLSTACK_API_KEY` in the environment.
+Use the same `npx -y @fopost/mcp` command with `FOPOST_API_KEY` in the environment.
 
 ## Configuration
 
-| Variable           | Required | Default                    |
-| ------------------ | -------- | -------------------------- |
-| `OWLSTACK_API_KEY` | yes      | —                          |
-| `OWLSTACK_API_URL` | no       | `https://api.owlstack.app` |
+| Variable         | Required | Default                  |
+| ---------------- | -------- | ------------------------ |
+| `FOPOST_API_KEY` | yes      | required                 |
+| `FOPOST_API_URL` | no       | `https://api.fopost.com` |
 
-Self-hosted? Point `OWLSTACK_API_URL` at your instance.
+Self-hosted? Point `FOPOST_API_URL` at your instance.
 
 ## Example prompts
 
@@ -76,7 +76,7 @@ Self-hosted? Point `OWLSTACK_API_URL` at your instance.
 ## Contributing
 
 Issues and pull requests are welcome at
-[owlstacks/owlstack-mcp](https://github.com/owlstacks/owlstack-mcp).
+[fopost/fopost-mcp](https://github.com/fopost/fopost-mcp).
 
 ```bash
 npm install
