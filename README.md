@@ -58,9 +58,9 @@ Use the same `npx -y @fopost/mcp` command with `FOPOST_API_KEY` in the environme
 
 ## Configuration
 
-| Variable           | Required | Default                    |
-| ------------------ | -------- | -------------------------- |
-| `FOPOST_API_KEY` | yes      | required                  |
+| Variable         | Required | Default                  |
+| ---------------- | -------- | ------------------------ |
+| `FOPOST_API_KEY` | yes      | required                 |
 | `FOPOST_API_URL` | no       | `https://api.fopost.com` |
 
 Self-hosted? Point `FOPOST_API_URL` at your instance.
