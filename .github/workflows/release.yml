@@ -49,7 +49,7 @@ jobs:
             '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
             '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
             '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
-            | OWLSTACK_API_KEY=ci_smoke_key node node_modules/.bin/owlstack-mcp 2>/dev/null \
+            | FOPOST_API_KEY=ci_smoke_key node node_modules/.bin/fopost-mcp 2>/dev/null \
             | node -e "
               let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{
                 for (const l of d.split('\n').filter(Boolean)) {
@@ -71,8 +71,8 @@ jobs:
             exit 1
           fi
           VERSION=$(node -p "require('./package.json').version")
-          if npm view "@owlstackapp/mcp@$VERSION" version >/dev/null 2>&1; then
-            echo "@owlstackapp/mcp@$VERSION already published, skipping"
+          if npm view "@fopost/mcp@$VERSION" version >/dev/null 2>&1; then
+            echo "@fopost/mcp@$VERSION already published, skipping"
           else
             npm publish --access public --provenance
           fi
