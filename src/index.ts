@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * @owlstackapp/mcp — MCP server that exposes the OwlStack REST API as MCP
+ * @fopost/mcp — MCP server that exposes the FoPost REST API as MCP
  * tools so users can manage social media posts, accounts, and AI usage
  * from any MCP-aware client (Claude Desktop, Cursor, ChatGPT, etc.).
  *
  * Configuration via environment variables:
- *   OWLSTACK_API_KEY  (required) — API key with appropriate scopes
- *   OWLSTACK_API_URL  (optional) — defaults to https://api.owlstack.app
+ *   FOPOST_API_KEY  (required) — API key with appropriate scopes
+ *   FOPOST_API_URL  (optional) — defaults to https://api.fopost.com
  *
  * Transport: stdio (standard for MCP servers).
  */
@@ -15,31 +15,31 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { OwlStackClient, OwlStackApiError } from './client.js';
+import { FoPostClient, FoPostApiError } from './client.js';
 import { postsTools } from './tools/posts.js';
 import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import type { ToolDefinition } from './types.js';
 
-const DEFAULT_API_URL = 'https://api.owlstack.app';
+const DEFAULT_API_URL = 'https://api.fopost.com';
 
 function readConfig(): { apiKey: string; baseUrl: string } {
-  const apiKey = process.env.OWLSTACK_API_KEY;
+  const apiKey = process.env.FOPOST_API_KEY;
   if (!apiKey) {
     console.error(
-      '[owlstack-mcp] Missing OWLSTACK_API_KEY. Generate one at https://app.owlstack.app/api-keys',
+      '[fopost-mcp] Missing FOPOST_API_KEY. Generate one at https://app.fopost.com/api-keys',
     );
     process.exit(1);
   }
   return {
     apiKey,
-    baseUrl: process.env.OWLSTACK_API_URL ?? DEFAULT_API_URL,
+    baseUrl: process.env.FOPOST_API_URL ?? DEFAULT_API_URL,
   };
 }
 
 async function main() {
   const config = readConfig();
-  const client = new OwlStackClient(config);
+  const client = new FoPostClient(config);
 
   const allTools: ToolDefinition[] = [
     ...postsTools(client),
@@ -50,7 +50,7 @@ async function main() {
 
   const server = new Server(
     {
-      name: 'owlstack-mcp',
+      name: 'fopost-mcp',
       version: __PKG_VERSION__,
     },
     {
@@ -99,13 +99,13 @@ async function main() {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
       };
     } catch (err) {
-      if (err instanceof OwlStackApiError) {
+      if (err instanceof FoPostApiError) {
         return {
           isError: true,
           content: [
             {
               type: 'text',
-              text: `OwlStack API ${err.status}${err.code ? ` (${err.code})` : ''}: ${err.message}`,
+              text: `FoPost API ${err.status}${err.code ? ` (${err.code})` : ''}: ${err.message}`,
             },
           ],
         };
@@ -124,10 +124,10 @@ async function main() {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('[owlstack-mcp] Server running on stdio');
+  console.error('[fopost-mcp] Server running on stdio');
 }
 
 main().catch((err) => {
-  console.error('[owlstack-mcp] Fatal:', err);
+  console.error('[fopost-mcp] Fatal:', err);
   process.exit(1);
 });

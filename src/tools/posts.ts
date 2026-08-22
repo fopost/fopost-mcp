@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import type { OwlStackClient } from '../client.js';
+import type { FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
-export function postsTools(client: OwlStackClient): ToolDefinition[] {
+export function postsTools(client: FoPostClient): ToolDefinition[] {
   return [
     {
       name: 'list_posts',
