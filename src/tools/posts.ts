@@ -18,7 +18,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         offset: z.number().int().min(0).default(0),
       }),
       async execute(input) {
-        return client.get('/api/v1/posts', {
+        return client.get('/v1/posts', {
           workspace_id: input.workspace_id,
           status: input.status,
           limit: input.limit,
@@ -34,7 +34,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.get(`/api/v1/posts/${input.id}`);
+        return client.get(`/v1/posts/${input.id}`);
       },
     },
 
@@ -54,7 +54,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         media_urls: z
           .array(z.string().url())
           .optional()
-          .describe('Pre-uploaded media URLs from /api/v1/media/upload'),
+          .describe('Pre-uploaded media URLs from /v1/media/upload'),
         labels: z.array(z.string().uuid()).optional(),
       }),
       async execute(input) {
@@ -76,9 +76,9 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
           accounts: input.account_ids.map((id: string) => ({ id })),
           labels: input.labels,
         };
-        const created = await client.post<{ id: string }>('/api/v1/posts', body);
+        const created = await client.post<{ id: string }>('/v1/posts', body);
         if (input.publish_now && created?.id) {
-          return client.post(`/api/v1/posts/${created.id}/publish`);
+          return client.post(`/v1/posts/${created.id}/publish`);
         }
         return created;
       },
@@ -100,7 +100,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         }
         if (input.schedule_at !== undefined) body.schedule_at = input.schedule_at;
         if (input.labels !== undefined) body.labels = input.labels;
-        return client.put(`/api/v1/posts/${input.id}`, body);
+        return client.put(`/v1/posts/${input.id}`, body);
       },
     },
 
@@ -112,7 +112,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/api/v1/posts/${input.id}/cancel`);
+        return client.post(`/v1/posts/${input.id}/cancel`);
       },
     },
 
@@ -123,7 +123,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.delete(`/api/v1/posts/${input.id}`);
+        return client.delete(`/v1/posts/${input.id}`);
       },
     },
 
@@ -135,7 +135,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.get(`/api/v1/posts/${input.id}/deliveries`);
+        return client.get(`/v1/posts/${input.id}/deliveries`);
       },
     },
   ];
