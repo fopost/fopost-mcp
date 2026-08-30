@@ -38,7 +38,7 @@ export function aiTools(client: FoPostClient): ToolDefinition[] {
         workspace_id: z.string().uuid().optional(),
       }),
       async execute(input) {
-        return client.post('/api/v1/ai/generate-caption', input);
+        return client.post('/v1/ai/generate-caption', input);
       },
     },
 
@@ -53,7 +53,7 @@ export function aiTools(client: FoPostClient): ToolDefinition[] {
         workspace_id: z.string().uuid().optional(),
       }),
       async execute(input) {
-        return client.post('/api/v1/ai/rewrite', input);
+        return client.post('/v1/ai/rewrite', input);
       },
     },
 
@@ -67,7 +67,7 @@ export function aiTools(client: FoPostClient): ToolDefinition[] {
         workspace_id: z.string().uuid().optional(),
       }),
       async execute(input) {
-        return client.post('/api/v1/ai/repurpose-url', input);
+        return client.post('/v1/ai/repurpose-url', input);
       },
     },
 
@@ -76,7 +76,7 @@ export function aiTools(client: FoPostClient): ToolDefinition[] {
       description: 'Show the current AI credit balance, usage this period, and reset date.',
       inputSchema: z.object({}),
       async execute() {
-        return client.get('/api/v1/ai/credits');
+        return client.get('/v1/ai/credits');
       },
     },
   ];

@@ -12,7 +12,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         workspace_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get('/api/v1/accounts', { workspace_id: input.workspace_id });
+        return client.get('/v1/accounts', { workspace_id: input.workspace_id });
       },
     },
 
@@ -24,7 +24,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/api/v1/accounts/${input.account_id}/health`);
+        return client.get(`/v1/accounts/${input.account_id}/health`);
       },
     },
 
@@ -33,7 +33,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       description: 'List workspaces the authenticated user has access to.',
       inputSchema: z.object({}),
       async execute() {
-        return client.get('/api/v1/workspaces');
+        return client.get('/v1/workspaces');
       },
     },
   ];
