@@ -38,10 +38,10 @@ stdout corrupts the JSON-RPC stream.
 
 **Config is environment only**, read once at startup in `readConfig()`:
 
-| Variable | Required | Default |
-| :--- | :--- | :--- |
-| `FOPOST_API_KEY` | yes, or the process exits 1 | — |
-| `FOPOST_API_URL` | no | `https://api.fopost.com` |
+| Variable         | Required                    | Default                  |
+| :--------------- | :-------------------------- | :----------------------- |
+| `FOPOST_API_KEY` | yes, or the process exits 1 | —                        |
+| `FOPOST_API_URL` | no                          | `https://api.fopost.com` |
 
 `FOPOST_API_URL` is **host-only**; the version prefix belongs to the tool paths. **That prefix is
 `/v1`, never `/api/v1`** — the API serves its routes at `/v1` on the bare host and nothing rewrites
