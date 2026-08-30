@@ -36,6 +36,7 @@ jobs:
           [ "$VERSION" = "$TAG" ] || { echo "::error::package.json is $VERSION but tag is $TAG"; exit 1; }
 
       - run: npm run lint
+      - run: npm test
       - run: npm run build
 
       # Installs the tarball the way a user would and drives a real MCP
