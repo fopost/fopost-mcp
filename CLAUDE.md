@@ -43,10 +43,15 @@ stdout corrupts the JSON-RPC stream.
 | `FOPOST_API_KEY` | yes, or the process exits 1 | — |
 | `FOPOST_API_URL` | no | `https://api.fopost.com` |
 
+`FOPOST_API_URL` is **host-only**; the version prefix belongs to the tool paths. **That prefix is
+`/v1`, never `/api/v1`** — the API serves its routes at `/v1` on the bare host and nothing rewrites
+the path, so an `/api/v1` request 404s. That was the 0.2.0 bug; `src/api-path.test.ts` pins every
+tool's path and fails if the prefix drifts back.
+
 **How a request flows.** `FoPostClient` sends `X-API-Key: <key>`, `Content-Type: application/json`
 and `User-Agent: @fopost/mcp` to `${baseUrl}${path}`, where every path is written out in full in
-the tool file (`/api/v1/posts`, `/api/v1/accounts`, `/api/v1/ai/credits`, …). A `{ data: … }`
-body is unwrapped when `data` is the only key. A non-2xx JSON body becomes `FoPostApiError` with
+the tool file (`/v1/posts`, `/v1/accounts`, `/v1/ai/credits`, …). A `{ data: … }` body is
+unwrapped when `data` is the only key. A non-2xx JSON body becomes `FoPostApiError` with
 the API's `message`, `error` code, and status; a non-JSON body becomes one carrying the raw text.
 
 **Deliberately absent from the client**: retries, backoff, `Retry-After` handling, and a request
@@ -67,7 +72,9 @@ tool file in the `allTools` array in `src/index.ts`, and add the row to the READ
 
 ```bash
 npm install
-npm run lint          # tsc --noEmit — the only checker in this repo
+npm run lint          # tsc --noEmit — the only type checker in this repo
+npm test              # vitest run
+npm run test:watch    # vitest
 npm run build         # tsup → dist/ (ESM + .d.ts), injects __PKG_VERSION__
 npm run dev           # tsx watch src/index.ts
 npm start             # node dist/index.js
@@ -75,8 +82,9 @@ npm run format        # prettier --write .
 npm run format:check
 ```
 
-There is **no test script and no CI workflow** — `release.yml` is the only workflow. `npm run lint`
-plus the release smoke test are the entire safety net, so run both before pushing.
+`.github/workflows/ci.yml` runs `lint`, `test`, and `build` on every push to `main` and every pull
+request; `release.yml` runs the same checks on a tag before publishing. Formatting is not checked
+by CI, so run `npm run format:check` by hand.
 
 ## Conventions
 
@@ -91,7 +99,12 @@ plus the release smoke test are the entire safety net, so run both before pushin
 
 ## Testing
 
-No test runner is installed. Verification is:
+Vitest, one suite so far: `src/api-path.test.ts`, which executes every registered tool against a
+stubbed `fetch` and asserts each request path starts with `/v1/` and never contains `/api/v1/`. It
+also fails when a tool is added without an input fixture, so new tools get their path pinned too.
+A test here **must stub `globalThis.fetch` and must never reach the live API.**
+
+The rest of the verification:
 
 1. `npm run lint` and `npm run build`.
 2. The release workflow's **smoke test**, which packs the tarball, installs it into a scratch
@@ -100,16 +113,17 @@ No test runner is installed. Verification is:
    unregistered tool file cannot ship past it.
 3. By hand: point a local MCP client at `node dist/index.js` with `FOPOST_API_KEY` set.
 
-If a change needs more than that, add a runner in the same PR rather than shipping untested logic.
+If a change needs more than that, add the case to the suite in the same PR rather than shipping
+untested logic.
 
 ## Releasing
 
-`@fopost/mcp` **is published on npm** (0.2.0 at the time of writing). Releasing is a tag:
+`@fopost/mcp` **is published on npm** (0.2.1 at the time of writing). Releasing is a tag:
 
 1. Bump `version` in `package.json` and commit.
 2. `git tag v<version> && git push --tags` — the tag must match `package.json` exactly or the
    workflow fails its version check.
-3. `.github/workflows/release.yml` runs lint, build, and the packed-tarball smoke test, then
+3. `.github/workflows/release.yml` runs lint, tests, build, and the packed-tarball smoke test, then
    publishes with `npm publish --access public --provenance`. It skips silently if that version is
    already on npm, so a re-run is safe.
 
