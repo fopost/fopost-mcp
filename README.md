@@ -30,7 +30,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 
 ### 1. Get an API key
 
-Generate one at <https://app.fopost.com/api-keys> with the scopes you need (`posts`, `accounts`, `workspaces` are most common).
+Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `accounts`, `workspaces` are most common).
 
 ### 2. Add to your MCP client
 

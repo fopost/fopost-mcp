@@ -27,7 +27,7 @@ function readConfig(): { apiKey: string; baseUrl: string } {
   const apiKey = process.env.FOPOST_API_KEY;
   if (!apiKey) {
     console.error(
-      '[fopost-mcp] Missing FOPOST_API_KEY. Generate one at https://app.fopost.com/api-keys',
+      '[fopost-mcp] Missing FOPOST_API_KEY. Generate one at https://fopost.com/dashboard/api-keys',
     );
     process.exit(1);
   }
