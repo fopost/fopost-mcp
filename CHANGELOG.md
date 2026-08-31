@@ -2,6 +2,13 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
+## 0.2.2
+
+### Changed
+
+- Readme links point at `fopost.com/dashboard`. The old `app.fopost.com` host is
+  retired, so those links no longer take a redirect hop.
+
 ## 0.2.1
 
 ### Fixed

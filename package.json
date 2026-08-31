@@ -1,6 +1,6 @@
 {
   "name": "@fopost/mcp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "FoPost MCP server: manage social media posts, accounts, and AI from Claude / ChatGPT / Cursor / any MCP-aware client.",
   "license": "MIT",
   "type": "module",
