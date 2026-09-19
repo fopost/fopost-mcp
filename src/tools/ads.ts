@@ -78,6 +78,69 @@ function adBaseBody(input: AdBaseInput) {
   };
 }
 
+function targetingBody(t: z.infer<typeof adTargeting>) {
+  return {
+    countries: t.countries,
+    ageMin: t.age_min,
+    ageMax: t.age_max,
+    gender: t.gender,
+    audienceIds: t.audience_ids,
+    locations: t.locations,
+    interests: t.interests,
+    behaviors: t.behaviors,
+    income: t.income,
+  };
+}
+
+const urlTags = z
+  .string()
+  .max(1000)
+  .optional()
+  .describe(
+    'Query string appended to every link in the ad, e.g. `utm_source=meta&utm_medium=paid`',
+  );
+
+const creativeCard = z.object({
+  media_url: z.string().min(1).describe('A library image'),
+  destination_url: z.string().url().optional(),
+  headline: z.string().max(255).optional(),
+  description: z.string().max(255).optional(),
+});
+
+const metaId = z.string().min(1).max(64).describe('Ad platform object id');
+const objectStatus = z.enum(['active', 'paused']);
+const pausedFlag = z.boolean().optional().describe('Default true; set false to go live at once');
+
+/** Reads take an optional workspace; changes must name it. */
+const metaRead = {
+  workspace_id: z.string().uuid().optional(),
+  connection_id: z.string().uuid().describe('An ads connection in the workspace'),
+};
+const metaWrite = {
+  workspace_id: z.string().uuid(),
+  connection_id: z.string().uuid().describe('An ads connection in the workspace'),
+};
+
+function metaQuery(input: { workspace_id?: string; connection_id: string }) {
+  return { workspace_id: input.workspace_id, connection_id: input.connection_id };
+}
+
+const insightsRange = {
+  since: z.string().describe('YYYY-MM-DD, inclusive'),
+  until: z.string().describe('YYYY-MM-DD, inclusive'),
+  breakdown: z.enum(['age', 'gender', 'placement', 'country']).optional(),
+  daily: z.boolean().optional().describe('Add a day-by-day timeline'),
+};
+
+function rangeQuery(input: { since: string; until: string; breakdown?: string; daily?: boolean }) {
+  return {
+    since: input.since,
+    until: input.until,
+    breakdown: input.breakdown,
+    daily: input.daily === undefined ? undefined : String(input.daily),
+  };
+}
+
 const workspaceFilter = z.object({
   workspace_id: z.string().uuid().optional().describe('Restrict to one workspace'),
 });
@@ -152,6 +215,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         headline: z.string().max(40).optional(),
         destination_url: z.string().url().optional(),
         media_url: z.string().optional().describe('A media library asset url'),
+        url_tags: urlTags,
       }),
       async execute(input) {
         return client.post('/v1/ads', {
@@ -161,6 +225,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
           headline: input.headline,
           destinationUrl: input.destination_url,
           mediaUrl: input.media_url,
+          urlTags: input.url_tags,
         });
       },
     },
@@ -278,6 +343,613 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
           page_id: input.page_id,
           after: input.after,
         });
+      },
+    },
+
+    {
+      name: 'get_ad_account_tree',
+      description:
+        'Read the campaigns, ad sets and ads on one ad account, live from the ad platform. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_account_id: z.string().describe('Ad account id, `act_…`'),
+      }),
+      async execute(input) {
+        return client.get(`/v1/ads/accounts/${input.ad_account_id}/tree`, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'create_ad_campaign',
+      description:
+        'Create a campaign on an ad account. Starts paused unless paused is false. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_account_id: z.string().describe('Ad account id, `act_…`'),
+        name: z.string().min(1).max(255),
+        goal: z.enum(['engagement', 'traffic', 'awareness', 'video_views']),
+        paused: pausedFlag,
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/campaigns', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adAccountId: input.ad_account_id,
+          name: input.name,
+          goal: input.goal,
+          paused: input.paused,
+        });
+      },
+    },
+
+    {
+      name: 'get_ad_campaign',
+      description: 'Read one campaign by its ad platform id. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaRead }),
+      async execute(input) {
+        return client.get(`/v1/ads/campaigns/${input.id}`, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'update_ad_campaign',
+      description: 'Rename, pause or resume a campaign. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        name: z.string().min(1).max(255).optional(),
+        status: objectStatus.optional(),
+      }),
+      async execute(input) {
+        return client.request(
+          'PATCH',
+          `/v1/ads/campaigns/${input.id}`,
+          { name: input.name, status: input.status },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'delete_ad_campaign',
+      description:
+        'Delete a campaign and everything beneath it on the ad platform. Cannot be undone. Needs the ads and publish scopes.',
+      inputSchema: z.object({ id: metaId, ...metaWrite }),
+      async execute(input) {
+        return client.request(
+          'DELETE',
+          `/v1/ads/campaigns/${input.id}`,
+          undefined,
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'duplicate_ad_campaign',
+      description:
+        'Copy a campaign with everything beneath it. The copy starts paused unless paused is false. Needs the ads and publish scopes.',
+      inputSchema: z.object({ id: metaId, ...metaWrite, paused: pausedFlag }),
+      async execute(input) {
+        return client.request(
+          'POST',
+          `/v1/ads/campaigns/${input.id}/duplicate`,
+          { paused: input.paused },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'create_ad_set',
+      description:
+        'Create an ad set with budget and targeting inside a campaign. Starts paused unless paused is false. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        campaign_id: metaId,
+        page_id: z.string().describe('Page the ads in this set run as'),
+        name: z.string().min(1).max(255),
+        goal: z.enum(['engagement', 'traffic', 'awareness', 'video_views']),
+        budget: adBudget,
+        targeting: adTargeting,
+        paused: pausedFlag,
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/ad-sets', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          campaignId: input.campaign_id,
+          pageId: input.page_id,
+          name: input.name,
+          goal: input.goal,
+          budget: {
+            minor: input.budget.minor,
+            type: input.budget.type,
+            endAt: input.budget.end_at,
+          },
+          targeting: targetingBody(input.targeting),
+          paused: input.paused,
+        });
+      },
+    },
+
+    {
+      name: 'get_ad_set',
+      description: 'Read one ad set by its ad platform id. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaRead }),
+      async execute(input) {
+        return client.get(`/v1/ads/ad-sets/${input.id}`, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'update_ad_set',
+      description:
+        'Rename, pause, resume, rebudget or retarget an ad set. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        name: z.string().min(1).max(255).optional(),
+        status: objectStatus.optional(),
+        budget_minor: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe('New budget in minor units; the budget type stays'),
+        end_at: z.string().optional().describe('ISO 8601'),
+        targeting: adTargeting.optional(),
+      }),
+      async execute(input) {
+        return client.request(
+          'PATCH',
+          `/v1/ads/ad-sets/${input.id}`,
+          {
+            name: input.name,
+            status: input.status,
+            budgetMinor: input.budget_minor,
+            endAt: input.end_at,
+            targeting: input.targeting ? targetingBody(input.targeting) : undefined,
+          },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'delete_ad_set',
+      description:
+        'Delete an ad set and its ads on the ad platform. Cannot be undone. Needs the ads and publish scopes.',
+      inputSchema: z.object({ id: metaId, ...metaWrite }),
+      async execute(input) {
+        return client.request('DELETE', `/v1/ads/ad-sets/${input.id}`, undefined, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'duplicate_ad_set',
+      description:
+        'Copy an ad set with its ads. The copy starts paused unless paused is false. Needs the ads and publish scopes.',
+      inputSchema: z.object({ id: metaId, ...metaWrite, paused: pausedFlag }),
+      async execute(input) {
+        return client.request(
+          'POST',
+          `/v1/ads/ad-sets/${input.id}/duplicate`,
+          { paused: input.paused },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'create_network_ad',
+      description:
+        'Create an ad inside an ad set from an existing creative. Starts paused unless paused is false. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_set_id: metaId,
+        creative_id: metaId.describe('From create_ad_creative or list_ad_creatives'),
+        name: z.string().min(1).max(255),
+        paused: pausedFlag,
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/ads', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adSetId: input.ad_set_id,
+          creativeId: input.creative_id,
+          name: input.name,
+          paused: input.paused,
+        });
+      },
+    },
+
+    {
+      name: 'get_network_ad',
+      description: 'Read one ad inside an ad set by its ad platform id. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaRead }),
+      async execute(input) {
+        return client.get(`/v1/ads/ads/${input.id}`, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'update_network_ad',
+      description:
+        'Rename, pause, resume or swap the creative of an ad inside an ad set. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        name: z.string().min(1).max(255).optional(),
+        status: objectStatus.optional(),
+        creative_id: metaId.optional(),
+      }),
+      async execute(input) {
+        return client.request(
+          'PATCH',
+          `/v1/ads/ads/${input.id}`,
+          { name: input.name, status: input.status, creativeId: input.creative_id },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'delete_network_ad',
+      description:
+        'Delete an ad inside an ad set on the ad platform. Cannot be undone. Needs the ads and publish scopes.',
+      inputSchema: z.object({ id: metaId, ...metaWrite }),
+      async execute(input) {
+        return client.request('DELETE', `/v1/ads/ads/${input.id}`, undefined, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'duplicate_network_ad',
+      description:
+        'Copy an ad inside its ad set. The copy starts paused unless paused is false. Needs the ads and publish scopes.',
+      inputSchema: z.object({ id: metaId, ...metaWrite, paused: pausedFlag }),
+      async execute(input) {
+        return client.request(
+          'POST',
+          `/v1/ads/ads/${input.id}/duplicate`,
+          { paused: input.paused },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'bulk_set_ad_status',
+      description:
+        'Pause or resume up to 50 campaigns, ad sets and ads at once; each reports its own outcome. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        status: objectStatus,
+        objects: z
+          .array(z.object({ id: metaId, level: z.enum(['campaign', 'ad_set', 'ad']) }))
+          .min(1)
+          .max(50),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/status', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          status: input.status,
+          objects: input.objects,
+        });
+      },
+    },
+
+    {
+      name: 'list_ad_creatives',
+      description: 'List the creatives on an ad account. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_account_id: z.string().describe('Ad account id, `act_…`'),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/creatives', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+        });
+      },
+    },
+
+    {
+      name: 'create_ad_creative',
+      description:
+        'Create an image, video or carousel creative from library media; nothing runs until an ad uses it. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_account_id: z.string().describe('Ad account id, `act_…`'),
+        page_id: z.string().describe('Page id the creative runs as'),
+        name: z.string().min(1).max(255),
+        format: z.enum(['image', 'video', 'carousel']),
+        text: z.string().min(1).max(2000).describe('Primary text'),
+        headline: z.string().max(255).optional(),
+        destination_url: z.string().url().optional(),
+        call_to_action: z
+          .enum([
+            'LEARN_MORE',
+            'SHOP_NOW',
+            'SIGN_UP',
+            'SUBSCRIBE',
+            'CONTACT_US',
+            'DOWNLOAD',
+            'GET_OFFER',
+            'BOOK_NOW',
+            'APPLY_NOW',
+            'WATCH_MORE',
+          ])
+          .optional()
+          .describe('Defaults to LEARN_MORE'),
+        url_tags: urlTags,
+        media_url: z
+          .string()
+          .optional()
+          .describe('A media library asset url: the image, or the video. Required for video'),
+        thumbnail_media_url: z
+          .string()
+          .optional()
+          .describe("A video's poster frame, a library image"),
+        cards: z
+          .array(creativeCard)
+          .min(2)
+          .max(10)
+          .optional()
+          .describe('Carousel cards; required for carousel'),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/creatives', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adAccountId: input.ad_account_id,
+          pageId: input.page_id,
+          name: input.name,
+          format: input.format,
+          text: input.text,
+          headline: input.headline,
+          destinationUrl: input.destination_url,
+          callToAction: input.call_to_action,
+          urlTags: input.url_tags,
+          mediaUrl: input.media_url,
+          thumbnailMediaUrl: input.thumbnail_media_url,
+          cards: input.cards?.map((c: z.infer<typeof creativeCard>) => ({
+            mediaUrl: c.media_url,
+            destinationUrl: c.destination_url,
+            headline: c.headline,
+            description: c.description,
+          })),
+        });
+      },
+    },
+
+    {
+      name: 'get_ad_creative',
+      description: 'Read one creative by its ad platform id. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaRead }),
+      async execute(input) {
+        return client.get(`/v1/ads/creatives/${input.id}`, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'delete_ad_creative',
+      description: 'Delete a creative on the ad platform. Cannot be undone. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaWrite }),
+      async execute(input) {
+        return client.request(
+          'DELETE',
+          `/v1/ads/creatives/${input.id}`,
+          undefined,
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'get_audience',
+      description:
+        'Read one saved audience with its size and delivery status. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaRead }),
+      async execute(input) {
+        return client.get(`/v1/ads/audiences/${input.id}`, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'update_audience',
+      description: 'Rename a saved audience or change its description. Needs the ads scope.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        name: z.string().min(1).max(255).optional(),
+        description: z.string().max(500).optional(),
+      }),
+      async execute(input) {
+        return client.request(
+          'PATCH',
+          `/v1/ads/audiences/${input.id}`,
+          { name: input.name, description: input.description },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'delete_audience',
+      description:
+        'Delete a saved audience on the ad platform. Cannot be undone. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaWrite }),
+      async execute(input) {
+        return client.request(
+          'DELETE',
+          `/v1/ads/audiences/${input.id}`,
+          undefined,
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'add_audience_users',
+      description:
+        'Add customer emails to a custom audience; they are hashed before they leave FoPost. Needs the ads scope.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        emails: z.array(z.string().email()).min(1).max(10000),
+      }),
+      async execute(input) {
+        return client.request(
+          'POST',
+          `/v1/ads/audiences/${input.id}/users`,
+          { emails: input.emails },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'estimate_ad_reach',
+      description:
+        'Estimate how many people a targeting would reach before spending anything. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_account_id: z.string().describe('Ad account id, `act_…`'),
+        page_id: z.string(),
+        targeting: adTargeting,
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/reach-estimate', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adAccountId: input.ad_account_id,
+          pageId: input.page_id,
+          targeting: targetingBody(input.targeting),
+        });
+      },
+    },
+
+    {
+      name: 'get_ad_object_insights',
+      description:
+        'Read insights for any campaign, ad set or ad on a connection over a date range, with an optional breakdown and daily timeline. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        object_id: metaId.describe('Campaign, ad set or ad id on the ad platform'),
+        ...insightsRange,
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/insights', {
+          ...metaQuery(input),
+          object_id: input.object_id,
+          ...rangeQuery(input),
+        });
+      },
+    },
+
+    {
+      name: 'get_ad_insights',
+      description:
+        'Read insights for an ad created through FoPost over a date range, with an optional breakdown and daily timeline. Needs the ads scope.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Ad id (uuid)'),
+        workspace_id: z.string().uuid(),
+        ...insightsRange,
+      }),
+      async execute(input) {
+        return client.get(`/v1/ads/${input.id}/insights`, {
+          workspace_id: input.workspace_id,
+          ...rangeQuery(input),
+        });
+      },
+    },
+
+    {
+      name: 'get_lead_form',
+      description: 'Read one lead form with its questions and privacy policy. Needs the ads scope.',
+      inputSchema: z.object({
+        form_id: z.string().describe('Lead form id'),
+        ...metaRead,
+        page_id: z.string(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/ads/lead-forms/${input.form_id}`, {
+          ...metaQuery(input),
+          page_id: input.page_id,
+        });
+      },
+    },
+
+    {
+      name: 'archive_lead_form',
+      description: 'Archive a lead form so it stops collecting leads. Needs the ads scope.',
+      inputSchema: z.object({
+        form_id: z.string().describe('Lead form id'),
+        ...metaWrite,
+        page_id: z.string(),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/lead-forms/${input.form_id}/archive`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          pageId: input.page_id,
+        });
+      },
+    },
+
+    {
+      name: 'list_leads_feed',
+      description:
+        'List leads stored from subscribed pages, newest first; pass next_cursor back as cursor for the next page. Needs the ads scope.',
+      inputSchema: z.object({
+        workspace_id: z.string().uuid().optional(),
+        form_id: z.string().optional(),
+        page_id: z.string().optional(),
+        cursor: z.string().optional().describe('nextCursor from the previous page'),
+        limit: z.number().int().min(1).max(100).optional(),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/leads', input);
+      },
+    },
+
+    {
+      name: 'list_lead_pages',
+      description: 'List the pages subscribed to new-lead notifications. Needs the ads scope.',
+      inputSchema: workspaceFilter,
+      async execute(input) {
+        return client.get('/v1/ads/lead-pages', input);
+      },
+    },
+
+    {
+      name: 'subscribe_lead_page',
+      description:
+        'Turn on new-lead notifications for a page and backfill its recent leads into the feed. Needs the ads scope.',
+      inputSchema: z.object({ ...metaWrite, page_id: z.string() }),
+      async execute(input) {
+        return client.post('/v1/ads/lead-pages', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          pageId: input.page_id,
+        });
+      },
+    },
+
+    {
+      name: 'unsubscribe_lead_page',
+      description: 'Turn off new-lead notifications for a page. Needs the ads scope.',
+      inputSchema: z.object({ page_id: z.string(), ...metaWrite }),
+      async execute(input) {
+        return client.request(
+          'DELETE',
+          `/v1/ads/lead-pages/${input.page_id}`,
+          undefined,
+          metaQuery(input),
+        );
       },
     },
   ];
