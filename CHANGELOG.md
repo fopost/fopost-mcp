@@ -2,15 +2,24 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
-## Unreleased
+## 0.4.0
 
 ### Added
 
+- Inbox action tools (8): edit your own comment, like, unlike, pin, unpin,
+  react to a DM, start a conversation (by handle, or a private reply to a
+  comment) and the typing indicator. Keys need the `inbox` and `publish` scopes.
+- `reply_to_inbox_item` takes `media_ids` and `quick_replies` (which also need
+  `publish`); `text` may be omitted when `media_ids` is given.
 - Account group tools (6): list, get, create, rename, set members and delete.
   Keys need the `accounts` scope.
 - `rename_account` sets or clears an account's display name.
 - `list_accounts` takes `group_id`; `schedule_post` takes `account_group_id`,
   and `account_ids` may be omitted when a group is given.
+
+### Changed
+
+- `delete_inbox_item` also deletes your own reply, which needs `publish`.
 
 ## 0.3.0
 

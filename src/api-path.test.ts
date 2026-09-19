@@ -56,6 +56,14 @@ const TOOL_INPUTS: Record<string, unknown> = {
   hide_inbox_item: { id: UUID },
   unhide_inbox_item: { id: UUID },
   delete_inbox_item: { id: UUID },
+  edit_inbox_comment: { id: UUID, text: 'fixed' },
+  like_inbox_item: { id: UUID },
+  unlike_inbox_item: { id: UUID },
+  pin_inbox_item: { id: UUID },
+  unpin_inbox_item: { id: UUID },
+  react_to_inbox_item: { id: UUID, reaction: null },
+  start_inbox_conversation: { account_id: UUID, handle: 'someone', text: 'hi' },
+  set_inbox_typing: { conversation_id: 'c1', account_id: UUID, on: false },
   list_inbox_approvals: { workspace_id: UUID },
   approve_inbox_reply: { id: 7, text: 'hi' },
   reject_inbox_reply: { id: 7 },
@@ -126,7 +134,7 @@ describe('request paths', () => {
       await tool.execute(tool.inputSchema.parse(TOOL_INPUTS[tool.name]));
     }
 
-    expect(urls.length).toBeGreaterThanOrEqual(48);
+    expect(urls.length).toBeGreaterThanOrEqual(56);
     for (const url of urls) {
       const path = new URL(url).pathname;
       expect(path).not.toContain('/api/v1');
@@ -161,6 +169,30 @@ describe('inbox and ads requests', () => {
     expect(requests[0].method).toBe('PATCH');
     expect(new URL(requests[0].url).pathname).toBe(`/v1/inbox/${UUID}`);
     expect(requests[0].body).toEqual({ state: 'snoozed', snoozedUntil: '2030-01-01T00:00:00Z' });
+  });
+
+  it('sends the inbox action bodies as the API expects them', async () => {
+    const reply = allTools().find((t) => t.name === 'reply_to_inbox_item')!;
+    await reply.execute(
+      reply.inputSchema.parse({ id: UUID, media_ids: ['m1'], quick_replies: ['Yes'] }),
+    );
+    expect(requests[0].body).toEqual({ media_ids: ['m1'], quick_replies: ['Yes'] });
+
+    await run('edit_inbox_comment');
+    expect(requests[1].method).toBe('PATCH');
+    expect(requests[1].body).toEqual({ text: 'fixed' });
+
+    await run('react_to_inbox_item');
+    expect(new URL(requests[2].url).pathname).toBe(`/v1/inbox/${UUID}/react`);
+    expect(requests[2].body).toEqual({ reaction: null });
+
+    await run('start_inbox_conversation');
+    expect(new URL(requests[3].url).pathname).toBe('/v1/inbox/conversations');
+    expect(requests[3].body).toEqual({ account_id: UUID, handle: 'someone', text: 'hi' });
+
+    await run('set_inbox_typing');
+    expect(new URL(requests[4].url).pathname).toBe('/v1/inbox/conversations/c1/typing');
+    expect(requests[4].body).toEqual({ account_id: UUID, on: false });
   });
 
   it('posts a boost as a camelCase body that starts paused unless told otherwise', async () => {
