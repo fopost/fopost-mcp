@@ -2,6 +2,13 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
+## Unreleased
+
+### Added
+
+- Telegram tools (5): create a connect code, check its status, and get, set or
+  clear a connected chat's bot commands. Keys need the `accounts` scope.
+
 ## 0.4.0
 
 ### Added

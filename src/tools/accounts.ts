@@ -114,6 +114,84 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'create_telegram_connect_code',
+      description:
+        'Mint a one-time Telegram connect code (valid 15 minutes). Sending `/connect <code>` to the bot in a chat, group or channel connects that chat; the deep links carry the code.',
+      inputSchema: z.object({
+        workspace_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe('Optional for a key bound to one workspace'),
+      }),
+      async execute(input) {
+        return client.post('/v1/accounts/telegram/connect-code', {
+          workspaceId: input.workspace_id,
+        });
+      },
+    },
+
+    {
+      name: 'get_telegram_connect_status',
+      description:
+        'Check a Telegram connect code: pending, connected (with account_id), failed (with reason) or expired.',
+      inputSchema: z.object({
+        code: z.string().min(1),
+      }),
+      async execute(input) {
+        return client.get('/v1/accounts/telegram/connect-code/status', { code: input.code });
+      },
+    },
+
+    {
+      name: 'get_telegram_bot_commands',
+      description: 'List the command menu the bot shows in a connected Telegram chat.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/telegram/commands`);
+      },
+    },
+
+    {
+      name: 'set_telegram_bot_commands',
+      description:
+        'Replace the command menu the bot shows in a connected Telegram chat with exactly this list.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        commands: z
+          .array(
+            z.object({
+              command: z
+                .string()
+                .regex(/^[a-z0-9_]{1,32}$/)
+                .describe('1-32 lowercase letters, digits or underscores, no leading slash'),
+              description: z.string().min(1).max(256),
+            }),
+          )
+          .min(1)
+          .max(100),
+      }),
+      async execute(input) {
+        return client.put(`/v1/accounts/${input.account_id}/telegram/commands`, {
+          commands: input.commands,
+        });
+      },
+    },
+
+    {
+      name: 'clear_telegram_bot_commands',
+      description: 'Remove every command from the bot menu in a connected Telegram chat.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.delete(`/v1/accounts/${input.account_id}/telegram/commands`);
+      },
+    },
+
+    {
       name: 'get_account_health',
       description:
         'Check token freshness and rate-limit headroom for a single account. Useful when posts are failing — tells you if the OAuth token has expired.',
