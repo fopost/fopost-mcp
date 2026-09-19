@@ -3,6 +3,8 @@ import { FoPostClient } from './client.js';
 import { postsTools } from './tools/posts.js';
 import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
+import { inboxTools } from './tools/inbox.js';
+import { adsTools } from './tools/ads.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -10,6 +12,16 @@ import type { ToolDefinition } from './types.js';
  * 404s, which is exactly how the published server shipped broken.
  */
 const UUID = '9b2f6c1e-0000-4000-8000-000000000001';
+
+const AD_BASE = {
+  workspace_id: UUID,
+  connection_id: UUID,
+  ad_account_id: 'act_1',
+  name: 'Spring launch',
+  goal: 'traffic',
+  budget: { minor: 1000, type: 'daily' },
+  targeting: { countries: ['DE'], age_min: 18, age_max: 65, gender: 'all' },
+};
 
 /** One valid input per tool, so every tool's request path gets exercised. */
 const TOOL_INPUTS: Record<string, unknown> = {
@@ -27,21 +39,61 @@ const TOOL_INPUTS: Record<string, unknown> = {
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
   get_ai_credits: {},
+  list_inbox: { workspace_id: UUID },
+  list_inbox_threads: { workspace_id: UUID, kind: 'mentions' },
+  list_inbox_conversations: { workspace_id: UUID },
+  get_inbox_unread_count: {},
+  mark_inbox_thread_read: { workspace_id: UUID, account_id: UUID, post_external_id: 'p1' },
+  reply_to_inbox_item: { id: UUID, text: 'hi' },
+  update_inbox_item: { id: UUID, state: 'snoozed', snoozed_until: '2030-01-01T00:00:00Z' },
+  hide_inbox_item: { id: UUID },
+  unhide_inbox_item: { id: UUID },
+  delete_inbox_item: { id: UUID },
+  list_inbox_approvals: { workspace_id: UUID },
+  approve_inbox_reply: { id: 7, text: 'hi' },
+  reject_inbox_reply: { id: 7 },
+  refresh_inbox: { workspace_id: UUID },
+  list_ads: { workspace_id: UUID },
+  list_external_ads: {},
+  list_boostable_posts: {},
+  list_ad_sources: {},
+  boost_post: { ...AD_BASE, post_id: UUID, account_id: UUID },
+  create_ad: { ...AD_BASE, page_id: '123', text: 'hi' },
+  set_ad_status: { id: UUID, workspace_id: UUID, status: 'active' },
+  refresh_ad: { id: UUID, workspace_id: UUID },
+  delete_ad: { id: UUID, workspace_id: UUID },
+  list_audiences: { connection_id: UUID, ad_account_id: 'act_1' },
+  search_ad_targeting: { connection_id: UUID, type: 'city', q: 'Berlin' },
+  list_lead_forms: {},
+  list_leads: { form_id: 'f1', connection_id: UUID, page_id: '123', after: 'c1' },
 };
 
 let urls: string[];
+let requests: { method: string; url: string; body: unknown }[];
 let originalFetch: typeof globalThis.fetch;
 
 function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
   const client = new FoPostClient({ apiKey: 'test-key', baseUrl });
-  return [...postsTools(client), ...accountsTools(client), ...aiTools(client)];
+  return [
+    ...postsTools(client),
+    ...accountsTools(client),
+    ...aiTools(client),
+    ...inboxTools(client),
+    ...adsTools(client),
+  ];
 }
 
 beforeEach(() => {
   urls = [];
+  requests = [];
   originalFetch = globalThis.fetch;
-  globalThis.fetch = (async (input: string | URL | Request) => {
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     urls.push(String(input));
+    requests.push({
+      method: init?.method ?? 'GET',
+      url: String(input),
+      body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
+    });
     return new Response(JSON.stringify({ data: { id: UUID } }), {
       status: 200,
       headers: { 'content-type': 'application/json' },
@@ -67,7 +119,7 @@ describe('request paths', () => {
       await tool.execute(tool.inputSchema.parse(TOOL_INPUTS[tool.name]));
     }
 
-    expect(urls.length).toBeGreaterThanOrEqual(14);
+    expect(urls.length).toBeGreaterThanOrEqual(41);
     for (const url of urls) {
       const path = new URL(url).pathname;
       expect(path).not.toContain('/api/v1');
@@ -80,5 +132,71 @@ describe('request paths', () => {
     const listWorkspaces = tools.find((t) => t.name === 'list_workspaces')!;
     await listWorkspaces.execute({});
     expect(urls[0]).toBe('https://self.hosted.example/v1/workspaces');
+  });
+});
+
+describe('inbox and ads requests', () => {
+  function run(name: string) {
+    const tool = allTools().find((t) => t.name === name)!;
+    return tool.execute(tool.inputSchema.parse(TOOL_INPUTS[name]));
+  }
+
+  it('sends inbox filters as snake_case query params', async () => {
+    await run('list_inbox_threads');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/inbox/posts');
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+    expect(url.searchParams.get('kind')).toBe('mentions');
+  });
+
+  it('patches an inbox item with a camelCase body', async () => {
+    await run('update_inbox_item');
+    expect(requests[0].method).toBe('PATCH');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/inbox/${UUID}`);
+    expect(requests[0].body).toEqual({ state: 'snoozed', snoozedUntil: '2030-01-01T00:00:00Z' });
+  });
+
+  it('posts a boost as a camelCase body that starts paused unless told otherwise', async () => {
+    await run('boost_post');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/ads/boost');
+    expect(requests[0].body).toMatchObject({
+      workspaceId: UUID,
+      connectionId: UUID,
+      adAccountId: 'act_1',
+      postId: UUID,
+      accountId: UUID,
+      budget: { minor: 1000, type: 'daily' },
+      targeting: { countries: ['DE'], ageMin: 18, ageMax: 65, gender: 'all' },
+    });
+    expect(requests[0].body).not.toHaveProperty('paused');
+    expect(requests[0].body).not.toHaveProperty('workspace_id');
+  });
+
+  it('sets ad status with workspace_id in the query and status in the body', async () => {
+    await run('set_ad_status');
+    const url = new URL(requests[0].url);
+    expect(requests[0].method).toBe('PATCH');
+    expect(url.pathname).toBe(`/v1/ads/${UUID}`);
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+    expect(requests[0].body).toEqual({ status: 'active' });
+  });
+
+  it('unwraps a { data } response', async () => {
+    const tool = allTools().find((t) => t.name === 'get_inbox_unread_count')!;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ count: 3 }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })) as unknown as typeof fetch;
+    expect(await tool.execute({})).toEqual({ count: 3 });
+
+    const ads = allTools().find((t) => t.name === 'list_ads')!;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ data: [{ id: UUID, status: 'paused' }] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })) as unknown as typeof fetch;
+    expect(await ads.execute({ workspace_id: UUID })).toEqual([{ id: UUID, status: 'paused' }]);
   });
 });
