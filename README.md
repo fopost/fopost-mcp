@@ -37,11 +37,19 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_inbox_conversations`  | List DM conversations                                       |
 | `get_inbox_unread_count`    | Count unread inbox items                                    |
 | `mark_inbox_thread_read`    | Mark a comment thread or DM conversation read               |
-| `reply_to_inbox_item`       | Reply on the platform as the connected account              |
+| `reply_to_inbox_item`       | Reply on the platform, with media or quick replies on a DM  |
+| `edit_inbox_comment`        | Edit your own comment on the platform                       |
 | `update_inbox_item`         | Set an item to unread, read, resolved or snoozed            |
 | `hide_inbox_item`           | Hide a comment on the platform                              |
 | `unhide_inbox_item`         | Unhide a comment on the platform                            |
-| `delete_inbox_item`         | Delete a comment on the platform                            |
+| `delete_inbox_item`         | Delete a comment, or your own reply, on the platform        |
+| `like_inbox_item`           | Like a comment or message on the platform                   |
+| `unlike_inbox_item`         | Remove your like                                            |
+| `pin_inbox_item`            | Pin your own comment                                        |
+| `unpin_inbox_item`          | Unpin your own comment                                      |
+| `react_to_inbox_item`       | React to a DM, or remove your reaction                      |
+| `start_inbox_conversation`  | Send a new DM, or answer a comment privately                |
+| `set_inbox_typing`          | Show or clear the typing indicator in a DM                  |
 | `list_inbox_approvals`      | List drafted replies waiting for approval                   |
 | `approve_inbox_reply`       | Approve and send a drafted reply                            |
 | `reject_inbox_reply`        | Reject a drafted reply                                      |
@@ -64,7 +72,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 
 ### 1. Get an API key
 
-Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status` and `delete_ad` also need `publish`. A boost or ad starts paused unless `paused` is `false`.
+Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`, and liking, pinning, reacting, editing, starting a conversation, the typing indicator, reply media and quick replies, and deleting your own reply also need `publish`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status` and `delete_ad` also need `publish`. A boost or ad starts paused unless `paused` is `false`.
 
 ### 2. Add to your MCP client
 
