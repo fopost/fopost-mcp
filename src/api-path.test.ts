@@ -35,6 +35,13 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_accounts: { workspace_id: UUID },
   get_account_health: { account_id: UUID },
   list_workspaces: {},
+  rename_account: { account_id: UUID, display_name: null },
+  list_account_groups: { workspace_id: UUID },
+  get_account_group: { id: UUID },
+  create_account_group: { workspace_id: UUID, name: 'EU', account_ids: [UUID] },
+  rename_account_group: { id: UUID, name: 'US' },
+  set_account_group_members: { id: UUID, account_ids: [UUID] },
+  delete_account_group: { id: UUID },
   generate_caption: { current_caption: 'hi' },
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
@@ -119,7 +126,7 @@ describe('request paths', () => {
       await tool.execute(tool.inputSchema.parse(TOOL_INPUTS[tool.name]));
     }
 
-    expect(urls.length).toBeGreaterThanOrEqual(41);
+    expect(urls.length).toBeGreaterThanOrEqual(48);
     for (const url of urls) {
       const path = new URL(url).pathname;
       expect(path).not.toContain('/api/v1');
@@ -198,5 +205,41 @@ describe('inbox and ads requests', () => {
         headers: { 'content-type': 'application/json' },
       })) as unknown as typeof fetch;
     expect(await ads.execute({ workspace_id: UUID })).toEqual([{ id: UUID, status: 'paused' }]);
+  });
+});
+
+describe('account group requests', () => {
+  function run(name: string, input: unknown = TOOL_INPUTS[name]) {
+    const tool = allTools().find((t) => t.name === name)!;
+    return tool.execute(tool.inputSchema.parse(input));
+  }
+
+  it('filters list_accounts by group_id', async () => {
+    await run('list_accounts', { workspace_id: UUID, group_id: UUID });
+    expect(new URL(requests[0].url).searchParams.get('group_id')).toBe(UUID);
+  });
+
+  it('renames an account with PATCH and a null display_name', async () => {
+    await run('rename_account');
+    expect(requests[0].method).toBe('PATCH');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}`);
+    expect(requests[0].body).toEqual({ display_name: null });
+  });
+
+  it('replaces group members with PUT', async () => {
+    await run('set_account_group_members');
+    expect(requests[0].method).toBe('PUT');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/account-groups/${UUID}/members`);
+    expect(requests[0].body).toEqual({ account_ids: [UUID] });
+  });
+
+  it('schedules a post to a group without account_ids', async () => {
+    await run('schedule_post', { workspace_id: UUID, content: 'hi', account_group_id: UUID });
+    expect(requests[0].body).toMatchObject({ account_group_id: UUID });
+    expect(requests[0].body).not.toHaveProperty('accounts');
+  });
+
+  it('exposes no tool that moves an account between workspaces', () => {
+    expect(allTools().some((t) => /move/.test(t.name))).toBe(false);
   });
 });

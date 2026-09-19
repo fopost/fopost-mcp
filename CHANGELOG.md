@@ -2,6 +2,16 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
+## Unreleased
+
+### Added
+
+- Account group tools (6): list, get, create, rename, set members and delete.
+  Keys need the `accounts` scope.
+- `rename_account` sets or clears an account's display name.
+- `list_accounts` takes `group_id`; `schedule_post` takes `account_group_id`,
+  and `account_ids` may be omitted when a group is given.
+
 ## 0.3.0
 
 ### Added

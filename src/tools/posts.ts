@@ -41,14 +41,20 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'schedule_post',
       description:
-        'Create and schedule a post. Pass the body text, target account ids, and an ISO 8601 schedule_at. Omit schedule_at to save as draft. Use publish_now=true to publish immediately after creation.',
+        'Create and schedule a post. Pass the body text, target account ids or an account group, and an ISO 8601 schedule_at. Omit schedule_at to save as draft. Use publish_now=true to publish immediately after creation.',
       inputSchema: z.object({
         workspace_id: z.string().uuid().describe('Workspace id (uuid)'),
         content: z.string().describe('Post body text'),
         account_ids: z
           .array(z.string().uuid())
           .min(1)
-          .describe('Target social account ids (uuids)'),
+          .optional()
+          .describe('Target social account ids (uuids); required unless account_group_id is set'),
+        account_group_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe('Post to every account in this group, merged with account_ids'),
         schedule_at: z.string().optional().describe('ISO 8601 timestamp; omit to save as draft'),
         publish_now: z.boolean().default(false),
         media_urls: z
@@ -73,7 +79,8 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
             },
           ],
           schedule_at: input.schedule_at,
-          accounts: input.account_ids.map((id: string) => ({ id })),
+          accounts: input.account_ids?.map((id: string) => ({ id })),
+          account_group_id: input.account_group_id,
           labels: input.labels,
         };
         const created = await client.post<{ id: string }>('/v1/posts', body);
