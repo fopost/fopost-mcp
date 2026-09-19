@@ -1,6 +1,6 @@
 # @fopost/mcp
 
-MCP server for [FoPost](https://fopost.com): manage social media posts, accounts, and AI usage from any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue, etc.).
+MCP server for [FoPost](https://fopost.com): manage social media posts, accounts, AI usage, the inbox, and ads from any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue, etc.).
 
 Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 
@@ -9,28 +9,55 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 
 ## Tools
 
-| Tool                    | What it does                                                |
-| ----------------------- | ----------------------------------------------------------- |
-| `list_posts`            | List posts in a workspace, filter by status                 |
-| `get_post`              | Fetch a post by id                                          |
-| `schedule_post`         | Create a post (draft, scheduled, or publish-now)            |
-| `edit_post`             | Update an existing post                                     |
-| `cancel_post`           | Cancel a scheduled post                                     |
-| `delete_post`           | Permanently delete a post                                   |
-| `list_post_deliveries`  | Per-account delivery status for a post                      |
-| `list_accounts`         | List connected social accounts                              |
-| `get_account_health`    | Check token freshness and rate-limit headroom               |
-| `list_workspaces`       | List workspaces the user can access                         |
-| `generate_caption`      | AI-generate or improve a caption (1 credit)                 |
-| `rewrite_for_platforms` | Rewrite content per target platform (1 credit each)         |
-| `repurpose_url`         | Turn a blog URL into N platform-optimized posts (6 credits) |
-| `get_ai_credits`        | Show current AI credit balance                              |
+| Tool                       | What it does                                                |
+| -------------------------- | ----------------------------------------------------------- |
+| `list_posts`               | List posts in a workspace, filter by status                 |
+| `get_post`                 | Fetch a post by id                                          |
+| `schedule_post`            | Create a post (draft, scheduled, or publish-now)            |
+| `edit_post`                | Update an existing post                                     |
+| `cancel_post`              | Cancel a scheduled post                                     |
+| `delete_post`              | Permanently delete a post                                   |
+| `list_post_deliveries`     | Per-account delivery status for a post                      |
+| `list_accounts`            | List connected social accounts                              |
+| `get_account_health`       | Check token freshness and rate-limit headroom               |
+| `list_workspaces`          | List workspaces the user can access                         |
+| `generate_caption`         | AI-generate or improve a caption (1 credit)                 |
+| `rewrite_for_platforms`    | Rewrite content per target platform (1 credit each)         |
+| `repurpose_url`            | Turn a blog URL into N platform-optimized posts (6 credits) |
+| `get_ai_credits`           | Show current AI credit balance                              |
+| `list_inbox`               | List comments, mentions and DMs with filters                |
+| `list_inbox_threads`       | List comment threads under your posts, or mentions          |
+| `list_inbox_conversations` | List DM conversations                                       |
+| `get_inbox_unread_count`   | Count unread inbox items                                    |
+| `mark_inbox_thread_read`   | Mark a comment thread or DM conversation read               |
+| `reply_to_inbox_item`      | Reply on the platform as the connected account              |
+| `update_inbox_item`        | Set an item to unread, read, resolved or snoozed            |
+| `hide_inbox_item`          | Hide a comment on the platform                              |
+| `unhide_inbox_item`        | Unhide a comment on the platform                            |
+| `delete_inbox_item`        | Delete a comment on the platform                            |
+| `list_inbox_approvals`     | List drafted replies waiting for approval                   |
+| `approve_inbox_reply`      | Approve and send a drafted reply                            |
+| `reject_inbox_reply`       | Reject a drafted reply                                      |
+| `refresh_inbox`            | Poll every inbox-capable account now                        |
+| `list_ads`                 | List boosts and ads created through FoPost                  |
+| `list_external_ads`        | List ads on connected ad accounts made elsewhere            |
+| `list_boostable_posts`     | List published posts that can be boosted                    |
+| `list_ad_sources`          | List ad connections, ad accounts and pages                  |
+| `boost_post`               | Boost a published post (starts paused, needs `publish`)     |
+| `create_ad`                | Create an ad (starts paused, needs `publish`)               |
+| `set_ad_status`            | Pause or resume an ad (needs `publish`)                     |
+| `refresh_ad`               | Re-read delivery status and insights                        |
+| `delete_ad`                | End delivery and delete an ad (needs `publish`)             |
+| `list_audiences`           | List saved audiences and pixels on an ad account            |
+| `search_ad_targeting`      | Search locations, interests, behaviors and income brackets  |
+| `list_lead_forms`          | List lead forms on connected pages                          |
+| `list_leads`               | List one page of leads from a lead form                     |
 
 ## Setup
 
 ### 1. Get an API key
 
-Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post).
+Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status` and `delete_ad` also need `publish`. A boost or ad starts paused unless `paused` is `false`.
 
 ### 2. Add to your MCP client
 

@@ -6,7 +6,7 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 
 `@fopost/mcp` — a Model Context Protocol server that exposes the FoPost REST API as MCP tools, so
 any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue) can list, schedule, edit,
-and publish social posts, inspect account health, and run the AI features. Published on npm and run
+and publish social posts, inspect account health, run the AI features, work the inbox, and manage ads. Published on npm and run
 with `npx -y @fopost/mcp`. TypeScript, ESM only, Node >= 18, bin `fopost-mcp`, MIT.
 
 **It does not depend on `@fopost/sdk`.** `src/client.ts` is a ~90-line `fetch` wrapper written in
@@ -29,7 +29,7 @@ that contract changes.
 src/index.ts     stdio server: reads config, builds the tool list, wires ListTools + CallTool
 src/client.ts    FoPostClient (fetch) + FoPostApiError
 src/types.ts     ToolDefinition<S> — name, description, Zod inputSchema, typed execute
-src/tools/       posts.ts (7 tools), accounts.ts (3), ai.ts (4) — 14 total
+src/tools/       posts.ts (7 tools), accounts.ts (3), ai.ts (4), inbox.ts (14), ads.ts (13) — 41 total
 src/globals.d.ts declares __PKG_VERSION__, injected by tsup from package.json
 ```
 
@@ -50,7 +50,7 @@ tool's path and fails if the prefix drifts back.
 
 **How a request flows.** `FoPostClient` sends `X-API-Key: <key>`, `Content-Type: application/json`
 and `User-Agent: @fopost/mcp` to `${baseUrl}${path}`, where every path is written out in full in
-the tool file (`/v1/posts`, `/v1/accounts`, `/v1/ai/credits`, …). A `{ data: … }` body is
+the tool file (`/v1/posts`, `/v1/accounts`, `/v1/ai/credits`, `/v1/inbox`, `/v1/ads`, …). A `{ data: … }` body is
 unwrapped when `data` is the only key. A non-2xx JSON body becomes `FoPostApiError` with
 the API's `message`, `error` code, and status; a non-JSON body becomes one carrying the raw text.
 
@@ -102,6 +102,8 @@ by CI, so run `npm run format:check` by hand.
 Vitest, one suite so far: `src/api-path.test.ts`, which executes every registered tool against a
 stubbed `fetch` and asserts each request path starts with `/v1/` and never contains `/api/v1/`. It
 also fails when a tool is added without an input fixture, so new tools get their path pinned too.
+A second block checks the inbox and ads wire shapes: snake_case query params, camelCase bodies,
+`workspace_id` in the query on the per-ad routes, and `{ data }` unwrapping.
 A test here **must stub `globalThis.fetch` and must never reach the live API.**
 
 The rest of the verification:
