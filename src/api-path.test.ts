@@ -42,6 +42,14 @@ const TOOL_INPUTS: Record<string, unknown> = {
   rename_account_group: { id: UUID, name: 'US' },
   set_account_group_members: { id: UUID, account_ids: [UUID] },
   delete_account_group: { id: UUID },
+  create_telegram_connect_code: { workspace_id: UUID },
+  get_telegram_connect_status: { code: 'abc123' },
+  get_telegram_bot_commands: { account_id: UUID },
+  set_telegram_bot_commands: {
+    account_id: UUID,
+    commands: [{ command: 'help', description: 'Show help' }],
+  },
+  clear_telegram_bot_commands: { account_id: UUID },
   generate_caption: { current_caption: 'hi' },
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
@@ -221,7 +229,7 @@ describe('request paths', () => {
       await tool.execute(tool.inputSchema.parse(TOOL_INPUTS[tool.name]));
     }
 
-    expect(urls.length).toBeGreaterThanOrEqual(90);
+    expect(urls.length).toBeGreaterThanOrEqual(95);
     for (const url of urls) {
       const path = new URL(url).pathname;
       expect(path).not.toContain('/api/v1');
@@ -406,5 +414,45 @@ describe('account group requests', () => {
 
   it('exposes no tool that moves an account between workspaces', () => {
     expect(allTools().some((t) => /move/.test(t.name))).toBe(false);
+  });
+});
+
+describe('telegram requests', () => {
+  function run(name: string, input: unknown = TOOL_INPUTS[name]) {
+    const tool = allTools().find((t) => t.name === name)!;
+    return tool.execute(tool.inputSchema.parse(input));
+  }
+
+  it('mints a connect code with a camelCase workspaceId body', async () => {
+    await run('create_telegram_connect_code');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/accounts/telegram/connect-code');
+    expect(requests[0].body).toEqual({ workspaceId: UUID });
+  });
+
+  it('reads the connect status by code in the query', async () => {
+    await run('get_telegram_connect_status');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/accounts/telegram/connect-code/status');
+    expect(url.searchParams.get('code')).toBe('abc123');
+  });
+
+  it('replaces bot commands with PUT and clears them with DELETE', async () => {
+    await run('set_telegram_bot_commands');
+    await run('clear_telegram_bot_commands');
+    expect(requests[0].method).toBe('PUT');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/telegram/commands`);
+    expect(requests[0].body).toEqual({ commands: [{ command: 'help', description: 'Show help' }] });
+    expect(requests[1].method).toBe('DELETE');
+  });
+
+  it('rejects a command with a leading slash', () => {
+    const tool = allTools().find((t) => t.name === 'set_telegram_bot_commands')!;
+    expect(() =>
+      tool.inputSchema.parse({
+        account_id: UUID,
+        commands: [{ command: '/help', description: 'Show help' }],
+      }),
+    ).toThrow();
   });
 });

@@ -18,6 +18,8 @@ All notable changes to `@fopost/mcp` are documented here.
 - Lead tools (6): get and archive a lead form, the leads feed (pass
   `nextCursor` back as `cursor`), and list, subscribe and unsubscribe lead pages.
 - `create_ad` takes `url_tags`.
+- Telegram tools (5): create a connect code, check its status, and get, set or
+  clear a connected chat's bot commands. Keys need the `accounts` scope.
 
 ## 0.4.0
 
