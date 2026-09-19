@@ -192,6 +192,61 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'list_slack_channels',
+      description:
+        'List the channels a connected Slack account can post to, and which one it posts to now.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/slack/channels`);
+      },
+    },
+
+    {
+      name: 'list_slack_members',
+      description:
+        'List people in a connected Slack workspace; a member id is the handle for start_inbox_conversation.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/slack/members`);
+      },
+    },
+
+    {
+      name: 'get_slack_identity',
+      description: 'Show the name and icon a connected Slack account posts under.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/slack/identity`);
+      },
+    },
+
+    {
+      name: 'set_slack_identity',
+      description:
+        'Set the name and icon a connected Slack account posts under. Omitted fields stay, null clears one; set icon_url or icon_emoji, not both.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        username: z.string().min(1).max(80).nullable().optional(),
+        icon_url: z.string().url().max(2048).nullable().optional().describe('http(s) image URL'),
+        icon_emoji: z
+          .string()
+          .regex(/^:[a-z0-9_+'-]+:$/)
+          .nullable()
+          .optional()
+          .describe('Emoji code, e.g. :rocket:'),
+      }),
+      async execute({ account_id, ...body }) {
+        return client.request('PATCH', `/v1/accounts/${account_id}/slack/identity`, body);
+      },
+    },
+
+    {
       name: 'get_account_health',
       description:
         'Check token freshness and rate-limit headroom for a single account. Useful when posts are failing — tells you if the OAuth token has expired.',

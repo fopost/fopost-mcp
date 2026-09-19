@@ -50,6 +50,10 @@ const TOOL_INPUTS: Record<string, unknown> = {
     commands: [{ command: 'help', description: 'Show help' }],
   },
   clear_telegram_bot_commands: { account_id: UUID },
+  list_slack_channels: { account_id: UUID },
+  list_slack_members: { account_id: UUID },
+  get_slack_identity: { account_id: UUID },
+  set_slack_identity: { account_id: UUID, username: 'Launch Bot', icon_url: null },
   generate_caption: { current_caption: 'hi' },
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
@@ -229,7 +233,7 @@ describe('request paths', () => {
       await tool.execute(tool.inputSchema.parse(TOOL_INPUTS[tool.name]));
     }
 
-    expect(urls.length).toBeGreaterThanOrEqual(95);
+    expect(urls.length).toBeGreaterThanOrEqual(99);
     for (const url of urls) {
       const path = new URL(url).pathname;
       expect(path).not.toContain('/api/v1');
@@ -397,6 +401,13 @@ describe('account group requests', () => {
     expect(requests[0].method).toBe('PATCH');
     expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}`);
     expect(requests[0].body).toEqual({ display_name: null });
+  });
+
+  it('sets the Slack identity with PATCH and a snake_case body', async () => {
+    await run('set_slack_identity');
+    expect(requests[0].method).toBe('PATCH');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/slack/identity`);
+    expect(requests[0].body).toEqual({ username: 'Launch Bot', icon_url: null });
   });
 
   it('replaces group members with PUT', async () => {

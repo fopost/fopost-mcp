@@ -33,6 +33,10 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `get_telegram_bot_commands`    | List the bot command menu in a Telegram chat                     |
 | `set_telegram_bot_commands`    | Replace the bot command menu in a Telegram chat                  |
 | `clear_telegram_bot_commands`  | Clear the bot command menu in a Telegram chat                    |
+| `list_slack_channels`          | List the channels a Slack account can post to                    |
+| `list_slack_members`           | List members of a Slack workspace, for DMs                       |
+| `get_slack_identity`           | Show the name and icon a Slack account posts under               |
+| `set_slack_identity`           | Set the name and icon a Slack account posts under                |
 | `generate_caption`             | AI-generate or improve a caption (1 credit)                      |
 | `rewrite_for_platforms`        | Rewrite content per target platform (1 credit each)              |
 | `repurpose_url`                | Turn a blog URL into N platform-optimized posts (6 credits)      |

@@ -2,6 +2,15 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
+## Unreleased
+
+### Added
+
+- Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
+  handle for `start_inbox_conversation`), `get_slack_identity` and
+  `set_slack_identity` for the name and icon posts appear under. All need the
+  `accounts` scope.
+
 ## 0.5.0
 
 ### Added
