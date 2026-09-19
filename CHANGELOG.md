@@ -6,7 +6,7 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
-- Ads campaign tree tools (16): read an ad account's tree, and create, get,
+- Ads campaign tree tools (17): read an ad account's tree, and create, get,
   update, delete and duplicate campaigns, ad sets and ads inside an ad set, plus
   `bulk_set_ad_status`. Changes need the `ads` and `publish` scopes and start
   paused unless `paused` is `false`.
