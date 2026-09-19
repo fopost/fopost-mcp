@@ -120,7 +120,7 @@ untested logic.
 
 ## Releasing
 
-`@fopost/mcp` **is published on npm** (0.2.1 at the time of writing). Releasing is a tag:
+`@fopost/mcp` **is published on npm** (0.3.0 at the time of writing). Releasing is a tag:
 
 1. Bump `version` in `package.json` and commit.
 2. `git tag v<version> && git push --tags` — the tag must match `package.json` exactly or the
@@ -129,8 +129,8 @@ untested logic.
    publishes with `npm publish --access public --provenance`. It skips silently if that version is
    already on npm, so a re-run is safe.
 
-Requires repo secret **`NPM_TOKEN`** (the job errors out explicitly when it is unset). Provenance
-needs `id-token: write`, which the workflow already grants. `workflow_dispatch` runs everything
+Auth is npm trusted publishing (OIDC through `id-token: write`, which the workflow grants), so
+there is no `NPM_TOKEN` secret. `workflow_dispatch` runs everything
 except the publish step.
 
 ## Git
