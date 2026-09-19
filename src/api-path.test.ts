@@ -89,6 +89,93 @@ const TOOL_INPUTS: Record<string, unknown> = {
   search_ad_targeting: { connection_id: UUID, type: 'city', q: 'Berlin' },
   list_lead_forms: {},
   list_leads: { form_id: 'f1', connection_id: UUID, page_id: '123', after: 'c1' },
+  get_ad_account_tree: { connection_id: UUID, ad_account_id: 'act_1' },
+  create_ad_campaign: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    ad_account_id: 'act_1',
+    name: 'Launch',
+    goal: 'traffic',
+  },
+  get_ad_campaign: { id: '120', connection_id: UUID },
+  update_ad_campaign: { id: '120', workspace_id: UUID, connection_id: UUID, status: 'paused' },
+  delete_ad_campaign: { id: '120', workspace_id: UUID, connection_id: UUID },
+  duplicate_ad_campaign: { id: '120', workspace_id: UUID, connection_id: UUID },
+  create_ad_set: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    campaign_id: '120',
+    page_id: '123',
+    name: 'EU',
+    goal: 'traffic',
+    budget: AD_BASE.budget,
+    targeting: AD_BASE.targeting,
+  },
+  get_ad_set: { id: '130', connection_id: UUID },
+  update_ad_set: { id: '130', workspace_id: UUID, connection_id: UUID, budget_minor: 500 },
+  delete_ad_set: { id: '130', workspace_id: UUID, connection_id: UUID },
+  duplicate_ad_set: { id: '130', workspace_id: UUID, connection_id: UUID, paused: false },
+  create_network_ad: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    ad_set_id: '130',
+    creative_id: '150',
+    name: 'A',
+  },
+  get_network_ad: { id: '140', connection_id: UUID },
+  update_network_ad: { id: '140', workspace_id: UUID, connection_id: UUID, creative_id: '151' },
+  delete_network_ad: { id: '140', workspace_id: UUID, connection_id: UUID },
+  duplicate_network_ad: { id: '140', workspace_id: UUID, connection_id: UUID },
+  bulk_set_ad_status: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    status: 'paused',
+    objects: [{ id: '120', level: 'campaign' }],
+  },
+  list_ad_creatives: { connection_id: UUID, ad_account_id: 'act_1' },
+  create_ad_creative: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    ad_account_id: 'act_1',
+    page_id: '123',
+    name: 'C',
+    format: 'image',
+    text: 'hi',
+    url_tags: 'utm_source=meta',
+  },
+  get_ad_creative: { id: '150', connection_id: UUID },
+  delete_ad_creative: { id: '150', workspace_id: UUID, connection_id: UUID },
+  get_audience: { id: '160', connection_id: UUID },
+  update_audience: { id: '160', workspace_id: UUID, connection_id: UUID, name: 'VIPs' },
+  delete_audience: { id: '160', workspace_id: UUID, connection_id: UUID },
+  add_audience_users: {
+    id: '160',
+    workspace_id: UUID,
+    connection_id: UUID,
+    emails: ['a@yourbrand.com'],
+  },
+  estimate_ad_reach: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    ad_account_id: 'act_1',
+    page_id: '123',
+    targeting: AD_BASE.targeting,
+  },
+  get_ad_object_insights: {
+    connection_id: UUID,
+    object_id: '120',
+    since: '2026-09-01',
+    until: '2026-09-07',
+    breakdown: 'age',
+    daily: true,
+  },
+  get_ad_insights: { id: UUID, workspace_id: UUID, since: '2026-09-01', until: '2026-09-07' },
+  get_lead_form: { form_id: 'f1', connection_id: UUID, page_id: '123' },
+  archive_lead_form: { form_id: 'f1', workspace_id: UUID, connection_id: UUID, page_id: '123' },
+  list_leads_feed: { workspace_id: UUID, form_id: 'f1', cursor: 'next1', limit: 50 },
+  list_lead_pages: {},
+  subscribe_lead_page: { workspace_id: UUID, connection_id: UUID, page_id: '123' },
+  unsubscribe_lead_page: { page_id: '123', workspace_id: UUID, connection_id: UUID },
 };
 
 let urls: string[];
@@ -142,7 +229,7 @@ describe('request paths', () => {
       await tool.execute(tool.inputSchema.parse(TOOL_INPUTS[tool.name]));
     }
 
-    expect(urls.length).toBeGreaterThanOrEqual(61);
+    expect(urls.length).toBeGreaterThanOrEqual(95);
     for (const url of urls) {
       const path = new URL(url).pathname;
       expect(path).not.toContain('/api/v1');
@@ -227,6 +314,52 @@ describe('inbox and ads requests', () => {
     expect(url.pathname).toBe(`/v1/ads/${UUID}`);
     expect(url.searchParams.get('workspace_id')).toBe(UUID);
     expect(requests[0].body).toEqual({ status: 'active' });
+  });
+
+  it('reads the account tree with connection_id in the query', async () => {
+    await run('get_ad_account_tree');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/ads/accounts/act_1/tree');
+    expect(url.searchParams.get('connection_id')).toBe(UUID);
+  });
+
+  it('changes a campaign with the ids in the query and a camelCase body', async () => {
+    await run('update_ad_campaign');
+    const url = new URL(requests[0].url);
+    expect(requests[0].method).toBe('PATCH');
+    expect(url.pathname).toBe('/v1/ads/campaigns/120');
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+    expect(url.searchParams.get('connection_id')).toBe(UUID);
+    expect(requests[0].body).toEqual({ status: 'paused' });
+
+    await run('create_ad_creative');
+    expect(requests[1].body).toMatchObject({ adAccountId: 'act_1', urlTags: 'utm_source=meta' });
+  });
+
+  it('sends the insights range, breakdown and daily flag as query params', async () => {
+    await run('get_ad_object_insights');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/ads/insights');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      connection_id: UUID,
+      object_id: '120',
+      since: '2026-09-01',
+      until: '2026-09-07',
+      breakdown: 'age',
+      daily: 'true',
+    });
+  });
+
+  it('pages the leads feed with the cursor in the query', async () => {
+    await run('list_leads_feed');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/ads/leads');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      workspace_id: UUID,
+      form_id: 'f1',
+      cursor: 'next1',
+      limit: '50',
+    });
   });
 
   it('unwraps a { data } response', async () => {

@@ -2,10 +2,22 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
-## Unreleased
+## 0.5.0
 
 ### Added
 
+- Ads campaign tree tools (17): read an ad account's tree, and create, get,
+  update, delete and duplicate campaigns, ad sets and ads inside an ad set, plus
+  `bulk_set_ad_status`. Changes need the `ads` and `publish` scopes and start
+  paused unless `paused` is `false`.
+- Creative tools (4): list, create (image, video or carousel, with a call to
+  action and URL tags), get and delete.
+- Audience tools (4): get, update, delete and add users.
+- `estimate_ad_reach`, `get_ad_object_insights` and `get_ad_insights`, with a
+  date range, an optional breakdown and a daily timeline.
+- Lead tools (6): get and archive a lead form, the leads feed (pass
+  `nextCursor` back as `cursor`), and list, subscribe and unsubscribe lead pages.
+- `create_ad` takes `url_tags`.
 - Telegram tools (5): create a connect code, check its status, and get, set or
   clear a connected chat's bot commands. Keys need the `accounts` scope.
 
