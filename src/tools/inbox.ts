@@ -91,13 +91,40 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'reply_to_inbox_item',
       description:
-        'Reply to a comment, mention or DM on the platform as the connected account. Needs the inbox scope.',
+        'Reply to a comment, mention or DM on the platform as the connected account. A DM reply may attach media_ids and quick_replies, which also need the publish scope. Needs the inbox scope.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+        text: z.string().min(1).optional().describe('Required unless media_ids is given'),
+        media_ids: z
+          .array(z.string())
+          .max(10)
+          .optional()
+          .describe('Media library ids to attach to a DM, where canSendMedia is true'),
+        quick_replies: z
+          .array(z.string().max(20))
+          .max(13)
+          .optional()
+          .describe('Answer buttons under a DM, where canQuickReply is true'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/reply`, {
+          text: input.text,
+          media_ids: input.media_ids,
+          quick_replies: input.quick_replies,
+        });
+      },
+    },
+
+    {
+      name: 'edit_inbox_comment',
+      description:
+        'Edit the text of your own comment on the platform, where canEdit is true. Needs the inbox and publish scopes.',
       inputSchema: z.object({
         id: z.string().uuid().describe('Inbox item id (uuid)'),
         text: z.string().min(1),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/reply`, { text: input.text });
+        return client.request('PATCH', `/v1/inbox/${input.id}`, { text: input.text });
       },
     },
 
@@ -142,12 +169,110 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
 
     {
       name: 'delete_inbox_item',
-      description: 'Delete a comment on the platform. Cannot be undone. Needs the inbox scope.',
+      description:
+        'Delete a comment, or your own reply, on the platform. Cannot be undone. Needs the inbox scope; your own reply also needs publish.',
       inputSchema: z.object({
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
         return client.delete(`/v1/inbox/${input.id}`);
+      },
+    },
+
+    {
+      name: 'like_inbox_item',
+      description:
+        'Like a comment or message on the platform (an upvote on Reddit, a favourite on Mastodon), where canLike is true. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/like`);
+      },
+    },
+
+    {
+      name: 'unlike_inbox_item',
+      description:
+        'Remove your like from a comment or message on the platform. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/unlike`);
+      },
+    },
+
+    {
+      name: 'pin_inbox_item',
+      description:
+        'Pin your own comment on the platform, where canPin is true. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/pin`);
+      },
+    },
+
+    {
+      name: 'unpin_inbox_item',
+      description: 'Unpin your own comment on the platform. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/unpin`);
+      },
+    },
+
+    {
+      name: 'react_to_inbox_item',
+      description:
+        'React to a DM with an emoji, or pass null to remove your reaction, where canReact is true. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+        reaction: z.string().max(32).nullable().describe('An emoji, or null to remove yours'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/react`, { reaction: input.reaction });
+      },
+    },
+
+    {
+      name: 'start_inbox_conversation',
+      description:
+        'Send a new DM: to a handle from account_id, or as a private reply to an inbox comment by comment_id. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        account_id: z.string().uuid().optional().describe('The account to send from, with handle'),
+        handle: z.string().optional().describe('Who to message'),
+        comment_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe('An inbox comment to answer privately, where canPrivateReply is true'),
+        text: z.string().min(1),
+        media_ids: z.array(z.string()).max(10).optional().describe('Media library ids to attach'),
+      }),
+      async execute(input) {
+        return client.post('/v1/inbox/conversations', input);
+      },
+    },
+
+    {
+      name: 'set_inbox_typing',
+      description:
+        'Show or clear the typing indicator in a DM conversation. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        conversation_id: z.string().describe('DM conversation id'),
+        account_id: z.string().uuid().describe('The account the conversation belongs to'),
+        on: z.boolean().optional().describe('Default true; false clears the indicator'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/conversations/${input.conversation_id}/typing`, {
+          account_id: input.account_id,
+          on: input.on,
+        });
       },
     },
 
