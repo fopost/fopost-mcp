@@ -4,6 +4,7 @@ import { postsTools } from './tools/posts.js';
 import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
+import { contactsTools } from './tools/contacts.js';
 import { adsTools } from './tools/ads.js';
 import type { ToolDefinition } from './types.js';
 
@@ -58,6 +59,28 @@ const TOOL_INPUTS: Record<string, unknown> = {
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
   get_ai_credits: {},
+  list_contacts: { workspace_id: UUID },
+  get_contact: { id: UUID },
+  create_contact: {
+    workspace_id: UUID,
+    channels: [{ platform: 'x', handle: 'ada_writes' }],
+    display_name: 'Ada Okafor',
+  },
+  update_contact: { id: UUID, display_name: 'Ada O.', fields: { plan_tier: 'Pro' } },
+  delete_contact: { id: UUID },
+  list_contact_conversations: { id: UUID },
+  import_contacts: { workspace_id: UUID, csv: 'platform,handle\nx,ada_writes\n' },
+  list_contact_fields: { workspace_id: UUID },
+  create_contact_field: {
+    workspace_id: UUID,
+    key: 'plan_tier',
+    name: 'Plan Tier',
+    type: 'select',
+    options: ['Free', 'Pro'],
+  },
+  update_contact_field: { id: UUID, name: 'Tier' },
+  delete_contact_field: { id: UUID },
+  get_conversation_analytics: { workspace_id: UUID, days: 30, sort: 'slowest' },
   list_inbox: { workspace_id: UUID },
   list_inbox_threads: { workspace_id: UUID, kind: 'mentions' },
   list_inbox_conversations: { workspace_id: UUID },
@@ -193,6 +216,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...accountsTools(client),
     ...aiTools(client),
     ...inboxTools(client),
+    ...contactsTools(client),
     ...adsTools(client),
   ];
 }
@@ -246,6 +270,40 @@ describe('request paths', () => {
     const listWorkspaces = tools.find((t) => t.name === 'list_workspaces')!;
     await listWorkspaces.execute({});
     expect(urls[0]).toBe('https://self.hosted.example/v1/workspaces');
+  });
+});
+
+describe('contacts requests', () => {
+  function run(name: string) {
+    const tool = allTools().find((t) => t.name === name)!;
+    return tool.execute(tool.inputSchema.parse(TOOL_INPUTS[name]));
+  }
+
+  it('sends the contact filters as snake_case query params', async () => {
+    await run('list_contacts');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/contacts');
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+  });
+
+  it('patches a contact rather than replacing it', async () => {
+    await run('update_contact');
+    expect(requests[0].method).toBe('PATCH');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/contacts/${UUID}`);
+    expect(requests[0].body).toEqual({ display_name: 'Ada O.', fields: { plan_tier: 'Pro' } });
+  });
+
+  it('carries the workspace on a field create, which the API reads from the query', async () => {
+    await run('create_contact_field');
+    const url = new URL(requests[0].url);
+    expect(requests[0].method).toBe('POST');
+    expect(url.pathname).toBe('/v1/contacts/fields');
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+  });
+
+  it('reads per-conversation analytics under analytics, not under contacts', async () => {
+    await run('get_conversation_analytics');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/analytics/inbox/conversations');
   });
 });
 

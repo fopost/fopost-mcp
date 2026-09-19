@@ -6,6 +6,14 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- Contacts tools (11): `list_contacts`, `get_contact`, `create_contact`,
+  `update_contact`, `delete_contact`, `list_contact_conversations`,
+  `import_contacts`, plus `list_contact_fields`, `create_contact_field`,
+  `update_contact_field` and `delete_contact_field` for the columns a workspace
+  keeps about a person. All need the `inbox` scope.
+- `get_conversation_analytics`: inbox volume and reply time per thread. Needs
+  the `analytics` scope, and each row's `key` is an opaque handle for the
+  thread rather than the id or handle the inbox groups on.
 - Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the

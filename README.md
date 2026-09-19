@@ -1,6 +1,6 @@
 # @fopost/mcp
 
-MCP server for [FoPost](https://fopost.com): manage social media posts, accounts, AI usage, the inbox, and ads from any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue, etc.).
+MCP server for [FoPost](https://fopost.com): manage social media posts, accounts, AI usage, the inbox, contacts, and ads from any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue, etc.).
 
 Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 
@@ -63,6 +63,18 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `approve_inbox_reply`          | Approve and send a drafted reply                                 |
 | `reject_inbox_reply`           | Reject a drafted reply                                           |
 | `refresh_inbox`                | Poll every inbox-capable account now                             |
+| `list_contacts`                | List the people behind the inbox, most recently active first     |
+| `get_contact`                  | Read one contact                                                 |
+| `create_contact`               | File a person by hand; folds into whoever holds the handle       |
+| `update_contact`               | Change a name, note, channels or custom fields                   |
+| `delete_contact`               | Remove a contact; the messages stay in the inbox                 |
+| `list_contact_conversations`   | The inbox threads one contact appears in                         |
+| `import_contacts`              | Import from CSV text                                             |
+| `list_contact_fields`          | The columns this workspace keeps about a contact                 |
+| `create_contact_field`         | Add a column                                                     |
+| `update_contact_field`         | Rename a field, change its options, or move it                   |
+| `delete_contact_field`         | Remove a field and every answer to it                            |
+| `get_conversation_analytics`   | Inbox volume and reply time per thread (needs `analytics`)       |
 | `list_ads`                     | List boosts and ads created through FoPost                       |
 | `list_external_ads`            | List ads on connected ad accounts made elsewhere                 |
 | `list_boostable_posts`         | List published posts that can be boosted                         |
