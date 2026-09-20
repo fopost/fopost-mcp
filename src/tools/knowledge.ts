@@ -18,13 +18,7 @@ export function knowledgeTools(client: FoPostClient): ToolDefinition[] {
         "Search the workspace's own saved answers, pages and files for passages that answer a question. Use it before drafting a reply that states a fact about the business (prices, policies, hours, how something works). Returns nothing when the knowledge base has no answer; say so rather than filling the gap. Needs the inbox scope.",
       inputSchema: z.object({
         q: z.string().describe('The question, in plain words'),
-        top_k: z
-          .number()
-          .int()
-          .min(1)
-          .max(20)
-          .optional()
-          .describe('How many passages, default 5'),
+        top_k: z.number().int().min(1).max(20).optional().describe('How many passages, default 5'),
         brand_voice_id: z.string().uuid().optional().describe('Narrow to one brand'),
         workspace_id: z.string().uuid().optional(),
       }),
