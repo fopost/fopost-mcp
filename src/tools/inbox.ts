@@ -21,10 +21,10 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'list_inbox',
       description:
-        'List inbox items (comments, mentions, DMs) newest first, with filters and pagination. Needs the inbox scope.',
+        'List inbox items (comments, mentions, reviews, DMs) newest first, with filters and pagination. A review carries a rating of 1 to 5. Needs the inbox scope.',
       inputSchema: z.object({
         ...threadFilters,
-        type: z.enum(['comment', 'mention', 'dm']).optional(),
+        type: z.enum(['comment', 'mention', 'dm', 'review']).optional(),
         post_id: z.string().uuid().optional().describe('Comments under one FoPost post'),
         post_external_id: z
           .string()
@@ -43,10 +43,10 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'list_inbox_threads',
       description:
-        'List comment threads under your posts (kind=comments, default) or posts you were tagged in (kind=mentions). Needs the inbox scope.',
+        'List comment threads under your posts (kind=comments, default), posts you were tagged in (kind=mentions), or reviews left on your business (kind=reviews). Needs the inbox scope.',
       inputSchema: z.object({
         ...threadFilters,
-        kind: z.enum(['comments', 'mentions']).optional(),
+        kind: z.enum(['comments', 'mentions', 'reviews']).optional(),
       }),
       async execute(input) {
         return client.get('/v1/inbox/posts', input);
@@ -91,7 +91,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'reply_to_inbox_item',
       description:
-        'Reply to a comment, mention or DM on the platform as the connected account. A DM reply may attach media_ids and quick_replies, which also need the publish scope. Needs the inbox scope.',
+        'Reply to a comment, mention, review or DM on the platform as the connected account. A DM reply may attach media_ids and quick_replies, which also need the publish scope. Needs the inbox scope.',
       inputSchema: z.object({
         id: z.string().uuid().describe('Inbox item id (uuid)'),
         text: z.string().min(1).optional().describe('Required unless media_ids is given'),
@@ -272,6 +272,29 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         return client.post(`/v1/inbox/conversations/${input.conversation_id}/typing`, {
           account_id: input.account_id,
           on: input.on,
+        });
+      },
+    },
+
+    {
+      name: 'handover_conversation',
+      description:
+        'Pass a Messenger conversation to another Meta app, or take it back when no app_id is given. The other app has to be subscribed to the same Page. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        conversation_id: z.string().describe('DM conversation id'),
+        account_id: z.string().uuid().describe('The account the conversation belongs to'),
+        app_id: z
+          .string()
+          .regex(/^\d{1,32}$/)
+          .optional()
+          .describe('The Meta app to pass control to; omit to take control back'),
+        metadata: z.string().max(1000).optional(),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/conversations/${input.conversation_id}/handover`, {
+          account_id: input.account_id,
+          app_id: input.app_id,
+          metadata: input.metadata,
         });
       },
     },
