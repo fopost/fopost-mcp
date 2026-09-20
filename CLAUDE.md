@@ -29,7 +29,7 @@ that contract changes.
 src/index.ts     stdio server: reads config, builds the tool list, wires ListTools + CallTool
 src/client.ts    FoPostClient (fetch) + FoPostApiError
 src/types.ts     ToolDefinition<S> — name, description, Zod inputSchema, typed execute
-src/tools/       posts.ts (7 tools), accounts.ts (19), ai.ts (4), inbox.ts (22), ads.ts (47) — 99 total
+src/tools/       posts.ts (7 tools), accounts.ts (26), ai.ts (4), inbox.ts (23), ads.ts (47) — 107 total
 src/globals.d.ts declares __PKG_VERSION__, injected by tsup from package.json
 ```
 
