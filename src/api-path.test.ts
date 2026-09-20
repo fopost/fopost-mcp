@@ -5,6 +5,7 @@ import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
 import { contactsTools } from './tools/contacts.js';
+import { broadcastsTools } from './tools/broadcasts.js';
 import { adsTools } from './tools/ads.js';
 import type { ToolDefinition } from './types.js';
 
@@ -71,6 +72,33 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_contact_conversations: { id: UUID },
   import_contacts: { workspace_id: UUID, csv: 'platform,handle\nx,ada_writes\n' },
   list_contact_fields: { workspace_id: UUID },
+  list_broadcasts: { workspace_id: UUID },
+  get_broadcast: { id: UUID },
+  create_broadcast: {
+    workspace_id: UUID,
+    account_id: UUID,
+    name: 'September check-in',
+    text: 'New colours just landed.',
+    audience: { platforms: ['instagram'] },
+  },
+  update_broadcast: { id: UUID, text: 'New colours just landed.' },
+  send_broadcast: { id: UUID },
+  cancel_broadcast: { id: UUID },
+  list_broadcast_recipients: { id: UUID, status: 'skipped' },
+  delete_broadcast: { id: UUID },
+  list_sequences: { workspace_id: UUID },
+  get_sequence: { id: UUID },
+  create_sequence: {
+    workspace_id: UUID,
+    account_id: UUID,
+    name: 'Welcome',
+    steps: [{ delay_hours: 0, text: 'Thanks for the follow' }],
+  },
+  update_sequence: { id: UUID, status: 'paused' },
+  enroll_in_sequence: { id: UUID, contact_ids: [UUID] },
+  unenroll_from_sequence: { id: UUID, contact_ids: [UUID] },
+  list_sequence_enrollments: { id: UUID },
+  delete_sequence: { id: UUID },
   create_contact_field: {
     workspace_id: UUID,
     key: 'plan_tier',
@@ -217,6 +245,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...aiTools(client),
     ...inboxTools(client),
     ...contactsTools(client),
+    ...broadcastsTools(client),
     ...adsTools(client),
   ];
 }

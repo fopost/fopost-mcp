@@ -6,6 +6,21 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- Broadcast tools (8): `list_broadcasts`, `get_broadcast`, `create_broadcast`,
+  `update_broadcast`, `send_broadcast`, `cancel_broadcast`,
+  `list_broadcast_recipients` and `delete_broadcast` — one message into every
+  conversation the workspace already has with a segment of its contacts.
+  Reading needs the `inbox` scope; sending and cancelling also need `publish`.
+- Sequence tools (8): `list_sequences`, `get_sequence`, `create_sequence`,
+  `update_sequence`, `enroll_in_sequence`, `unenroll_from_sequence`,
+  `list_sequence_enrollments` and `delete_sequence` — a series of messages on a
+  delay. Enrolling and unenrolling need `publish`.
+- Both honour each network's messaging window server-side. Messenger and
+  Instagram take a business-initiated message only within 24 hours of the
+  contact's last one, so recipients outside it come back `skipped` with
+  `skip_reason` `window_closed` and nothing is attempted — the number sent is
+  often lower than the audience, and `list_broadcast_recipients` with
+  `status=skipped` says who.
 - Contacts tools (11): `list_contacts`, `get_contact`, `create_contact`,
   `update_contact`, `delete_contact`, `list_contact_conversations`,
   `import_contacts`, plus `list_contact_fields`, `create_contact_field`,
