@@ -37,6 +37,28 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_slack_members`           | List members of a Slack workspace, for DMs                       |
 | `get_slack_identity`           | Show the name and icon a Slack account posts under               |
 | `set_slack_identity`           | Set the name and icon a Slack account posts under                |
+| `get_messaging_setting`        | Read a Meta ice breakers, persistent menu or greeting setting    |
+| `set_ice_breakers`             | Replace the prompts shown before the first message               |
+| `set_persistent_menu`          | Replace the always-visible Messenger menu                        |
+| `set_greeting`                 | Replace the Messenger greeting                                   |
+| `clear_messaging_setting`      | Clear one Meta messaging-profile setting                         |
+| `get_webhook_subscription`     | Check what the network delivers to the FoPost webhook            |
+| `resubscribe_webhook`          | Re-subscribe an account whose webhook lapsed                     |
+| `list_discord_channels`        | List the channels a Discord bot account can post to              |
+| `switch_discord_channel`       | Move a Discord account to another channel in the same server     |
+| `get_discord_identity`         | Show the nickname and avatar the bot wears in the server         |
+| `set_discord_identity`         | Set the nickname and avatar the bot wears in the server          |
+| `list_discord_pins`            | List the pinned messages in the account's channel                |
+| `manage_discord_message`       | Delete, pin, unpin, crosspost a message or start a thread on it  |
+| `send_discord_dm`              | Send one direct message to a member of the server                |
+| `list_discord_events`          | List the server's scheduled events                               |
+| `create_discord_event`         | Add a scheduled event to the server                              |
+| `update_discord_event`         | Change a scheduled event                                         |
+| `delete_discord_event`         | Remove a scheduled event                                         |
+| `list_discord_members`         | List or search the server's members                              |
+| `list_discord_roles`           | List the server's roles                                          |
+| `create_discord_role`          | Add a role to the server                                         |
+| `assign_discord_role`          | Give a member a role, or take one away                           |
 | `generate_caption`             | AI-generate or improve a caption (1 credit)                      |
 | `rewrite_for_platforms`        | Rewrite content per target platform (1 credit each)              |
 | `repurpose_url`                | Turn a blog URL into N platform-optimized posts (6 credits)      |
@@ -59,6 +81,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `react_to_inbox_item`          | React to a DM, or remove your reaction                           |
 | `start_inbox_conversation`     | Send a new DM, or answer a comment privately                     |
 | `set_inbox_typing`             | Show or clear the typing indicator in a DM                       |
+| `handover_conversation`        | Pass a Messenger thread to another Meta app, or take it back     |
 | `list_inbox_approvals`         | List drafted replies waiting for approval                        |
 | `approve_inbox_reply`          | Approve and send a drafted reply                                 |
 | `reject_inbox_reply`           | Reject a drafted reply                                           |
@@ -138,6 +161,12 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_lead_pages`              | List pages subscribed to new leads                               |
 | `subscribe_lead_page`          | Subscribe a page to new leads and backfill                       |
 | `unsubscribe_lead_page`        | Unsubscribe a page from new leads                                |
+| `search_knowledge`             | Find the saved passages that answer a question about the brand   |
+| `list_knowledge_sources`       | List knowledge sources and their sync status                     |
+| `create_knowledge_source`      | Save an FAQ, a note, one of your pages, or a text file           |
+| `update_knowledge_source`      | Edit a source; changing its text re-indexes it                   |
+| `sync_knowledge_source`        | Read a source again — a URL source is re-fetched                 |
+| `delete_knowledge_source`      | Delete a source and its indexed passages                         |
 
 ## Setup
 

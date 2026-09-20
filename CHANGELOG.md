@@ -29,10 +29,32 @@ All notable changes to `@fopost/mcp` are documented here.
 - `get_conversation_analytics`: inbox volume and reply time per thread. Needs
   the `analytics` scope, and each row's `key` is an opaque handle for the
   thread rather than the id or handle the inbox groups on.
+- Meta messaging tools (7): `get_messaging_setting` and `clear_messaging_setting` for ice
+  breakers, the persistent menu or the greeting, plus `set_ice_breakers` (Facebook Pages
+  and Instagram), `set_persistent_menu` and `set_greeting` (Facebook Pages), and
+  `get_webhook_subscription` / `resubscribe_webhook` for an account whose webhook lapsed.
+  All need the `accounts` scope.
+- `handover_conversation` passes a Messenger thread to another Meta app, or takes it back
+  when no `app_id` is given. Needs the `inbox` and `publish` scopes.
+- Knowledge base tools (6): `search_knowledge`, `list_knowledge_sources`,
+  `create_knowledge_source`, `update_knowledge_source`, `sync_knowledge_source`
+  and `delete_knowledge_source`. A source is an FAQ, a note, a URL on your own
+  site or a plain-text/CSV media item; `search_knowledge` returns the passages
+  closest to a question, so a drafted reply quotes the brand's own answer
+  instead of inventing one. All need the `inbox` scope.
+
 - Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the
   `accounts` scope.
+- Discord bot tools (15): `list_discord_channels`, `switch_discord_channel`,
+  `get_discord_identity`, `set_discord_identity`, `list_discord_pins`,
+  `manage_discord_message` (delete, pin, unpin, crosspost, thread), `send_discord_dm`,
+  `list_discord_events`, `create_discord_event`, `update_discord_event`,
+  `delete_discord_event`, `list_discord_members`, `list_discord_roles`,
+  `create_discord_role` and `assign_discord_role`. They need the `accounts` scope,
+  plus `publish` for anything that posts; a Discord connection made with a webhook
+  answers `409 webhook_connection`.
 
 ## 0.5.0
 
