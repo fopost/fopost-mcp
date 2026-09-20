@@ -262,7 +262,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'list_discord_channels',
       description:
-        'List the text channels a connected Discord bot account can post to, and which one it posts to now. A webhook connection answers 409 webhook_connection.',
+        "List a connected Discord server's text channels, which one the account posts to now, and can_post — false when a channel permission in Discord shuts the bot out, so publishing there would fail. A webhook connection answers 409 webhook_connection.",
       inputSchema: z.object({
         account_id: z.string().uuid(),
       }),
@@ -274,7 +274,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'switch_discord_channel',
       description:
-        'Move a connected Discord account to another channel in the same server. The channel must be one list_discord_channels returned.',
+        'Move a connected Discord account to another channel in the same server. The channel must be one list_discord_channels returned with can_post true; otherwise it answers 409 channel_not_writable.',
       inputSchema: z.object({
         account_id: z.string().uuid(),
         channel_id: z.string().min(1).describe('Discord channel id'),

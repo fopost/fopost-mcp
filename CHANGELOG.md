@@ -55,6 +55,8 @@ All notable changes to `@fopost/mcp` are documented here.
   `create_discord_role` and `assign_discord_role`. They need the `accounts` scope,
   plus `publish` for anything that posts; a Discord connection made with a webhook
   answers `409 webhook_connection`.
+- `list_discord_channels` now reports `can_post` per channel, so a channel a Discord
+  permission shuts the bot out of is visible before a publish fails.
 
 ## 0.5.0
 
