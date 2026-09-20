@@ -57,6 +57,14 @@ All notable changes to `@fopost/mcp` are documented here.
   answers `409 webhook_connection`.
 - `list_discord_channels` now reports `can_post` per channel, so a channel a Discord
   permission shuts the bot out of is visible before a publish fails.
+- Google Business Profile tools (19): read and edit a connected location's profile,
+  attributes, food menus, services, photos (from the media library, JPEG or PNG),
+  place action links and verification, plus `get_google_business_performance` for
+  daily impressions, calls and clicks and the monthly search terms. Reads need the
+  `accounts` scope, writes `publish` as well. Every one answers a 503
+  `configuration_error` until Google grants the deployment Business Profile API
+  access. There is deliberately no tool for handing a location to another
+  workspace — this server exposes no move at all.
 
 ## 0.5.0
 
