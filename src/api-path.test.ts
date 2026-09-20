@@ -5,6 +5,7 @@ import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
 import { adsTools } from './tools/ads.js';
+import { activityTools } from './tools/activity.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -180,6 +181,8 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_lead_pages: {},
   subscribe_lead_page: { workspace_id: UUID, connection_id: UUID, page_id: '123' },
   unsubscribe_lead_page: { page_id: '123', workspace_id: UUID, connection_id: UUID },
+  list_activity: { workspace_id: UUID, kind: 'security' },
+  list_audit_events: { workspace_id: UUID },
 };
 
 let urls: string[];
@@ -194,6 +197,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...aiTools(client),
     ...inboxTools(client),
     ...adsTools(client),
+    ...activityTools(client),
   ];
 }
 

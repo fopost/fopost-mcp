@@ -110,6 +110,8 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_lead_pages`              | List pages subscribed to new leads                               |
 | `subscribe_lead_page`          | Subscribe a page to new leads and backfill                       |
 | `unsubscribe_lead_page`        | Unsubscribe a page from new leads                                |
+| `list_activity`                | What happened in a workspace, newest first                       |
+| `list_audit_events`            | The security audit log: who changed access, and when             |
 
 ## Setup
 
