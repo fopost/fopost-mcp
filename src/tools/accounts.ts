@@ -2,6 +2,19 @@ import { z } from 'zod';
 import type { FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
+type MessagingSetting = 'ice_breakers' | 'persistent_menu' | 'greeting';
+
+/** The URL segment each messaging-profile setting lives under. */
+function messagingPath(accountId: string, setting: MessagingSetting): string {
+  const segment =
+    setting === 'ice_breakers'
+      ? 'ice-breakers'
+      : setting === 'persistent_menu'
+        ? 'persistent-menu'
+        : 'greeting';
+  return `/v1/accounts/${accountId}/messaging/${segment}`;
+}
+
 export function accountsTools(client: FoPostClient): ToolDefinition[] {
   return [
     {
@@ -247,6 +260,238 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'list_discord_channels',
+      description:
+        'List the text channels a connected Discord bot account can post to, and which one it posts to now. A webhook connection answers 409 webhook_connection.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/discord/channels`);
+      },
+    },
+
+    {
+      name: 'switch_discord_channel',
+      description:
+        'Move a connected Discord account to another channel in the same server. The channel must be one list_discord_channels returned.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        channel_id: z.string().min(1).describe('Discord channel id'),
+      }),
+      async execute({ account_id, channel_id }) {
+        return client.request('PATCH', `/v1/accounts/${account_id}/discord/channels/current`, {
+          channel_id,
+        });
+      },
+    },
+
+    {
+      name: 'get_discord_identity',
+      description: 'Show the nickname and avatar the bot wears in a connected Discord server.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/discord/identity`);
+      },
+    },
+
+    {
+      name: 'set_discord_identity',
+      description:
+        'Set the nickname and avatar the bot wears in a connected Discord server. Omitted fields stay, null clears one.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        username: z.string().min(1).max(32).nullable().optional(),
+        avatar_url: z.string().url().max(2048).nullable().optional().describe('http(s) image URL'),
+      }),
+      async execute({ account_id, ...body }) {
+        return client.request('PATCH', `/v1/accounts/${account_id}/discord/identity`, body);
+      },
+    },
+
+    {
+      name: 'list_discord_pins',
+      description: "List the pinned messages in a connected Discord account's channel.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/discord/messages/pinned`);
+      },
+    },
+
+    {
+      name: 'manage_discord_message',
+      description:
+        "Act on one message in a connected Discord account's channel: delete it, pin or unpin it, crosspost it from an announcement channel, or start a thread on it. A thread needs thread_name.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        message_id: z.string().min(1).describe('Discord message id'),
+        action: z.enum(['delete', 'pin', 'unpin', 'crosspost', 'thread']),
+        thread_name: z.string().min(1).max(100).optional().describe('Required for action=thread'),
+        auto_archive_duration: z
+          .union([z.literal(60), z.literal(1440), z.literal(4320), z.literal(10080)])
+          .optional()
+          .describe('Minutes of inactivity before a thread archives'),
+      }),
+      async execute({ account_id, message_id, action, thread_name, auto_archive_duration }) {
+        const base = `/v1/accounts/${account_id}/discord/messages/${message_id}`;
+        switch (action) {
+          case 'delete':
+            return client.delete(base);
+          case 'pin':
+            return client.post(`${base}/pin`);
+          case 'unpin':
+            return client.delete(`${base}/pin`);
+          case 'crosspost':
+            return client.post(`${base}/crosspost`);
+          default:
+            return client.post(`${base}/thread`, {
+              name: thread_name,
+              ...(auto_archive_duration ? { auto_archive_duration } : {}),
+            });
+        }
+      },
+    },
+
+    {
+      name: 'send_discord_dm',
+      description:
+        'Send one direct message to a member of a connected Discord server. The member id comes from list_discord_members.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        member_id: z.string().min(1).describe('Discord user id'),
+        content: z.string().min(1).max(2000),
+      }),
+      async execute({ account_id, ...body }) {
+        return client.post(`/v1/accounts/${account_id}/discord/dm`, body);
+      },
+    },
+
+    {
+      name: 'list_discord_events',
+      description: "List the scheduled events on a connected Discord server's calendar.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/discord/events`);
+      },
+    },
+
+    {
+      name: 'create_discord_event',
+      description:
+        'Add a scheduled event to a connected Discord server. Give channel_id for an event in a voice or stage channel, or location with an end_time for one somewhere else.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        name: z.string().min(1).max(100),
+        description: z.string().max(1000).optional(),
+        start_time: z.string().datetime(),
+        end_time: z.string().datetime().optional(),
+        channel_id: z.string().min(1).optional().describe('A voice or stage channel'),
+        location: z.string().min(1).max(100).optional(),
+      }),
+      async execute({ account_id, ...body }) {
+        return client.post(`/v1/accounts/${account_id}/discord/events`, body);
+      },
+    },
+
+    {
+      name: 'update_discord_event',
+      description:
+        'Change a Discord scheduled event. Omitted fields stay as they are; status is scheduled, active, completed or canceled.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        event_id: z.string().min(1).describe('Discord event id'),
+        name: z.string().min(1).max(100).optional(),
+        description: z.string().max(1000).optional(),
+        start_time: z.string().datetime().optional(),
+        end_time: z.string().datetime().optional(),
+        channel_id: z.string().min(1).optional(),
+        location: z.string().min(1).max(100).optional(),
+        status: z.enum(['scheduled', 'active', 'completed', 'canceled']).optional(),
+      }),
+      async execute({ account_id, event_id, ...body }) {
+        return client.request(
+          'PATCH',
+          `/v1/accounts/${account_id}/discord/events/${event_id}`,
+          body,
+        );
+      },
+    },
+
+    {
+      name: 'delete_discord_event',
+      description: 'Remove a scheduled event from a connected Discord server.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        event_id: z.string().min(1).describe('Discord event id'),
+      }),
+      async execute({ account_id, event_id }) {
+        return client.delete(`/v1/accounts/${account_id}/discord/events/${event_id}`);
+      },
+    },
+
+    {
+      name: 'list_discord_members',
+      description:
+        'List or search the members of a connected Discord server. A member id is what send_discord_dm and assign_discord_role take.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        query: z.string().min(1).optional().describe('Search by username or nickname prefix'),
+        limit: z.number().int().min(1).max(1000).optional(),
+      }),
+      async execute({ account_id, query, limit }) {
+        return client.get(`/v1/accounts/${account_id}/discord/members`, { q: query, limit });
+      },
+    },
+
+    {
+      name: 'list_discord_roles',
+      description: 'List the roles on a connected Discord server, highest first.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/discord/roles`);
+      },
+    },
+
+    {
+      name: 'create_discord_role',
+      description: 'Add a role to a connected Discord server.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        name: z.string().min(1).max(100),
+        color: z.number().int().min(0).max(0xffffff).optional().describe('RGB integer'),
+        hoist: z.boolean().optional().describe('Show holders separately in the member list'),
+        mentionable: z.boolean().optional(),
+      }),
+      async execute({ account_id, ...body }) {
+        return client.post(`/v1/accounts/${account_id}/discord/roles`, body);
+      },
+    },
+
+    {
+      name: 'assign_discord_role',
+      description:
+        'Give a member of a connected Discord server a role, or take one away. Role and member ids come from list_discord_roles and list_discord_members.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        role_id: z.string().min(1).describe('Discord role id'),
+        member_id: z.string().min(1).describe('Discord user id'),
+        action: z.enum(['add', 'remove']).default('add'),
+      }),
+      async execute({ account_id, role_id, member_id, action }) {
+        const path = `/v1/accounts/${account_id}/discord/roles/${role_id}/members/${member_id}`;
+        return action === 'add' ? client.put(path) : client.delete(path);
+      },
+    },
+
+    {
       name: 'get_account_health',
       description:
         'Check token freshness and rate-limit headroom for a single account. Useful when posts are failing — tells you if the OAuth token has expired.',
@@ -255,6 +500,138 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get(`/v1/accounts/${input.account_id}/health`);
+      },
+    },
+
+    {
+      name: 'get_messaging_setting',
+      description:
+        'Read one Meta messaging-profile setting for a Facebook Page or Instagram account: ice breakers, the persistent menu, or the greeting. Instagram carries ice breakers only; a network without the setting answers 400.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        setting: z
+          .enum(['ice_breakers', 'persistent_menu', 'greeting'])
+          .describe('Which part of the messaging profile to read'),
+      }),
+      async execute(input) {
+        return client.get(messagingPath(input.account_id, input.setting));
+      },
+    },
+
+    {
+      name: 'set_ice_breakers',
+      description:
+        'Replace the tappable prompts Messenger or Instagram shows before the first message with exactly this list, up to four.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        ice_breakers: z
+          .array(
+            z.object({
+              question: z.string().min(1).max(80),
+              payload: z
+                .string()
+                .min(1)
+                .max(1000)
+                .describe('What your webhook receives when the prompt is tapped'),
+            }),
+          )
+          .min(1)
+          .max(4),
+      }),
+      async execute(input) {
+        return client.put(`/v1/accounts/${input.account_id}/messaging/ice-breakers`, {
+          ice_breakers: input.ice_breakers,
+        });
+      },
+    },
+
+    {
+      name: 'set_persistent_menu',
+      description:
+        'Replace the always-visible Messenger menu with exactly these items, up to three. Facebook Pages only.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        call_to_actions: z
+          .array(
+            z.union([
+              z.object({
+                type: z.literal('postback'),
+                title: z.string().min(1).max(30),
+                payload: z.string().min(1).max(1000),
+              }),
+              z.object({
+                type: z.literal('web_url'),
+                title: z.string().min(1).max(30),
+                url: z.string().url().describe('An http(s) link'),
+              }),
+            ]),
+          )
+          .min(1)
+          .max(3),
+        locale: z
+          .string()
+          .optional()
+          .describe('Defaults to `default`, the menu every language falls back to'),
+      }),
+      async execute(input) {
+        return client.put(`/v1/accounts/${input.account_id}/messaging/persistent-menu`, {
+          persistent_menu: [
+            { locale: input.locale ?? 'default', call_to_actions: input.call_to_actions },
+          ],
+        });
+      },
+    },
+
+    {
+      name: 'set_greeting',
+      description:
+        'Replace the text shown before a Messenger conversation starts. Facebook Pages only.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        text: z.string().min(1).max(160),
+        locale: z.string().optional().describe('Defaults to `default`'),
+      }),
+      async execute(input) {
+        return client.put(`/v1/accounts/${input.account_id}/messaging/greeting`, {
+          greeting: [{ locale: input.locale ?? 'default', text: input.text }],
+        });
+      },
+    },
+
+    {
+      name: 'clear_messaging_setting',
+      description:
+        'Clear one Meta messaging-profile setting: ice breakers, the persistent menu, or the greeting.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        setting: z.enum(['ice_breakers', 'persistent_menu', 'greeting']),
+      }),
+      async execute(input) {
+        return client.delete(messagingPath(input.account_id, input.setting));
+      },
+    },
+
+    {
+      name: 'get_webhook_subscription',
+      description:
+        'Check what the network is delivering to the FoPost webhook for an account. `subscribed` is false when the subscription lapsed or a required field is missing — the usual reason an inbox looks quiet.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/webhook-subscription`);
+      },
+    },
+
+    {
+      name: 'resubscribe_webhook',
+      description:
+        'Re-subscribe the app to every webhook field an account needs, lapsed or not. Use after `get_webhook_subscription` reports it is not subscribed.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.post(`/v1/accounts/${input.account_id}/webhook-subscription`, {});
       },
     },
 

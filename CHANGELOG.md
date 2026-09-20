@@ -6,10 +6,55 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- Broadcast tools (8): `list_broadcasts`, `get_broadcast`, `create_broadcast`,
+  `update_broadcast`, `send_broadcast`, `cancel_broadcast`,
+  `list_broadcast_recipients` and `delete_broadcast` — one message into every
+  conversation the workspace already has with a segment of its contacts.
+  Reading needs the `inbox` scope; sending and cancelling also need `publish`.
+- Sequence tools (8): `list_sequences`, `get_sequence`, `create_sequence`,
+  `update_sequence`, `enroll_in_sequence`, `unenroll_from_sequence`,
+  `list_sequence_enrollments` and `delete_sequence` — a series of messages on a
+  delay. Enrolling and unenrolling need `publish`.
+- Both honour each network's messaging window server-side. Messenger and
+  Instagram take a business-initiated message only within 24 hours of the
+  contact's last one, so recipients outside it come back `skipped` with
+  `skip_reason` `window_closed` and nothing is attempted — the number sent is
+  often lower than the audience, and `list_broadcast_recipients` with
+  `status=skipped` says who.
+- Contacts tools (11): `list_contacts`, `get_contact`, `create_contact`,
+  `update_contact`, `delete_contact`, `list_contact_conversations`,
+  `import_contacts`, plus `list_contact_fields`, `create_contact_field`,
+  `update_contact_field` and `delete_contact_field` for the columns a workspace
+  keeps about a person. All need the `inbox` scope.
+- `get_conversation_analytics`: inbox volume and reply time per thread. Needs
+  the `analytics` scope, and each row's `key` is an opaque handle for the
+  thread rather than the id or handle the inbox groups on.
+- Meta messaging tools (7): `get_messaging_setting` and `clear_messaging_setting` for ice
+  breakers, the persistent menu or the greeting, plus `set_ice_breakers` (Facebook Pages
+  and Instagram), `set_persistent_menu` and `set_greeting` (Facebook Pages), and
+  `get_webhook_subscription` / `resubscribe_webhook` for an account whose webhook lapsed.
+  All need the `accounts` scope.
+- `handover_conversation` passes a Messenger thread to another Meta app, or takes it back
+  when no `app_id` is given. Needs the `inbox` and `publish` scopes.
+- Knowledge base tools (6): `search_knowledge`, `list_knowledge_sources`,
+  `create_knowledge_source`, `update_knowledge_source`, `sync_knowledge_source`
+  and `delete_knowledge_source`. A source is an FAQ, a note, a URL on your own
+  site or a plain-text/CSV media item; `search_knowledge` returns the passages
+  closest to a question, so a drafted reply quotes the brand's own answer
+  instead of inventing one. All need the `inbox` scope.
+
 - Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the
   `accounts` scope.
+- Discord bot tools (15): `list_discord_channels`, `switch_discord_channel`,
+  `get_discord_identity`, `set_discord_identity`, `list_discord_pins`,
+  `manage_discord_message` (delete, pin, unpin, crosspost, thread), `send_discord_dm`,
+  `list_discord_events`, `create_discord_event`, `update_discord_event`,
+  `delete_discord_event`, `list_discord_members`, `list_discord_roles`,
+  `create_discord_role` and `assign_discord_role`. They need the `accounts` scope,
+  plus `publish` for anything that posts; a Discord connection made with a webhook
+  answers `409 webhook_connection`.
 
 ## 0.5.0
 
