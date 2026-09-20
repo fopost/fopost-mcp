@@ -67,6 +67,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_external_ads`            | List ads on connected ad accounts made elsewhere                 |
 | `list_boostable_posts`         | List published posts that can be boosted                         |
 | `list_ad_sources`              | List ad connections, ad accounts and pages                       |
+| `list_ad_networks`             | List the ad networks and what each one supports                  |
 | `boost_post`                   | Boost a published post (starts paused, needs `publish`)          |
 | `create_ad`                    | Create an ad (starts paused, needs `publish`)                    |
 | `set_ad_status`                | Pause or resume an ad (needs `publish`)                          |
@@ -101,6 +102,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `update_audience`              | Rename or redescribe a saved audience                            |
 | `delete_audience`              | Delete a saved audience                                          |
 | `add_audience_users`           | Add customer emails to a custom audience                         |
+| `add_audience_companies`       | Add companies to a company-list audience                         |
 | `estimate_ad_reach`            | Estimate the reach of a targeting                                |
 | `get_ad_object_insights`       | Insights for a campaign, ad set or ad                            |
 | `get_ad_insights`              | Insights for an ad created through FoPost                        |
@@ -110,6 +112,17 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_lead_pages`              | List pages subscribed to new leads                               |
 | `subscribe_lead_page`          | Subscribe a page to new leads and backfill                       |
 | `unsubscribe_lead_page`        | Unsubscribe a page from new leads                                |
+| `get_ad_bid_pricing`           | Quote what an audience costs at auction                          |
+| `get_ad_supply_forecast`       | Forecast what a budget would deliver                             |
+| `list_conversion_rules`        | List the conversion rules on an ad account                       |
+| `create_conversion_rule`       | Create a conversion rule                                         |
+| `get_conversion_rule`          | Read one conversion rule                                         |
+| `update_conversion_rule`       | Change a conversion rule                                         |
+| `delete_conversion_rule`       | Turn a conversion rule off                                       |
+| `set_conversion_rule_ad_set`   | Attach or detach a conversion rule and an ad set                 |
+| `get_conversion_metrics`       | Read what a conversion rule recorded                             |
+| `send_conversion_events`       | Send off-site conversions back to the network                    |
+| `search_ad_library`            | Search the network's own public ad library                       |
 
 ## Setup
 
