@@ -204,6 +204,19 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'vote_inbox_item',
+      description:
+        'Vote a comment or message up or down on a network that ranks by votes (Reddit), where canVote is true. Pass "none" to take an earlier vote back. An upvote is the same call a like makes, so liked moves with it. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+        direction: z.enum(['up', 'down', 'none']),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/vote`, { direction: input.direction });
+      },
+    },
+
+    {
       name: 'pin_inbox_item',
       description:
         'Pin your own comment on the platform, where canPin is true. Needs the inbox and publish scopes.',
