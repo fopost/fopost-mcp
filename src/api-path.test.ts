@@ -5,6 +5,7 @@ import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
 import { adsTools } from './tools/ads.js';
+import { knowledgeTools } from './tools/knowledge.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -220,6 +221,12 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_lead_pages: {},
   subscribe_lead_page: { workspace_id: UUID, connection_id: UUID, page_id: '123' },
   unsubscribe_lead_page: { page_id: '123', workspace_id: UUID, connection_id: UUID },
+  search_knowledge: { q: 'how long do refunds take?', top_k: 3 },
+  list_knowledge_sources: { workspace_id: UUID },
+  create_knowledge_source: { kind: 'faq', title: 'Refunds', content: 'Q: ...\nA: 30 days.' },
+  update_knowledge_source: { id: UUID, title: 'Refunds and returns' },
+  sync_knowledge_source: { id: UUID },
+  delete_knowledge_source: { id: UUID },
 };
 
 let urls: string[];
@@ -234,6 +241,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...aiTools(client),
     ...inboxTools(client),
     ...adsTools(client),
+    ...knowledgeTools(client),
   ];
 }
 
