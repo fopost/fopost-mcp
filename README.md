@@ -110,12 +110,20 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_lead_pages`              | List pages subscribed to new leads                               |
 | `subscribe_lead_page`          | Subscribe a page to new leads and backfill                       |
 | `unsubscribe_lead_page`        | Unsubscribe a page from new leads                                |
+| `list_blogs`                   | List the blogs on a connected WordPress site or Shopify store    |
+| `list_articles`                | List the articles already on a blog, drafts included             |
+| `get_article`                  | Read one article on a connected site in full                     |
+| `create_article`               | Write a new article to a blog on a connected site                |
+| `update_article`               | Change a live article in place, never as a duplicate             |
+| `delete_article`               | Remove an article from a connected site                          |
+| `list_products`                | List a connected store's products                                |
+| `update_product`               | Change a product on a connected store                            |
 
 ## Setup
 
 ### 1. Get an API key
 
-Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`, and liking, pinning, reacting, editing, starting a conversation, the typing indicator, reply media and quick replies, and deleting your own reply also need `publish`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status`, `delete_ad`, `bulk_set_ad_status` and every create, update, delete and duplicate tool for campaigns, ad sets and network ads also need `publish`. A boost, ad, campaign, ad set or copy starts paused unless `paused` is `false`.
+Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`, and liking, pinning, reacting, editing, starting a conversation, the typing indicator, reply media and quick replies, and deleting your own reply also need `publish`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status`, `delete_ad`, `bulk_set_ad_status` and every create, update, delete and duplicate tool for campaigns, ad sets and network ads also need `publish`. A boost, ad, campaign, ad set or copy starts paused unless `paused` is `false`. Blog tools read with `posts`, and `create_article`, `update_article`, `delete_article` and `update_product` also need `publish`, because a change there is visible to the site's own readers.
 
 ### 2. Add to your MCP client
 

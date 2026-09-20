@@ -2,7 +2,7 @@
 /**
  * @fopost/mcp — MCP server that exposes the FoPost REST API as MCP
  * tools so users can manage social media posts, accounts, AI usage,
- * the inbox, and ads
+ * the inbox, ads, and the articles and products on a connected site
  * from any MCP-aware client (Claude Desktop, Cursor, ChatGPT, etc.).
  *
  * Configuration via environment variables:
@@ -22,6 +22,7 @@ import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
 import { adsTools } from './tools/ads.js';
+import { blogsTools } from './tools/blogs.js';
 import type { ToolDefinition } from './types.js';
 
 const DEFAULT_API_URL = 'https://api.fopost.com';
@@ -50,6 +51,7 @@ async function main() {
     ...aiTools(client),
     ...inboxTools(client),
     ...adsTools(client),
+    ...blogsTools(client),
   ];
   const toolMap = new Map(allTools.map((t) => [t.name, t]));
 
