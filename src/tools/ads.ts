@@ -152,6 +152,27 @@ function rangeQuery(input: { since: string; until: string; breakdown?: string; d
   };
 }
 
+/** One upsert or delete in a catalog products batch. */
+const catalogProductWrite = z.object({
+  op: z.enum(['upsert', 'delete']),
+  retailer_id: z.string().describe('Your own key for the product'),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  url: z.string().optional().describe('The product page'),
+  image_url: z.string().optional(),
+  price_minor: z
+    .number()
+    .int()
+    .optional()
+    .describe('Minor units of currency: 12900 with USD is $129.00'),
+  currency: z.string().length(3).optional(),
+  availability: z.string().optional().describe('in stock, out of stock, preorder, …'),
+  condition: z.enum(['new', 'refurbished', 'used']).optional(),
+  brand: z.string().optional(),
+});
+
+type CatalogProductWrite = z.infer<typeof catalogProductWrite>;
+
 const workspaceFilter = z.object({
   workspace_id: z.string().uuid().optional().describe('Restrict to one workspace'),
 });
@@ -1031,34 +1052,13 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       inputSchema: z.object({
         ...metaWrite,
         catalog_id: z.string().describe('From list_ad_catalogs'),
-        products: z
-          .array(
-            z.object({
-              op: z.enum(['upsert', 'delete']),
-              retailer_id: z.string().describe('Your own key for the product'),
-              name: z.string().optional(),
-              description: z.string().optional(),
-              url: z.string().optional().describe('The product page'),
-              image_url: z.string().optional(),
-              price_minor: z
-                .number()
-                .int()
-                .optional()
-                .describe('Minor units of currency: 12900 with USD is $129.00'),
-              currency: z.string().length(3).optional(),
-              availability: z.string().optional().describe('in stock, out of stock, preorder, …'),
-              condition: z.enum(['new', 'refurbished', 'used']).optional(),
-              brand: z.string().optional(),
-            }),
-          )
-          .min(1)
-          .max(500),
+        products: z.array(catalogProductWrite).min(1).max(500),
       }),
       async execute(input) {
         return client.post(`/v1/ads/catalogs/${input.catalog_id}/products`, {
           workspaceId: input.workspace_id,
           connectionId: input.connection_id,
-          products: input.products.map((product) => ({
+          products: input.products.map((product: CatalogProductWrite) => ({
             op: product.op,
             retailerId: product.retailer_id,
             name: product.name,
