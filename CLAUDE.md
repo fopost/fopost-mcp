@@ -68,6 +68,36 @@ first), a one-line `description` the model reads to choose it, a Zod `inputSchem
 (`zodToJsonSchema` publishes it), and an `execute` that calls one client method. Register a new
 tool file in the `allTools` array in `src/index.ts`, and add the row to the README table.
 
+## Claude Code Plugin
+
+The repo doubles as a Claude Code plugin, installed straight from git:
+
+```
+.claude-plugin/plugin.json       name, version, description — the plugin's own version
+.claude-plugin/marketplace.json  the single-plugin marketplace `claude plugin install` reads
+.mcp.json                        the hosted server, `{"type":"http","url":"…/mcp"}`
+skills/<name>/SKILL.md           schedule-a-week, triage-the-inbox, weekly-report
+```
+
+**The plugin installs the hosted server, not this package.** `.mcp.json` points at
+`https://api.fopost.com/mcp`, which authenticates over OAuth (RFC 9728) — there is no
+`FOPOST_API_KEY` in it and there must never be. The stdio server in `src/` is the other way
+to run FoPost and keeps its own setup path in the README.
+
+**The plugin's version is its own.** `.claude-plugin/plugin.json` does not track
+`package.json`; installing the plugin never installs the npm package, so the two move
+apart on purpose. `claude plugin tag` cuts a `fopost--v<version>` git tag when the plugin
+is released.
+
+**Skills name hosted tools, not stdio tools.** The hosted server serves the FoPost Agent's
+tool set (`list_inbox`, `draft_inbox_reply`, `add_to_queue`, `get_analytics_summary`, …),
+which is not the same list as the `src/tools/` table in the README. Check a tool name
+against the hosted server before writing it into a skill.
+
+`src/plugin.test.ts` pins the manifests, the hosted URL and the skill frontmatter.
+`claude plugin validate .` passes; `--strict` warns about the repo's own `CLAUDE.md`
+sitting at the plugin root, which is contributor guidance and stays where it is.
+
 ## Commands
 
 ```bash

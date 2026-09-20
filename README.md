@@ -300,6 +300,27 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `complete_google_business_verification` | Finish it with the PIN Google sent                               |
 | `get_google_business_performance`       | Daily impressions, calls, clicks and search terms                |
 
+## Claude Code plugin
+
+This repo is also a Claude Code plugin. Installing it wires up FoPost's **hosted** MCP server at `https://api.fopost.com/mcp`: no API key to copy, no local process. It also adds three skills for the flows people run every week.
+
+```bash
+claude plugin marketplace add fopost/fopost-mcp
+claude plugin install fopost@fopost
+```
+
+Claude Code opens your browser to sign in the first time a tool runs. Pick the workspace the assistant works in; the connection stays locked to it.
+
+| Skill              | Fires when you ask to                                               |
+| ------------------ | ------------------------------------------------------------------- |
+| `schedule-a-week`  | Fill next week's calendar, draft a batch of posts, top up the queue |
+| `triage-the-inbox` | Triage or clear the inbox, draft replies, find what needs an answer |
+| `weekly-report`    | Summarise the week, recap performance, see what failed              |
+
+The hosted server serves the same tools as the FoPost Agent, and anything that publishes, schedules or sends waits for your approval.
+
+Prefer to run the server yourself? The stdio package below is the same product, driven by an API key.
+
 ## Setup
 
 ### 1. Get an API key

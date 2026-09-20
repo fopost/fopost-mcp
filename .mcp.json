@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fopost": {
+      "type": "http",
+      "url": "https://api.fopost.com/mcp"
+    }
+  }
+}

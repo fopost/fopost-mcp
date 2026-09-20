@@ -65,6 +65,10 @@ All notable changes to `@fopost/mcp` are documented here.
   `configuration_error` until Google grants the deployment Business Profile API
   access. There is deliberately no tool for handing a location to another
   workspace — this server exposes no move at all.
+- Claude Code plugin (`.claude-plugin/`, `.mcp.json`, `skills/`). It installs the
+  **hosted** server at `https://api.fopost.com/mcp`, not this npm package, and
+  ships three skills: `schedule-a-week`, `triage-the-inbox` and `weekly-report`.
+  The plugin carries its own version, independent of `@fopost/mcp`.
 
 ## 0.5.0
 
