@@ -492,6 +492,242 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'list_pinterest_boards',
+      description: 'List the boards a connected Pinterest account can pin to.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/pinterest/boards`);
+      },
+    },
+    {
+      name: 'create_pinterest_board',
+      description:
+        'Create a board on a connected Pinterest account. Pass the returned id as the board_id platform setting to pin to it.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        name: z.string().min(1).max(180),
+        description: z.string().max(500).optional(),
+        privacy: z.enum(['PUBLIC', 'PROTECTED', 'SECRET']).optional(),
+      }),
+      async execute({ account_id, ...body }) {
+        return client.post(`/v1/accounts/${account_id}/pinterest/boards`, body);
+      },
+    },
+    {
+      name: 'list_youtube_playlists',
+      description:
+        "List a connected channel's playlists, with the playlist new videos join by default marked.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/youtube/playlists`);
+      },
+    },
+    {
+      name: 'create_youtube_playlist',
+      description: 'Create a playlist on a connected YouTube channel.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        title: z.string().min(1).max(150),
+        description: z.string().max(5000).optional(),
+        privacy: z.enum(['public', 'unlisted', 'private']).optional(),
+      }),
+      async execute({ account_id, ...body }) {
+        return client.post(`/v1/accounts/${account_id}/youtube/playlists`, body);
+      },
+    },
+    {
+      name: 'set_default_youtube_playlist',
+      description:
+        'Set the playlist a new video joins when a post does not pick one. Pass null to clear it.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        playlist_id: z.string().min(1).max(100).nullable(),
+      }),
+      async execute({ account_id, playlist_id }) {
+        return client.put(`/v1/accounts/${account_id}/youtube/playlists/default`, {
+          playlist_id,
+        });
+      },
+    },
+    {
+      name: 'list_youtube_captions',
+      description: "List the caption tracks on one of a connected channel's videos.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        video_id: z.string().min(1),
+      }),
+      async execute(input) {
+        return client.get(
+          `/v1/accounts/${input.account_id}/youtube/videos/${input.video_id}/captions`,
+        );
+      },
+    },
+    {
+      name: 'upload_youtube_captions',
+      description:
+        'Upload a caption track to a published video. body is the subtitle file itself; YouTube reads SRT and WebVTT and works out which.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        video_id: z.string().min(1),
+        language: z.string().min(2).max(20).describe('BCP-47 tag, e.g. en or pt-BR'),
+        name: z.string().max(150).optional(),
+        body: z.string().min(1),
+        is_draft: z.boolean().optional(),
+      }),
+      async execute({ account_id, video_id, ...body }) {
+        return client.post(`/v1/accounts/${account_id}/youtube/videos/${video_id}/captions`, body);
+      },
+    },
+    {
+      name: 'read_youtube_transcript',
+      description: 'Read one caption track back as text.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        caption_id: z.string().min(1),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/youtube/captions/${input.caption_id}`);
+      },
+    },
+    {
+      name: 'get_bluesky_languages',
+      description:
+        'Show the default post languages for a Bluesky connection. Bluesky filters the feed by language.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/bluesky/languages`);
+      },
+    },
+    {
+      name: 'set_bluesky_languages',
+      description:
+        'Set the default post languages for a Bluesky connection. Up to three BCP-47 tags; an empty list clears them.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        languages: z.array(z.string().min(2).max(20)).max(3),
+      }),
+      async execute({ account_id, languages }) {
+        return client.put(`/v1/accounts/${account_id}/bluesky/languages`, { languages });
+      },
+    },
+    {
+      name: 'get_tiktok_creator_info',
+      description:
+        'Read the switches TikTok enforces at publish time: which privacy levels are open, whether comments, Duet or Stitch are off, and the creator video length cap.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/tiktok/creator-info`);
+      },
+    },
+    {
+      name: 'search_tiktok_music',
+      description:
+        "Search TikTok's Commercial Music Library. Pass a track id as the music_id platform setting on a post.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        q: z.string().min(1),
+        limit: z.number().int().min(1).max(50).optional(),
+      }),
+      async execute({ account_id, ...query }) {
+        return client.get(`/v1/accounts/${account_id}/tiktok/music`, query);
+      },
+    },
+    {
+      name: 'search_tiktok_locations',
+      description:
+        'Search the places a TikTok post can be tagged with. Pass a place id as the location_id platform setting.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        q: z.string().min(1),
+        limit: z.number().int().min(1).max(50).optional(),
+      }),
+      async execute({ account_id, ...query }) {
+        return client.get(`/v1/accounts/${account_id}/tiktok/locations`, query);
+      },
+    },
+    {
+      name: 'lookup_tiktok_video',
+      description:
+        "Resolve a TikTok share link to one of the connected account's own videos, for repurposing. TikTok serves no raw media file, so download_url is the share address.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        url: z.string().url(),
+      }),
+      async execute({ account_id, url }) {
+        return client.post(`/v1/accounts/${account_id}/tiktok/video-download`, { url });
+      },
+    },
+    {
+      name: 'search_instagram_audio',
+      description:
+        'Search the tracks a Reel can carry. With no q Instagram answers with what is trending.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        q: z.string().optional(),
+        audio_type: z.enum(['music', 'original_sound']).optional(),
+      }),
+      async execute({ account_id, ...query }) {
+        return client.get(`/v1/accounts/${account_id}/instagram/audio`, query);
+      },
+    },
+    {
+      name: 'get_instagram_publishing_limit',
+      description:
+        'How many posts are left before Instagram refuses the next one in its rolling window.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/instagram/publishing-limit`);
+      },
+    },
+    {
+      name: 'list_instagram_stories',
+      description:
+        'List the stories still inside their 24 hours, posted through FoPost or not. Asking for insights costs one extra call per story.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        insights: z.boolean().optional(),
+      }),
+      async execute({ account_id, ...query }) {
+        return client.get(`/v1/accounts/${account_id}/instagram/stories`, query);
+      },
+    },
+    {
+      name: 'get_instagram_story_insights',
+      description: 'Read the insight set for one live story.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        story_id: z.string().min(1),
+      }),
+      async execute(input) {
+        return client.get(
+          `/v1/accounts/${input.account_id}/instagram/stories/${input.story_id}/insights`,
+        );
+      },
+    },
+    {
+      name: 'search_linkedin_mentions',
+      description:
+        'Find the organizations a LinkedIn post can mention, and the annotation to paste into the text. People are not searchable: LinkedIn has no public person search.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        q: z.string().min(1),
+      }),
+      async execute({ account_id, ...query }) {
+        return client.get(`/v1/accounts/${account_id}/linkedin/mentions`, query);
+      },
+    },
+
+    {
       name: 'get_account_health',
       description:
         'Check token freshness and rate-limit headroom for a single account. Useful when posts are failing — tells you if the OAuth token has expired.',
