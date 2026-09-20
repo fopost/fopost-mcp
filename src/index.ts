@@ -27,6 +27,7 @@ import { adsTools } from './tools/ads.js';
 import { knowledgeTools } from './tools/knowledge.js';
 import { activityTools } from './tools/activity.js';
 import { googleBusinessTools } from './tools/google-business.js';
+import { googleAdsTools } from './tools/ads-google.js';
 import type { ToolDefinition } from './types.js';
 
 const DEFAULT_API_URL = 'https://api.fopost.com';
@@ -60,6 +61,7 @@ async function main() {
     ...knowledgeTools(client),
     ...activityTools(client),
     ...googleBusinessTools(client),
+    ...googleAdsTools(client),
   ];
   const toolMap = new Map(allTools.map((t) => [t.name, t]));
 

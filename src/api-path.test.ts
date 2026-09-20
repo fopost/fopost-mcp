@@ -10,6 +10,7 @@ import { adsTools } from './tools/ads.js';
 import { knowledgeTools } from './tools/knowledge.js';
 import { activityTools } from './tools/activity.js';
 import { googleBusinessTools } from './tools/google-business.js';
+import { googleAdsTools } from './tools/ads-google.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -212,6 +213,66 @@ const TOOL_INPUTS: Record<string, unknown> = {
   approve_inbox_reply: { id: 7, text: 'hi' },
   reject_inbox_reply: { id: 7 },
   refresh_inbox: { workspace_id: UUID },
+  // Google Ads only: every call names the connection and the Google account.
+  list_google_keywords: {
+    connection_id: UUID,
+    customer_id: '1234567890',
+    ad_group_id: '1234567890~adGroup~77',
+  },
+  create_google_keyword: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    customer_id: '1234567890',
+    ad_group_id: '1234567890~adGroup~77',
+    text: 'running shoes',
+    match_type: 'EXACT',
+  },
+  set_google_keyword_status: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    customer_id: '1234567890',
+    keyword_id: '1234567890~keyword~77~99',
+    status: 'paused',
+  },
+  delete_google_keyword: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    customer_id: '1234567890',
+    keyword_id: '1234567890~keyword~77~99',
+  },
+  google_keyword_ideas: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    customer_id: '1234567890',
+    seeds: ['running shoes'],
+  },
+  list_google_search_terms: {
+    connection_id: UUID,
+    customer_id: '1234567890',
+    since: '2026-09-01',
+    until: '2026-09-20',
+  },
+  list_google_negative_keywords: { connection_id: UUID, customer_id: '1234567890' },
+  list_google_assets: { connection_id: UUID, customer_id: '1234567890' },
+  create_google_asset: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    customer_id: '1234567890',
+    spec: { kind: 'callout', text: 'Free returns' },
+  },
+  list_google_asset_groups: { connection_id: UUID, customer_id: '1234567890' },
+  list_google_local_services_leads: {
+    connection_id: UUID,
+    customer_id: '1234567890',
+    since: '2026-09-01',
+    until: '2026-09-20',
+  },
+  list_google_conversion_actions: { connection_id: UUID, customer_id: '1234567890' },
+  run_google_ads_query: {
+    connection_id: UUID,
+    customer_id: '1234567890',
+    query: 'SELECT campaign.id FROM campaign',
+  },
   list_ads: { workspace_id: UUID },
   list_external_ads: {},
   list_boostable_posts: {},
@@ -369,6 +430,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...knowledgeTools(client),
     ...activityTools(client),
     ...googleBusinessTools(client),
+    ...googleAdsTools(client),
   ];
 }
 
