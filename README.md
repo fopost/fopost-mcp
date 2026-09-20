@@ -20,6 +20,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_post_deliveries`                  | Per-account delivery status for a post                           |
 | `list_accounts`                         | List connected social accounts, optionally by group              |
 | `get_account_health`                    | Check token freshness and rate-limit headroom                    |
+| `get_account_platform_metrics`          | The numbers only an account's own network reports                |
 | `list_workspaces`                       | List workspaces the user can access                              |
 | `rename_account`                        | Set or clear an account's display name                           |
 | `list_account_groups`                   | List account groups and their members                            |

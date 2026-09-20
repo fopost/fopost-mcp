@@ -860,6 +860,20 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'get_account_platform_metrics',
+      description:
+        "The numbers only this account's own network reports, in its own vocabulary rather than the cross-network one: ad-break earnings on a monetised Facebook Page, how viewers left an Instagram story, a YouTube retention curve and daily views, LinkedIn reactions split by type, the search terms behind a Google Business listing. Read from the newest collected snapshot, never fetched live. Each row carries the platform's own metric `key`, a `label`, a `kind` (count, duration_ms, currency_usd, ratio, series) and the `value`.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        // A network whose metric access has not been granted yet answers 503
+        // platform_metrics_unavailable rather than an empty set.
+        return client.get(`/v1/accounts/${input.account_id}/insights`, { raw: 'true' });
+      },
+    },
+
+    {
       name: 'resubscribe_webhook',
       description:
         'Re-subscribe the app to every webhook field an account needs, lapsed or not. Use after `get_webhook_subscription` reports it is not subscribed.',
@@ -868,6 +882,9 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.post(`/v1/accounts/${input.account_id}/webhook-subscription`, {});
+        // A network whose metric access has not been granted yet answers 503
+        // platform_metrics_unavailable rather than an empty set.
+        return client.get(`/v1/accounts/${input.account_id}/insights`, { raw: 'true' });
       },
     },
 
