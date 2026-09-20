@@ -54,6 +54,27 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_slack_members: { account_id: UUID },
   get_slack_identity: { account_id: UUID },
   set_slack_identity: { account_id: UUID, username: 'Launch Bot', icon_url: null },
+  list_discord_channels: { account_id: UUID },
+  switch_discord_channel: { account_id: UUID, channel_id: 'c2' },
+  get_discord_identity: { account_id: UUID },
+  set_discord_identity: { account_id: UUID, username: 'Release Bot', avatar_url: null },
+  list_discord_pins: { account_id: UUID },
+  manage_discord_message: { account_id: UUID, message_id: 'm1', action: 'pin' },
+  send_discord_dm: { account_id: UUID, member_id: 'u7', content: 'hi' },
+  list_discord_events: { account_id: UUID },
+  create_discord_event: {
+    account_id: UUID,
+    name: 'Launch stream',
+    start_time: '2026-10-01T18:00:00.000Z',
+    end_time: '2026-10-01T19:00:00.000Z',
+    location: 'https://example.com/live',
+  },
+  update_discord_event: { account_id: UUID, event_id: 'e1', status: 'canceled' },
+  delete_discord_event: { account_id: UUID, event_id: 'e1' },
+  list_discord_members: { account_id: UUID, query: 'ada' },
+  list_discord_roles: { account_id: UUID },
+  create_discord_role: { account_id: UUID, name: 'Beta' },
+  assign_discord_role: { account_id: UUID, role_id: 'r1', member_id: 'u7', action: 'add' },
   generate_caption: { current_caption: 'hi' },
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
@@ -421,6 +442,63 @@ describe('account group requests', () => {
     await run('schedule_post', { workspace_id: UUID, content: 'hi', account_group_id: UUID });
     expect(requests[0].body).toMatchObject({ account_group_id: UUID });
     expect(requests[0].body).not.toHaveProperty('accounts');
+  });
+
+  it('switches the Discord channel with PATCH', async () => {
+    await run('switch_discord_channel');
+    expect(requests[0].method).toBe('PATCH');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/discord/channels/current`);
+    expect(requests[0].body).toEqual({ channel_id: 'c2' });
+  });
+
+  it('routes each manage_discord_message action to its own request', async () => {
+    await run('manage_discord_message', { account_id: UUID, message_id: 'm1', action: 'pin' });
+    await run('manage_discord_message', { account_id: UUID, message_id: 'm1', action: 'unpin' });
+    await run('manage_discord_message', { account_id: UUID, message_id: 'm1', action: 'delete' });
+    await run('manage_discord_message', {
+      account_id: UUID,
+      message_id: 'm1',
+      action: 'thread',
+      thread_name: 'Launch chat',
+    });
+
+    const base = `/v1/accounts/${UUID}/discord/messages/m1`;
+    expect(requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)).toEqual([
+      `POST ${base}/pin`,
+      `DELETE ${base}/pin`,
+      `DELETE ${base}`,
+      `POST ${base}/thread`,
+    ]);
+    expect(requests[3].body).toEqual({ name: 'Launch chat' });
+  });
+
+  it('sends a Discord event body in snake_case and a member search as q', async () => {
+    await run('create_discord_event');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/discord/events`);
+    expect(requests[0].body).toMatchObject({
+      name: 'Launch stream',
+      start_time: '2026-10-01T18:00:00.000Z',
+      location: 'https://example.com/live',
+    });
+
+    await run('list_discord_members');
+    expect(new URL(requests[1].url).searchParams.get('q')).toBe('ada');
+  });
+
+  it('assigns and unassigns a Discord role on the same path', async () => {
+    await run('assign_discord_role');
+    await run('assign_discord_role', {
+      account_id: UUID,
+      role_id: 'r1',
+      member_id: 'u7',
+      action: 'remove',
+    });
+
+    const path = `/v1/accounts/${UUID}/discord/roles/r1/members/u7`;
+    expect(requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)).toEqual([
+      `PUT ${path}`,
+      `DELETE ${path}`,
+    ]);
   });
 
   it('exposes no tool that moves an account between workspaces', () => {

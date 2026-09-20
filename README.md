@@ -37,6 +37,21 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_slack_members`           | List members of a Slack workspace, for DMs                       |
 | `get_slack_identity`           | Show the name and icon a Slack account posts under               |
 | `set_slack_identity`           | Set the name and icon a Slack account posts under                |
+| `list_discord_channels`        | List the channels a Discord bot account can post to              |
+| `switch_discord_channel`       | Move a Discord account to another channel in the same server     |
+| `get_discord_identity`         | Show the nickname and avatar the bot wears in the server         |
+| `set_discord_identity`         | Set the nickname and avatar the bot wears in the server          |
+| `list_discord_pins`            | List the pinned messages in the account's channel                |
+| `manage_discord_message`       | Delete, pin, unpin, crosspost a message or start a thread on it  |
+| `send_discord_dm`              | Send one direct message to a member of the server                |
+| `list_discord_events`          | List the server's scheduled events                               |
+| `create_discord_event`         | Add a scheduled event to the server                              |
+| `update_discord_event`         | Change a scheduled event                                         |
+| `delete_discord_event`         | Remove a scheduled event                                         |
+| `list_discord_members`         | List or search the server's members                              |
+| `list_discord_roles`           | List the server's roles                                          |
+| `create_discord_role`          | Add a role to the server                                         |
+| `assign_discord_role`          | Give a member a role, or take one away                           |
 | `generate_caption`             | AI-generate or improve a caption (1 credit)                      |
 | `rewrite_for_platforms`        | Rewrite content per target platform (1 credit each)              |
 | `repurpose_url`                | Turn a blog URL into N platform-optimized posts (6 credits)      |
