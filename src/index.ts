@@ -25,6 +25,7 @@ import { contactsTools } from './tools/contacts.js';
 import { broadcastsTools } from './tools/broadcasts.js';
 import { adsTools } from './tools/ads.js';
 import { knowledgeTools } from './tools/knowledge.js';
+import { activityTools } from './tools/activity.js';
 import type { ToolDefinition } from './types.js';
 
 const DEFAULT_API_URL = 'https://api.fopost.com';
@@ -56,6 +57,7 @@ async function main() {
     ...broadcastsTools(client),
     ...adsTools(client),
     ...knowledgeTools(client),
+    ...activityTools(client),
   ];
   const toolMap = new Map(allTools.map((t) => [t.name, t]));
 

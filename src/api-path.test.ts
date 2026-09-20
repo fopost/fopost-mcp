@@ -8,6 +8,7 @@ import { contactsTools } from './tools/contacts.js';
 import { broadcastsTools } from './tools/broadcasts.js';
 import { adsTools } from './tools/ads.js';
 import { knowledgeTools } from './tools/knowledge.js';
+import { activityTools } from './tools/activity.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -308,6 +309,8 @@ const TOOL_INPUTS: Record<string, unknown> = {
   update_knowledge_source: { id: UUID, title: 'Refunds and returns' },
   sync_knowledge_source: { id: UUID },
   delete_knowledge_source: { id: UUID },
+  list_activity: { workspace_id: UUID, kind: 'security' },
+  list_audit_events: { workspace_id: UUID },
 };
 
 let urls: string[];
@@ -325,6 +328,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...broadcastsTools(client),
     ...adsTools(client),
     ...knowledgeTools(client),
+    ...activityTools(client),
   ];
 }
 

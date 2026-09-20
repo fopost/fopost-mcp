@@ -177,6 +177,8 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `update_knowledge_source`      | Edit a source; changing its text re-indexes it                   |
 | `sync_knowledge_source`        | Read a source again — a URL source is re-fetched                 |
 | `delete_knowledge_source`      | Delete a source and its indexed passages                         |
+| `list_activity`                | What happened in a workspace, newest first                       |
+| `list_audit_events`            | The security audit log: who changed access, and when             |
 
 ## Setup
 
