@@ -13,6 +13,13 @@ All notable changes to `@fopost/mcp` are documented here.
   All need the `accounts` scope.
 - `handover_conversation` passes a Messenger thread to another Meta app, or takes it back
   when no `app_id` is given. Needs the `inbox` and `publish` scopes.
+- Knowledge base tools (6): `search_knowledge`, `list_knowledge_sources`,
+  `create_knowledge_source`, `update_knowledge_source`, `sync_knowledge_source`
+  and `delete_knowledge_source`. A source is an FAQ, a note, a URL on your own
+  site or a plain-text/CSV media item; `search_knowledge` returns the passages
+  closest to a question, so a drafted reply quotes the brand's own answer
+  instead of inventing one. All need the `inbox` scope.
+
 - Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the
