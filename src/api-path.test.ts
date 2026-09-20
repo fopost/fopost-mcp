@@ -54,13 +54,26 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_slack_members: { account_id: UUID },
   get_slack_identity: { account_id: UUID },
   set_slack_identity: { account_id: UUID, username: 'Launch Bot', icon_url: null },
+  get_messaging_setting: { account_id: UUID, setting: 'ice_breakers' },
+  set_ice_breakers: {
+    account_id: UUID,
+    ice_breakers: [{ question: 'What are your hours?', payload: 'HOURS' }],
+  },
+  set_persistent_menu: {
+    account_id: UUID,
+    call_to_actions: [{ type: 'postback', title: 'Talk to Us', payload: 'HUMAN' }],
+  },
+  set_greeting: { account_id: UUID, text: 'Hi! Ask us anything.' },
+  clear_messaging_setting: { account_id: UUID, setting: 'greeting' },
+  get_webhook_subscription: { account_id: UUID },
+  resubscribe_webhook: { account_id: UUID },
   list_discord_channels: { account_id: UUID },
-  switch_discord_channel: { account_id: UUID, channel_id: 'c2' },
+  switch_discord_channel: { account_id: UUID, channel_id: '100000000000000002' },
   get_discord_identity: { account_id: UUID },
   set_discord_identity: { account_id: UUID, username: 'Release Bot', avatar_url: null },
   list_discord_pins: { account_id: UUID },
-  manage_discord_message: { account_id: UUID, message_id: 'm1', action: 'pin' },
-  send_discord_dm: { account_id: UUID, member_id: 'u7', content: 'hi' },
+  manage_discord_message: { account_id: UUID, message_id: '100000000000000003', action: 'pin' },
+  send_discord_dm: { account_id: UUID, member_id: '100000000000000004', content: 'hi' },
   list_discord_events: { account_id: UUID },
   create_discord_event: {
     account_id: UUID,
@@ -69,12 +82,17 @@ const TOOL_INPUTS: Record<string, unknown> = {
     end_time: '2026-10-01T19:00:00.000Z',
     location: 'https://example.com/live',
   },
-  update_discord_event: { account_id: UUID, event_id: 'e1', status: 'canceled' },
-  delete_discord_event: { account_id: UUID, event_id: 'e1' },
+  update_discord_event: { account_id: UUID, event_id: '100000000000000005', status: 'canceled' },
+  delete_discord_event: { account_id: UUID, event_id: '100000000000000005' },
   list_discord_members: { account_id: UUID, query: 'ada' },
   list_discord_roles: { account_id: UUID },
   create_discord_role: { account_id: UUID, name: 'Beta' },
-  assign_discord_role: { account_id: UUID, role_id: 'r1', member_id: 'u7', action: 'add' },
+  assign_discord_role: {
+    account_id: UUID,
+    role_id: '100000000000000006',
+    member_id: '100000000000000004',
+    action: 'add',
+  },
   generate_caption: { current_caption: 'hi' },
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
@@ -97,6 +115,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   react_to_inbox_item: { id: UUID, reaction: null },
   start_inbox_conversation: { account_id: UUID, handle: 'someone', text: 'hi' },
   set_inbox_typing: { conversation_id: 'c1', account_id: UUID, on: false },
+  handover_conversation: { conversation_id: 'c1', account_id: UUID, app_id: '263902037430900' },
   list_inbox_approvals: { workspace_id: UUID },
   approve_inbox_reply: { id: 7, text: 'hi' },
   reject_inbox_reply: { id: 7 },
@@ -448,21 +467,33 @@ describe('account group requests', () => {
     await run('switch_discord_channel');
     expect(requests[0].method).toBe('PATCH');
     expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/discord/channels/current`);
-    expect(requests[0].body).toEqual({ channel_id: 'c2' });
+    expect(requests[0].body).toEqual({ channel_id: '100000000000000002' });
   });
 
   it('routes each manage_discord_message action to its own request', async () => {
-    await run('manage_discord_message', { account_id: UUID, message_id: 'm1', action: 'pin' });
-    await run('manage_discord_message', { account_id: UUID, message_id: 'm1', action: 'unpin' });
-    await run('manage_discord_message', { account_id: UUID, message_id: 'm1', action: 'delete' });
     await run('manage_discord_message', {
       account_id: UUID,
-      message_id: 'm1',
+      message_id: '100000000000000003',
+      action: 'pin',
+    });
+    await run('manage_discord_message', {
+      account_id: UUID,
+      message_id: '100000000000000003',
+      action: 'unpin',
+    });
+    await run('manage_discord_message', {
+      account_id: UUID,
+      message_id: '100000000000000003',
+      action: 'delete',
+    });
+    await run('manage_discord_message', {
+      account_id: UUID,
+      message_id: '100000000000000003',
       action: 'thread',
       thread_name: 'Launch chat',
     });
 
-    const base = `/v1/accounts/${UUID}/discord/messages/m1`;
+    const base = `/v1/accounts/${UUID}/discord/messages/100000000000000003`;
     expect(requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)).toEqual([
       `POST ${base}/pin`,
       `DELETE ${base}/pin`,
@@ -489,12 +520,12 @@ describe('account group requests', () => {
     await run('assign_discord_role');
     await run('assign_discord_role', {
       account_id: UUID,
-      role_id: 'r1',
-      member_id: 'u7',
+      role_id: '100000000000000006',
+      member_id: '100000000000000004',
       action: 'remove',
     });
 
-    const path = `/v1/accounts/${UUID}/discord/roles/r1/members/u7`;
+    const path = `/v1/accounts/${UUID}/discord/roles/100000000000000006/members/100000000000000004`;
     expect(requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)).toEqual([
       `PUT ${path}`,
       `DELETE ${path}`,
@@ -533,6 +564,59 @@ describe('telegram requests', () => {
     expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/telegram/commands`);
     expect(requests[0].body).toEqual({ commands: [{ command: 'help', description: 'Show help' }] });
     expect(requests[1].method).toBe('DELETE');
+  });
+
+  it('reads, replaces and clears each messaging setting on its own path', async () => {
+    await run('get_messaging_setting');
+    expect(requests[0].method).toBe('GET');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/messaging/ice-breakers`);
+
+    await run('set_ice_breakers');
+    expect(requests[1].method).toBe('PUT');
+    expect(requests[1].body).toEqual({
+      ice_breakers: [{ question: 'What are your hours?', payload: 'HOURS' }],
+    });
+
+    await run('set_persistent_menu');
+    expect(new URL(requests[2].url).pathname).toBe(
+      `/v1/accounts/${UUID}/messaging/persistent-menu`,
+    );
+    // The tool takes a flat item list and wraps it in the default-locale entry.
+    expect(requests[2].body).toEqual({
+      persistent_menu: [
+        {
+          locale: 'default',
+          call_to_actions: [{ type: 'postback', title: 'Talk to Us', payload: 'HUMAN' }],
+        },
+      ],
+    });
+
+    await run('set_greeting');
+    expect(requests[3].body).toEqual({
+      greeting: [{ locale: 'default', text: 'Hi! Ask us anything.' }],
+    });
+
+    await run('clear_messaging_setting');
+    expect(requests[4].method).toBe('DELETE');
+    expect(new URL(requests[4].url).pathname).toBe(`/v1/accounts/${UUID}/messaging/greeting`);
+  });
+
+  it('reports and re-subscribes the webhook on one path', async () => {
+    await run('get_webhook_subscription');
+    await run('resubscribe_webhook');
+    expect(requests[0].method).toBe('GET');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/webhook-subscription`);
+    expect(requests[1].method).toBe('POST');
+    expect(new URL(requests[1].url).pathname).toBe(`/v1/accounts/${UUID}/webhook-subscription`);
+  });
+
+  it('hands a Messenger thread over, and takes it back without an app id', async () => {
+    await run('handover_conversation');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/inbox/conversations/c1/handover');
+    expect(requests[0].body).toEqual({ account_id: UUID, app_id: '263902037430900' });
+
+    await run('handover_conversation', { conversation_id: 'c1', account_id: UUID });
+    expect(requests[1].body).toEqual({ account_id: UUID });
   });
 
   it('rejects a command with a leading slash', () => {

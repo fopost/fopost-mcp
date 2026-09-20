@@ -6,6 +6,13 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- Meta messaging tools (7): `get_messaging_setting` and `clear_messaging_setting` for ice
+  breakers, the persistent menu or the greeting, plus `set_ice_breakers` (Facebook Pages
+  and Instagram), `set_persistent_menu` and `set_greeting` (Facebook Pages), and
+  `get_webhook_subscription` / `resubscribe_webhook` for an account whose webhook lapsed.
+  All need the `accounts` scope.
+- `handover_conversation` passes a Messenger thread to another Meta app, or takes it back
+  when no `app_id` is given. Needs the `inbox` and `publish` scopes.
 - Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the

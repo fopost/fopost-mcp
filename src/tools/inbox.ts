@@ -277,6 +277,29 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'handover_conversation',
+      description:
+        'Pass a Messenger conversation to another Meta app, or take it back when no app_id is given. The other app has to be subscribed to the same Page. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        conversation_id: z.string().describe('DM conversation id'),
+        account_id: z.string().uuid().describe('The account the conversation belongs to'),
+        app_id: z
+          .string()
+          .regex(/^\d{1,32}$/)
+          .optional()
+          .describe('The Meta app to pass control to; omit to take control back'),
+        metadata: z.string().max(1000).optional(),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/conversations/${input.conversation_id}/handover`, {
+          account_id: input.account_id,
+          app_id: input.app_id,
+          metadata: input.metadata,
+        });
+      },
+    },
+
+    {
       name: 'list_inbox_approvals',
       description:
         'List drafted replies waiting for a person to approve before they are sent. Needs the inbox scope.',
