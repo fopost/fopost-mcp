@@ -9,6 +9,7 @@ import { broadcastsTools } from './tools/broadcasts.js';
 import { adsTools } from './tools/ads.js';
 import { knowledgeTools } from './tools/knowledge.js';
 import { activityTools } from './tools/activity.js';
+import { googleBusinessTools } from './tools/google-business.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -36,6 +37,44 @@ const TOOL_INPUTS: Record<string, unknown> = {
   cancel_post: { id: UUID },
   delete_post: { id: UUID },
   list_post_deliveries: { id: UUID },
+  get_google_business_location: { account_id: UUID },
+  update_google_business_location: { account_id: UUID, title: 'Corner Bakery' },
+  get_google_business_attributes: { account_id: UUID },
+  update_google_business_attributes: {
+    account_id: UUID,
+    attributes: [{ name: 'attributes/has_wifi', values: [true] }],
+  },
+  get_google_business_menus: { account_id: UUID },
+  replace_google_business_menus: { account_id: UUID, menus: [] },
+  get_google_business_services: { account_id: UUID },
+  replace_google_business_services: { account_id: UUID, service_items: [] },
+  list_google_business_media: { account_id: UUID },
+  add_google_business_media: { account_id: UUID, media_id: UUID, category: 'INTERIOR' },
+  delete_google_business_media: { account_id: UUID, media_key: 'CAoSL' },
+  list_google_business_place_actions: { account_id: UUID },
+  create_google_business_place_action: {
+    account_id: UUID,
+    uri: 'https://example.test/book',
+    place_action_type: 'APPOINTMENT',
+  },
+  update_google_business_place_action: {
+    account_id: UUID,
+    link_id: 'links-1',
+    is_preferred: true,
+  },
+  delete_google_business_place_action: { account_id: UUID, link_id: 'links-1' },
+  get_google_business_verification: { account_id: UUID },
+  start_google_business_verification: { account_id: UUID, method: 'SMS' },
+  complete_google_business_verification: {
+    account_id: UUID,
+    verification_name: 'v1',
+    pin: '123456',
+  },
+  get_google_business_performance: {
+    account_id: UUID,
+    start_date: '2026-09-01',
+    end_date: '2026-09-07',
+  },
   list_accounts: { workspace_id: UUID },
   get_account_health: { account_id: UUID },
   list_workspaces: {},
@@ -329,6 +368,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...adsTools(client),
     ...knowledgeTools(client),
     ...activityTools(client),
+    ...googleBusinessTools(client),
   ];
 }
 
@@ -756,5 +796,59 @@ describe('telegram requests', () => {
         commands: [{ command: '/help', description: 'Show help' }],
       }),
     ).toThrow();
+  });
+});
+
+describe('google business requests', () => {
+  function run(name: string, input: unknown = TOOL_INPUTS[name]) {
+    const tool = allTools().find((t) => t.name === name)!;
+    return tool.execute(tool.inputSchema.parse(input));
+  }
+
+  it('reads and patches the location on the same route', async () => {
+    await run('get_google_business_location');
+    await run('update_google_business_location');
+
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/gbp/location`);
+    expect(requests[1].method).toBe('PATCH');
+    expect(requests[1].body).toEqual({ title: 'Corner Bakery' });
+  });
+
+  it('names a photo by its media-library id, never a URL', async () => {
+    await run('add_google_business_media');
+
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/gbp/media`);
+    expect(requests[0].body).toEqual({ media_id: UUID, category: 'INTERIOR' });
+  });
+
+  it('replaces menus and services with PUT, because Google has no partial patch', async () => {
+    await run('replace_google_business_menus');
+    await run('replace_google_business_services');
+
+    expect(requests[0].method).toBe('PUT');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/gbp/menus`);
+    expect(requests[1].method).toBe('PUT');
+    expect(new URL(requests[1].url).pathname).toBe(`/v1/accounts/${UUID}/gbp/services`);
+  });
+
+  it('asks the one performance route for the daily series and the keywords', async () => {
+    await run('get_google_business_performance');
+    await run('get_google_business_performance', {
+      account_id: UUID,
+      start_date: '2026-08-01',
+      end_date: '2026-09-01',
+      keywords: true,
+    });
+
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/gbp/performance`);
+    expect(new URL(requests[1].url).searchParams.get('keywords')).toBe('true');
+  });
+
+  it('exposes no tool that hands a location to another workspace', () => {
+    const names = allTools()
+      .map((t) => t.name)
+      .filter((name) => name.includes('google_business'));
+    expect(names.some((name) => /assign|move|transfer/.test(name))).toBe(false);
   });
 });
