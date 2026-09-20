@@ -54,6 +54,19 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_slack_members: { account_id: UUID },
   get_slack_identity: { account_id: UUID },
   set_slack_identity: { account_id: UUID, username: 'Launch Bot', icon_url: null },
+  get_messaging_setting: { account_id: UUID, setting: 'ice_breakers' },
+  set_ice_breakers: {
+    account_id: UUID,
+    ice_breakers: [{ question: 'What are your hours?', payload: 'HOURS' }],
+  },
+  set_persistent_menu: {
+    account_id: UUID,
+    call_to_actions: [{ type: 'postback', title: 'Talk to Us', payload: 'HUMAN' }],
+  },
+  set_greeting: { account_id: UUID, text: 'Hi! Ask us anything.' },
+  clear_messaging_setting: { account_id: UUID, setting: 'greeting' },
+  get_webhook_subscription: { account_id: UUID },
+  resubscribe_webhook: { account_id: UUID },
   generate_caption: { current_caption: 'hi' },
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
@@ -76,6 +89,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   react_to_inbox_item: { id: UUID, reaction: null },
   start_inbox_conversation: { account_id: UUID, handle: 'someone', text: 'hi' },
   set_inbox_typing: { conversation_id: 'c1', account_id: UUID, on: false },
+  handover_conversation: { conversation_id: 'c1', account_id: UUID, app_id: '263902037430900' },
   list_inbox_approvals: { workspace_id: UUID },
   approve_inbox_reply: { id: 7, text: 'hi' },
   reject_inbox_reply: { id: 7 },
@@ -455,6 +469,59 @@ describe('telegram requests', () => {
     expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/telegram/commands`);
     expect(requests[0].body).toEqual({ commands: [{ command: 'help', description: 'Show help' }] });
     expect(requests[1].method).toBe('DELETE');
+  });
+
+  it('reads, replaces and clears each messaging setting on its own path', async () => {
+    await run('get_messaging_setting');
+    expect(requests[0].method).toBe('GET');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/messaging/ice-breakers`);
+
+    await run('set_ice_breakers');
+    expect(requests[1].method).toBe('PUT');
+    expect(requests[1].body).toEqual({
+      ice_breakers: [{ question: 'What are your hours?', payload: 'HOURS' }],
+    });
+
+    await run('set_persistent_menu');
+    expect(new URL(requests[2].url).pathname).toBe(
+      `/v1/accounts/${UUID}/messaging/persistent-menu`,
+    );
+    // The tool takes a flat item list and wraps it in the default-locale entry.
+    expect(requests[2].body).toEqual({
+      persistent_menu: [
+        {
+          locale: 'default',
+          call_to_actions: [{ type: 'postback', title: 'Talk to Us', payload: 'HUMAN' }],
+        },
+      ],
+    });
+
+    await run('set_greeting');
+    expect(requests[3].body).toEqual({
+      greeting: [{ locale: 'default', text: 'Hi! Ask us anything.' }],
+    });
+
+    await run('clear_messaging_setting');
+    expect(requests[4].method).toBe('DELETE');
+    expect(new URL(requests[4].url).pathname).toBe(`/v1/accounts/${UUID}/messaging/greeting`);
+  });
+
+  it('reports and re-subscribes the webhook on one path', async () => {
+    await run('get_webhook_subscription');
+    await run('resubscribe_webhook');
+    expect(requests[0].method).toBe('GET');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/webhook-subscription`);
+    expect(requests[1].method).toBe('POST');
+    expect(new URL(requests[1].url).pathname).toBe(`/v1/accounts/${UUID}/webhook-subscription`);
+  });
+
+  it('hands a Messenger thread over, and takes it back without an app id', async () => {
+    await run('handover_conversation');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/inbox/conversations/c1/handover');
+    expect(requests[0].body).toEqual({ account_id: UUID, app_id: '263902037430900' });
+
+    await run('handover_conversation', { conversation_id: 'c1', account_id: UUID });
+    expect(requests[1].body).toEqual({ account_id: UUID });
   });
 
   it('rejects a command with a leading slash', () => {

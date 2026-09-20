@@ -2,6 +2,19 @@ import { z } from 'zod';
 import type { FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
+type MessagingSetting = 'ice_breakers' | 'persistent_menu' | 'greeting';
+
+/** The URL segment each messaging-profile setting lives under. */
+function messagingPath(accountId: string, setting: MessagingSetting): string {
+  const segment =
+    setting === 'ice_breakers'
+      ? 'ice-breakers'
+      : setting === 'persistent_menu'
+        ? 'persistent-menu'
+        : 'greeting';
+  return `/v1/accounts/${accountId}/messaging/${segment}`;
+}
+
 export function accountsTools(client: FoPostClient): ToolDefinition[] {
   return [
     {
@@ -255,6 +268,138 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get(`/v1/accounts/${input.account_id}/health`);
+      },
+    },
+
+    {
+      name: 'get_messaging_setting',
+      description:
+        'Read one Meta messaging-profile setting for a Facebook Page or Instagram account: ice breakers, the persistent menu, or the greeting. Instagram carries ice breakers only; a network without the setting answers 400.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        setting: z
+          .enum(['ice_breakers', 'persistent_menu', 'greeting'])
+          .describe('Which part of the messaging profile to read'),
+      }),
+      async execute(input) {
+        return client.get(messagingPath(input.account_id, input.setting));
+      },
+    },
+
+    {
+      name: 'set_ice_breakers',
+      description:
+        'Replace the tappable prompts Messenger or Instagram shows before the first message with exactly this list, up to four.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        ice_breakers: z
+          .array(
+            z.object({
+              question: z.string().min(1).max(80),
+              payload: z
+                .string()
+                .min(1)
+                .max(1000)
+                .describe('What your webhook receives when the prompt is tapped'),
+            }),
+          )
+          .min(1)
+          .max(4),
+      }),
+      async execute(input) {
+        return client.put(`/v1/accounts/${input.account_id}/messaging/ice-breakers`, {
+          ice_breakers: input.ice_breakers,
+        });
+      },
+    },
+
+    {
+      name: 'set_persistent_menu',
+      description:
+        'Replace the always-visible Messenger menu with exactly these items, up to three. Facebook Pages only.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        call_to_actions: z
+          .array(
+            z.union([
+              z.object({
+                type: z.literal('postback'),
+                title: z.string().min(1).max(30),
+                payload: z.string().min(1).max(1000),
+              }),
+              z.object({
+                type: z.literal('web_url'),
+                title: z.string().min(1).max(30),
+                url: z.string().url().describe('An http(s) link'),
+              }),
+            ]),
+          )
+          .min(1)
+          .max(3),
+        locale: z
+          .string()
+          .optional()
+          .describe('Defaults to `default`, the menu every language falls back to'),
+      }),
+      async execute(input) {
+        return client.put(`/v1/accounts/${input.account_id}/messaging/persistent-menu`, {
+          persistent_menu: [
+            { locale: input.locale ?? 'default', call_to_actions: input.call_to_actions },
+          ],
+        });
+      },
+    },
+
+    {
+      name: 'set_greeting',
+      description:
+        'Replace the text shown before a Messenger conversation starts. Facebook Pages only.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        text: z.string().min(1).max(160),
+        locale: z.string().optional().describe('Defaults to `default`'),
+      }),
+      async execute(input) {
+        return client.put(`/v1/accounts/${input.account_id}/messaging/greeting`, {
+          greeting: [{ locale: input.locale ?? 'default', text: input.text }],
+        });
+      },
+    },
+
+    {
+      name: 'clear_messaging_setting',
+      description:
+        'Clear one Meta messaging-profile setting: ice breakers, the persistent menu, or the greeting.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        setting: z.enum(['ice_breakers', 'persistent_menu', 'greeting']),
+      }),
+      async execute(input) {
+        return client.delete(messagingPath(input.account_id, input.setting));
+      },
+    },
+
+    {
+      name: 'get_webhook_subscription',
+      description:
+        'Check what the network is delivering to the FoPost webhook for an account. `subscribed` is false when the subscription lapsed or a required field is missing — the usual reason an inbox looks quiet.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/webhook-subscription`);
+      },
+    },
+
+    {
+      name: 'resubscribe_webhook',
+      description:
+        'Re-subscribe the app to every webhook field an account needs, lapsed or not. Use after `get_webhook_subscription` reports it is not subscribed.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.post(`/v1/accounts/${input.account_id}/webhook-subscription`, {});
       },
     },
 
