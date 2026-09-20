@@ -5,6 +5,7 @@ import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
 import { adsTools } from './tools/ads.js';
+import { analyticsTools } from './tools/analytics.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -80,6 +81,12 @@ const TOOL_INPUTS: Record<string, unknown> = {
   approve_inbox_reply: { id: 7, text: 'hi' },
   reject_inbox_reply: { id: 7 },
   refresh_inbox: { workspace_id: UUID },
+  get_content_decay: { days: 30 },
+  get_posting_frequency: { days: 90 },
+  get_post_timeline: { post: UUID },
+  get_analytics_changes: { since: '2026-03-02T00:00:00Z' },
+  collect_post_analytics: { post: UUID },
+  list_native_posts: { account_id: UUID },
   list_ads: { workspace_id: UUID },
   list_external_ads: {},
   list_boostable_posts: {},
@@ -194,6 +201,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...aiTools(client),
     ...inboxTools(client),
     ...adsTools(client),
+    ...analyticsTools(client),
   ];
 }
 

@@ -110,12 +110,18 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_lead_pages`              | List pages subscribed to new leads                               |
 | `subscribe_lead_page`          | Subscribe a page to new leads and backfill                       |
 | `unsubscribe_lead_page`        | Unsubscribe a page from new leads                                |
+| `get_content_decay`            | How long a post keeps earning, by age band                       |
+| `get_posting_frequency`        | What each weekly posting cadence earned per post                 |
+| `get_post_timeline`            | Every metric reading held for one post, oldest first             |
+| `get_analytics_changes`        | Readings since a cursor, for mirroring metrics elsewhere         |
+| `collect_post_analytics`       | Refresh one post's metrics now                                   |
+| `list_native_posts`            | Posts on an account that never went out through FoPost           |
 
 ## Setup
 
 ### 1. Get an API key
 
-Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`, and liking, pinning, reacting, editing, starting a conversation, the typing indicator, reply media and quick replies, and deleting your own reply also need `publish`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status`, `delete_ad`, `bulk_set_ad_status` and every create, update, delete and duplicate tool for campaigns, ad sets and network ads also need `publish`. A boost, ad, campaign, ad set or copy starts paused unless `paused` is `false`.
+Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`, and liking, pinning, reacting, editing, starting a conversation, the typing indicator, reply media and quick replies, and deleting your own reply also need `publish`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status`, `delete_ad`, `bulk_set_ad_status` and every create, update, delete and duplicate tool for campaigns, ad sets and network ads also need `publish`. A boost, ad, campaign, ad set or copy starts paused unless `paused` is `false`. The analytics tools need `analytics`; `collect_post_analytics` needs `posts` too, and `list_native_posts` needs `accounts`.
 
 ### 2. Add to your MCP client
 
@@ -157,6 +163,10 @@ Self-hosted? Point `FOPOST_API_URL` at your instance.
 > "Take this URL and turn it into a Twitter thread, a LinkedIn post, and a dev.to summary: https://example.com/blog/post"
 
 > "How many AI credits do I have left this period?"
+
+> "How long do my posts keep earning, and what cadence gets the most per post?"
+
+> "Show me the metric readings for this post over time: https://x.com/acme/status/1"
 
 ## Contributing
 
