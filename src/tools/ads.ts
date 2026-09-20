@@ -38,7 +38,18 @@ const adBase = {
   connection_id: z.string().uuid().describe('An ads connection in the workspace'),
   ad_account_id: z.string().describe('Ad account id, `act_…`'),
   name: z.string().min(1).max(255),
-  goal: z.enum(['engagement', 'traffic', 'awareness', 'video_views']),
+  goal: z
+    .enum([
+      'engagement',
+      'traffic',
+      'awareness',
+      'video_views',
+      'messages',
+      'calls',
+      'whatsapp',
+      'sales',
+    ])
+    .describe('Check list_ad_goals first; a goal the deployment cannot run is refused'),
   budget: adBudget,
   targeting: adTargeting,
   paused: z.boolean().optional().describe('Default true; set false to go live at once'),
@@ -950,6 +961,218 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
           undefined,
           metaQuery(input),
         );
+      },
+    },
+    {
+      name: 'list_ad_goals',
+      description:
+        'List the goals this ads connection can run right now. Ask rather than assume: a goal the ' +
+        'deployment is not set up for is absent here and is refused if sent anyway. Needs the ads scope.',
+      inputSchema: z.object(metaRead),
+      async execute(input) {
+        return client.get('/v1/ads/goals', metaQuery(input));
+      },
+    },
+
+    {
+      name: 'list_ad_catalogs',
+      description:
+        'List the product catalogs this connection reaches, read live and never stored. A catalog ' +
+        'ad runs from a product set inside one. Needs the ads scope.',
+      inputSchema: z.object(metaRead),
+      async execute(input) {
+        return client.get('/v1/ads/catalogs', metaQuery(input));
+      },
+    },
+
+    {
+      name: 'create_ad_catalog',
+      description:
+        "Create a product catalog on the connection's business portfolio. Needs the ads and " +
+        'publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        name: z.string().min(1).max(255),
+        vertical: z.string().optional().describe('Catalog vertical; commerce by default'),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/catalogs', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          name: input.name,
+          vertical: input.vertical,
+        });
+      },
+    },
+
+    {
+      name: 'list_catalog_products',
+      description:
+        "List one page of a catalog's products. Pass next_cursor back as after for the next page. " +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        catalog_id: z.string().describe('From list_ad_catalogs'),
+        after: z.string().optional().describe('A next_cursor from a previous page'),
+      }),
+      async execute(input) {
+        return client.get(`/v1/ads/catalogs/${input.catalog_id}/products`, {
+          ...metaQuery(input),
+          after: input.after,
+        });
+      },
+    },
+
+    {
+      name: 'write_catalog_products',
+      description:
+        'Add, replace or remove up to 500 products in one batch, keyed by your own retailer_id. ' +
+        'Upserts and deletes travel together. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        catalog_id: z.string().describe('From list_ad_catalogs'),
+        products: z
+          .array(
+            z.object({
+              op: z.enum(['upsert', 'delete']),
+              retailer_id: z.string().describe('Your own key for the product'),
+              name: z.string().optional(),
+              description: z.string().optional(),
+              url: z.string().optional().describe('The product page'),
+              image_url: z.string().optional(),
+              price_minor: z
+                .number()
+                .int()
+                .optional()
+                .describe('Minor units of currency: 12900 with USD is $129.00'),
+              currency: z.string().length(3).optional(),
+              availability: z.string().optional().describe('in stock, out of stock, preorder, …'),
+              condition: z.enum(['new', 'refurbished', 'used']).optional(),
+              brand: z.string().optional(),
+            }),
+          )
+          .min(1)
+          .max(500),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/catalogs/${input.catalog_id}/products`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          products: input.products.map((product) => ({
+            op: product.op,
+            retailerId: product.retailer_id,
+            name: product.name,
+            description: product.description,
+            url: product.url,
+            imageUrl: product.image_url,
+            priceMinor: product.price_minor,
+            currency: product.currency,
+            availability: product.availability,
+            condition: product.condition,
+            brand: product.brand,
+          })),
+        });
+      },
+    },
+
+    {
+      name: 'list_catalog_product_sets',
+      description:
+        'List the product sets in a catalog. A catalog ad runs from a set, not the whole catalog. ' +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        catalog_id: z.string().describe('From list_ad_catalogs'),
+      }),
+      async execute(input) {
+        return client.get(`/v1/ads/catalogs/${input.catalog_id}/product-sets`, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'create_catalog_product_set',
+      description:
+        'Create a product set in a catalog. Without a filter the set is the whole catalog. Needs ' +
+        'the ads and publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        catalog_id: z.string().describe('From list_ad_catalogs'),
+        name: z.string().min(1).max(255),
+        filter: z.record(z.unknown()).optional().describe("The network's own product-set filter"),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/catalogs/${input.catalog_id}/product-sets`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          name: input.name,
+          filter: input.filter,
+        });
+      },
+    },
+
+    {
+      name: 'list_reach_frequency',
+      description:
+        'List the reach-and-frequency predictions on an ad account. A prediction prices a fixed ' +
+        'flight; nothing is bought until it is reserved. Needs the ads scope.',
+      inputSchema: z.object({ ...metaRead, ad_account_id: z.string().describe('`act_…`') }),
+      async execute(input) {
+        return client.get('/v1/ads/reach-frequency', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+        });
+      },
+    },
+
+    {
+      name: 'search_ad_library',
+      description:
+        'Search the public ad archive for ads anyone is running, by keyword or by page. Read live ' +
+        'on every call and stored nowhere, so an ad that stops running is simply absent from the ' +
+        'next search. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        countries: z
+          .array(z.string().length(2))
+          .min(1)
+          .describe('ISO 3166-1 alpha-2 codes the ad reached'),
+        q: z.string().optional().describe('Keyword or page name; required unless page_ids is set'),
+        page_ids: z.array(z.string()).max(10).optional(),
+        active_status: z.enum(['ACTIVE', 'INACTIVE', 'ALL']).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        after: z.string().optional(),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/library', {
+          ...metaQuery(input),
+          countries: input.countries.join(','),
+          q: input.q,
+          page_ids: input.page_ids?.join(','),
+          active_status: input.active_status,
+          limit: input.limit === undefined ? undefined : String(input.limit),
+          after: input.after,
+        });
+      },
+    },
+
+    {
+      name: 'list_ad_account_activity',
+      description:
+        "Read an ad account's change log: who changed what, and when. Read live and never stored. " +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_account_id: z.string().describe('`act_…`'),
+        since: z.string().optional().describe('YYYY-MM-DD'),
+        until: z.string().optional().describe('YYYY-MM-DD'),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/account/activity', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+          since: input.since,
+          until: input.until,
+        });
       },
     },
   ];

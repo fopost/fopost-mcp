@@ -67,6 +67,16 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_external_ads`            | List ads on connected ad accounts made elsewhere                 |
 | `list_boostable_posts`         | List published posts that can be boosted                         |
 | `list_ad_sources`              | List ad connections, ad accounts and pages                       |
+| `list_ad_goals`                | List the goals this connection can run right now                 |
+| `list_ad_catalogs`             | List product catalogs the connection reaches                     |
+| `create_ad_catalog`            | Create a product catalog (needs `publish`)                       |
+| `list_catalog_products`        | List one page of a catalog's products                            |
+| `write_catalog_products`       | Upsert or delete up to 500 products (needs `publish`)            |
+| `list_catalog_product_sets`    | List the product sets a catalog ad can run from                  |
+| `create_catalog_product_set`   | Create a product set (needs `publish`)                           |
+| `list_reach_frequency`         | List reach-and-frequency predictions on an ad account            |
+| `search_ad_library`            | Search the public ad archive, read live and never stored         |
+| `list_ad_account_activity`     | Read an ad account's change log                                  |
 | `boost_post`                   | Boost a published post (starts paused, needs `publish`)          |
 | `create_ad`                    | Create an ad (starts paused, needs `publish`)                    |
 | `set_ad_status`                | Pause or resume an ad (needs `publish`)                          |
