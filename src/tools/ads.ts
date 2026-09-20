@@ -4,6 +4,18 @@ import type { ToolDefinition } from '../types.js';
 
 const namedItem = z.object({ id: z.string(), name: z.string() });
 
+/** One offline conversion, as `upload_ad_conversions` takes it. */
+const conversionEvent = z.object({
+  event_name: z.string().max(64),
+  occurred_at: z.string().describe('ISO 8601'),
+  email: z.string().email().optional(),
+  phone: z.string().max(32).optional(),
+  value_minor: z.number().int().min(0).optional(),
+  currency: z.string().length(3).optional(),
+  order_id: z.string().max(128).optional(),
+});
+type ConversionEvent = z.infer<typeof conversionEvent>;
+
 const adBudget = z.object({
   minor: z.number().int().positive().describe('Amount in the ad account currency, minor units'),
   type: z.enum(['daily', 'lifetime']),
@@ -216,6 +228,13 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         destination_url: z.string().url().optional(),
         media_url: z.string().optional().describe('A media library asset url'),
         url_tags: urlTags,
+        spark_post_id: z
+          .string()
+          .max(128)
+          .optional()
+          .describe(
+            'A post already live on the network, from list_spark_posts. Runs it as a Spark ad, so text, headline and media_url are ignored.',
+          ),
       }),
       async execute(input) {
         return client.post('/v1/ads', {
@@ -226,6 +245,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
           destinationUrl: input.destination_url,
           mediaUrl: input.media_url,
           urlTags: input.url_tags,
+          sparkPostId: input.spark_post_id,
         });
       },
     },
@@ -317,6 +337,154 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'list_ad_business_centers',
+      description:
+        'List the TikTok Business Centers an ads connection reaches. The one network-named read here, because no other network groups ad accounts this way. Needs the ads scope.',
+      inputSchema: z.object(metaRead),
+      async execute(input) {
+        return client.get('/v1/ads/tiktok/business-centers', metaQuery(input));
+      },
+    },
+
+    {
+      name: 'list_ad_identities',
+      description:
+        'List the TikTok identities an ad can run as on one ad account. An identity id is what every other ads tool calls page_id. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_account_id: z.string().describe('Ad account id'),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/tiktok/identities', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+        });
+      },
+    },
+
+    {
+      name: 'list_spark_posts',
+      description:
+        'List posts already live under an identity, each a candidate Spark ad for create_ad. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_account_id: z.string().describe('Ad account id'),
+        identity_id: z.string().describe('Identity id, from list_ad_identities'),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/spark-posts', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+          identity_id: input.identity_id,
+        });
+      },
+    },
+
+    {
+      name: 'upload_ad_conversions',
+      description:
+        'Send offline conversions against a pixel the ad account owns. Emails and phone numbers are hashed before they leave FoPost. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_account_id: z.string().describe('Ad account id'),
+        pixel_id: z.string().describe('A pixel on that ad account, from list_audiences'),
+        events: z.array(conversionEvent).min(1).max(1000),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/conversions', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adAccountId: input.ad_account_id,
+          pixelId: input.pixel_id,
+          events: input.events.map((event: ConversionEvent) => ({
+            eventName: event.event_name,
+            occurredAt: event.occurred_at,
+            email: event.email,
+            phone: event.phone,
+            valueMinor: event.value_minor,
+            currency: event.currency,
+            orderId: event.order_id,
+          })),
+        });
+      },
+    },
+
+    {
+      name: 'list_ad_comments',
+      description:
+        'Read one page of the comments on an ad, live from the network. Pass next_cursor back as after. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_id: metaId,
+        after: z.string().max(200).optional().describe("The previous page's next_cursor"),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/comments', {
+          ...metaQuery(input),
+          ad_id: input.ad_id,
+          after: input.after,
+        });
+      },
+    },
+
+    {
+      name: 'reply_to_ad_comment',
+      description:
+        "Answer a comment on an ad. The reply is published under the ad's identity. Needs the ads and publish scopes.",
+      inputSchema: z.object({
+        id: metaId.describe('Comment id'),
+        ...metaWrite,
+        ad_id: metaId,
+        text: z.string().min(1).max(500),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/comments/${input.id}/reply`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adId: input.ad_id,
+          text: input.text,
+        });
+      },
+    },
+
+    {
+      name: 'set_ad_comment_hidden',
+      description: 'Hide or show a comment on an ad. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        id: metaId.describe('Comment id'),
+        ...metaWrite,
+        ad_id: metaId,
+        hidden: z.boolean(),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/comments/${input.id}/hide`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adId: input.ad_id,
+          hidden: input.hidden,
+        });
+      },
+    },
+
+    {
+      name: 'delete_ad_comment',
+      description:
+        'Remove a comment from the ad on the network. One already gone succeeds. Cannot be undone. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        id: metaId.describe('Comment id'),
+        ...metaWrite,
+        ad_id: metaId,
+      }),
+      async execute(input) {
+        return client.request('DELETE', `/v1/ads/comments/${input.id}`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adId: input.ad_id,
+        });
+      },
+    },
+
+    {
       name: 'list_lead_forms',
       description: 'List lead forms on the connected pages. Needs the ads scope.',
       inputSchema: workspaceFilter,
@@ -369,6 +537,12 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         name: z.string().min(1).max(255),
         goal: z.enum(['engagement', 'traffic', 'awareness', 'video_views']),
         paused: pausedFlag,
+        smart_plus: z
+          .boolean()
+          .optional()
+          .describe(
+            'Hands targeting and creative rotation to the network. Only where the network reports the smartPlus capability.',
+          ),
       }),
       async execute(input) {
         return client.post('/v1/ads/campaigns', {
@@ -378,6 +552,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
           name: input.name,
           goal: input.goal,
           paused: input.paused,
+          smartPlus: input.smart_plus,
         });
       },
     },
