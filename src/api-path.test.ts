@@ -54,6 +54,11 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_slack_members: { account_id: UUID },
   get_slack_identity: { account_id: UUID },
   set_slack_identity: { account_id: UUID, username: 'Launch Bot', icon_url: null },
+  list_reddit_subreddits: { account_id: UUID },
+  list_reddit_subreddit_rules: { account_id: UUID, subreddit: 'webdev' },
+  list_reddit_flairs: { account_id: UUID, subreddit: 'webdev' },
+  validate_subreddit: { account_id: UUID, name: 'webdev' },
+  set_reddit_default_subreddit: { account_id: UUID, subreddit: null },
   generate_caption: { current_caption: 'hi' },
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
@@ -71,6 +76,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   edit_inbox_comment: { id: UUID, text: 'fixed' },
   like_inbox_item: { id: UUID },
   unlike_inbox_item: { id: UUID },
+  vote_inbox_item: { id: UUID, direction: 'down' },
   pin_inbox_item: { id: UUID },
   unpin_inbox_item: { id: UUID },
   react_to_inbox_item: { id: UUID, reaction: null },
@@ -408,6 +414,31 @@ describe('account group requests', () => {
     expect(requests[0].method).toBe('PATCH');
     expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/slack/identity`);
     expect(requests[0].body).toEqual({ username: 'Launch Bot', icon_url: null });
+  });
+
+  it('sets the default subreddit with PUT and an explicit null', async () => {
+    await run('set_reddit_default_subreddit');
+    expect(requests[0].method).toBe('PUT');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/reddit/default-subreddit`);
+    expect(requests[0].body).toEqual({ subreddit: null });
+  });
+
+  it('reads flairs and checks a subreddit through the query string', async () => {
+    await run('list_reddit_flairs');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/reddit/flairs`);
+    expect(new URL(requests[0].url).searchParams.get('subreddit')).toBe('webdev');
+
+    await run('validate_subreddit');
+    expect(new URL(requests[1].url).pathname).toBe('/v1/validate/subreddit');
+    expect(new URL(requests[1].url).searchParams.get('account_id')).toBe(UUID);
+    expect(new URL(requests[1].url).searchParams.get('name')).toBe('webdev');
+  });
+
+  it('votes with a direction in the body', async () => {
+    await run('vote_inbox_item');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/inbox/${UUID}/vote`);
+    expect(requests[0].body).toEqual({ direction: 'down' });
   });
 
   it('replaces group members with PUT', async () => {

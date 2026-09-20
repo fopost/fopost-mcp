@@ -192,6 +192,83 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'list_reddit_subreddits',
+      description:
+        'List the subreddits a connected Reddit account is in, busiest first, plus its own profile page. canPost is false where it may read but not submit, and isDefault marks where posts go when a post names no subreddit. A 409 reconnect_required means the account has to be reconnected; the same applies to the other Reddit reads.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/reddit/subreddits`);
+      },
+    },
+
+    {
+      name: 'list_reddit_subreddit_rules',
+      description:
+        'List the rules a subreddit publishes, in its own order. Read them before publishing there.',
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        subreddit: z.string().describe('Subreddit name, without the r/ prefix'),
+      }),
+      async execute(input) {
+        return client.get(
+          `/v1/accounts/${input.account_id}/reddit/subreddits/${encodeURIComponent(input.subreddit)}/rules`,
+        );
+      },
+    },
+
+    {
+      name: 'list_reddit_flairs',
+      description:
+        "List the post flairs one subreddit offers. A flair id is valid only in the subreddit it came from: pass it as flair_id in the post's Reddit settings, and preflight rejects an id from anywhere else.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        subreddit: z.string().describe('Subreddit name, without the r/ prefix'),
+      }),
+      async execute(input) {
+        return client.get(`/v1/accounts/${input.account_id}/reddit/flairs`, {
+          subreddit: input.subreddit,
+        });
+      },
+    },
+
+    {
+      name: 'validate_subreddit',
+      description:
+        'Check whether a subreddit exists and takes a post from a connected Reddit account, before creating a post. A private, banned or missing subreddit answers exists: false rather than failing. Nothing is stored.',
+      inputSchema: z.object({
+        account_id: z
+          .string()
+          .uuid()
+          .describe('The Reddit account whose token the check runs with'),
+        name: z.string().describe('Subreddit name, without the r/ prefix'),
+      }),
+      async execute(input) {
+        return client.get('/v1/validate/subreddit', {
+          account_id: input.account_id,
+          name: input.name,
+        });
+      },
+    },
+
+    {
+      name: 'set_reddit_default_subreddit',
+      description:
+        "Set where a Reddit account's posts go when a post names no subreddit. Pass null to fall back to the account's own profile page, which always takes a post.",
+      inputSchema: z.object({
+        account_id: z.string().uuid(),
+        subreddit: z
+          .string()
+          .nullable()
+          .describe('Subreddit name without the r/ prefix, or null for the profile page'),
+      }),
+      async execute({ account_id, subreddit }) {
+        return client.put(`/v1/accounts/${account_id}/reddit/default-subreddit`, { subreddit });
+      },
+    },
+
+    {
       name: 'list_slack_channels',
       description:
         'List the channels a connected Slack account can post to, and which one it posts to now.',

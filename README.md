@@ -37,6 +37,11 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_slack_members`           | List members of a Slack workspace, for DMs                       |
 | `get_slack_identity`           | Show the name and icon a Slack account posts under               |
 | `set_slack_identity`           | Set the name and icon a Slack account posts under                |
+| `list_reddit_subreddits`       | List the subreddits a Reddit account is in                       |
+| `list_reddit_subreddit_rules`  | List a subreddit's rules, to read before publishing              |
+| `list_reddit_flairs`           | List a subreddit's post flairs                                   |
+| `validate_subreddit`           | Check a subreddit exists and takes a post                        |
+| `set_reddit_default_subreddit` | Set where posts go when a post names no subreddit                |
 | `generate_caption`             | AI-generate or improve a caption (1 credit)                      |
 | `rewrite_for_platforms`        | Rewrite content per target platform (1 credit each)              |
 | `repurpose_url`                | Turn a blog URL into N platform-optimized posts (6 credits)      |
@@ -54,6 +59,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `delete_inbox_item`            | Delete a comment, or your own reply, on the platform             |
 | `like_inbox_item`              | Like a comment or message on the platform                        |
 | `unlike_inbox_item`            | Remove your like                                                 |
+| `vote_inbox_item`              | Vote up or down, or take the vote back                           |
 | `pin_inbox_item`               | Pin your own comment                                             |
 | `unpin_inbox_item`             | Unpin your own comment                                           |
 | `react_to_inbox_item`          | React to a DM, or remove your reaction                           |
