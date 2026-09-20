@@ -75,6 +75,18 @@ All notable changes to `@fopost/mcp` are documented here.
   **hosted** server at `https://api.fopost.com/mcp`, not this npm package, and
   ships three skills: `schedule-a-week`, `triage-the-inbox` and `weekly-report`.
   The plugin carries its own version, independent of `@fopost/mcp`.
+- Per-network extras (20), all under the `accounts` scope: Pinterest boards
+  (`list_pinterest_boards`, `create_pinterest_board`), YouTube playlists and
+  captions (`list_youtube_playlists`, `create_youtube_playlist`,
+  `set_default_youtube_playlist`, `list_youtube_captions`,
+  `upload_youtube_captions`, `read_youtube_transcript`), Bluesky post languages
+  (`get_bluesky_languages`, `set_bluesky_languages`), TikTok creator info, music
+  and place search and video lookup (`get_tiktok_creator_info`,
+  `search_tiktok_music`, `search_tiktok_locations`, `lookup_tiktok_video`),
+  Instagram audio, publishing limit and stories (`search_instagram_audio`,
+  `get_instagram_publishing_limit`, `list_instagram_stories`,
+  `get_instagram_story_insights`) and LinkedIn mentions
+  (`search_linkedin_mentions`).
 
 ## 0.5.0
 
