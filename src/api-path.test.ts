@@ -4,7 +4,10 @@ import { postsTools } from './tools/posts.js';
 import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
+import { contactsTools } from './tools/contacts.js';
+import { broadcastsTools } from './tools/broadcasts.js';
 import { adsTools } from './tools/ads.js';
+import { knowledgeTools } from './tools/knowledge.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -54,10 +57,98 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_slack_members: { account_id: UUID },
   get_slack_identity: { account_id: UUID },
   set_slack_identity: { account_id: UUID, username: 'Launch Bot', icon_url: null },
+  get_messaging_setting: { account_id: UUID, setting: 'ice_breakers' },
+  set_ice_breakers: {
+    account_id: UUID,
+    ice_breakers: [{ question: 'What are your hours?', payload: 'HOURS' }],
+  },
+  set_persistent_menu: {
+    account_id: UUID,
+    call_to_actions: [{ type: 'postback', title: 'Talk to Us', payload: 'HUMAN' }],
+  },
+  set_greeting: { account_id: UUID, text: 'Hi! Ask us anything.' },
+  clear_messaging_setting: { account_id: UUID, setting: 'greeting' },
+  get_webhook_subscription: { account_id: UUID },
+  resubscribe_webhook: { account_id: UUID },
+  list_discord_channels: { account_id: UUID },
+  switch_discord_channel: { account_id: UUID, channel_id: '100000000000000002' },
+  get_discord_identity: { account_id: UUID },
+  set_discord_identity: { account_id: UUID, username: 'Release Bot', avatar_url: null },
+  list_discord_pins: { account_id: UUID },
+  manage_discord_message: { account_id: UUID, message_id: '100000000000000003', action: 'pin' },
+  send_discord_dm: { account_id: UUID, member_id: '100000000000000004', content: 'hi' },
+  list_discord_events: { account_id: UUID },
+  create_discord_event: {
+    account_id: UUID,
+    name: 'Launch stream',
+    start_time: '2026-10-01T18:00:00.000Z',
+    end_time: '2026-10-01T19:00:00.000Z',
+    location: 'https://example.com/live',
+  },
+  update_discord_event: { account_id: UUID, event_id: '100000000000000005', status: 'canceled' },
+  delete_discord_event: { account_id: UUID, event_id: '100000000000000005' },
+  list_discord_members: { account_id: UUID, query: 'ada' },
+  list_discord_roles: { account_id: UUID },
+  create_discord_role: { account_id: UUID, name: 'Beta' },
+  assign_discord_role: {
+    account_id: UUID,
+    role_id: '100000000000000006',
+    member_id: '100000000000000004',
+    action: 'add',
+  },
   generate_caption: { current_caption: 'hi' },
   rewrite_for_platforms: { content: 'hi', platforms: ['twitter'] },
   repurpose_url: { url: 'https://example.com', platforms: ['twitter'] },
   get_ai_credits: {},
+  list_contacts: { workspace_id: UUID },
+  get_contact: { id: UUID },
+  create_contact: {
+    workspace_id: UUID,
+    channels: [{ platform: 'x', handle: 'ada_writes' }],
+    display_name: 'Ada Okafor',
+  },
+  update_contact: { id: UUID, display_name: 'Ada O.', fields: { plan_tier: 'Pro' } },
+  delete_contact: { id: UUID },
+  list_contact_conversations: { id: UUID },
+  import_contacts: { workspace_id: UUID, csv: 'platform,handle\nx,ada_writes\n' },
+  list_contact_fields: { workspace_id: UUID },
+  list_broadcasts: { workspace_id: UUID },
+  get_broadcast: { id: UUID },
+  create_broadcast: {
+    workspace_id: UUID,
+    account_id: UUID,
+    name: 'September check-in',
+    text: 'New colours just landed.',
+    audience: { platforms: ['instagram'] },
+  },
+  update_broadcast: { id: UUID, text: 'New colours just landed.' },
+  send_broadcast: { id: UUID },
+  cancel_broadcast: { id: UUID },
+  list_broadcast_recipients: { id: UUID, status: 'skipped' },
+  delete_broadcast: { id: UUID },
+  list_sequences: { workspace_id: UUID },
+  get_sequence: { id: UUID },
+  create_sequence: {
+    workspace_id: UUID,
+    account_id: UUID,
+    name: 'Welcome',
+    steps: [{ delay_hours: 0, text: 'Thanks for the follow' }],
+  },
+  update_sequence: { id: UUID, status: 'paused' },
+  enroll_in_sequence: { id: UUID, contact_ids: [UUID] },
+  unenroll_from_sequence: { id: UUID, contact_ids: [UUID] },
+  list_sequence_enrollments: { id: UUID },
+  delete_sequence: { id: UUID },
+  create_contact_field: {
+    workspace_id: UUID,
+    key: 'plan_tier',
+    name: 'Plan Tier',
+    type: 'select',
+    options: ['Free', 'Pro'],
+  },
+  update_contact_field: { id: UUID, name: 'Tier' },
+  delete_contact_field: { id: UUID },
+  get_conversation_analytics: { workspace_id: UUID, days: 30, sort: 'slowest' },
   list_inbox: { workspace_id: UUID },
   list_inbox_threads: { workspace_id: UUID, kind: 'mentions' },
   list_inbox_conversations: { workspace_id: UUID },
@@ -76,6 +167,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   react_to_inbox_item: { id: UUID, reaction: null },
   start_inbox_conversation: { account_id: UUID, handle: 'someone', text: 'hi' },
   set_inbox_typing: { conversation_id: 'c1', account_id: UUID, on: false },
+  handover_conversation: { conversation_id: 'c1', account_id: UUID, app_id: '263902037430900' },
   list_inbox_approvals: { workspace_id: UUID },
   approve_inbox_reply: { id: 7, text: 'hi' },
   reject_inbox_reply: { id: 7 },
@@ -180,6 +272,12 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_lead_pages: {},
   subscribe_lead_page: { workspace_id: UUID, connection_id: UUID, page_id: '123' },
   unsubscribe_lead_page: { page_id: '123', workspace_id: UUID, connection_id: UUID },
+  search_knowledge: { q: 'how long do refunds take?', top_k: 3 },
+  list_knowledge_sources: { workspace_id: UUID },
+  create_knowledge_source: { kind: 'faq', title: 'Refunds', content: 'Q: ...\nA: 30 days.' },
+  update_knowledge_source: { id: UUID, title: 'Refunds and returns' },
+  sync_knowledge_source: { id: UUID },
+  delete_knowledge_source: { id: UUID },
 };
 
 let urls: string[];
@@ -193,7 +291,10 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...accountsTools(client),
     ...aiTools(client),
     ...inboxTools(client),
+    ...contactsTools(client),
+    ...broadcastsTools(client),
     ...adsTools(client),
+    ...knowledgeTools(client),
   ];
 }
 
@@ -246,6 +347,40 @@ describe('request paths', () => {
     const listWorkspaces = tools.find((t) => t.name === 'list_workspaces')!;
     await listWorkspaces.execute({});
     expect(urls[0]).toBe('https://self.hosted.example/v1/workspaces');
+  });
+});
+
+describe('contacts requests', () => {
+  function run(name: string) {
+    const tool = allTools().find((t) => t.name === name)!;
+    return tool.execute(tool.inputSchema.parse(TOOL_INPUTS[name]));
+  }
+
+  it('sends the contact filters as snake_case query params', async () => {
+    await run('list_contacts');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/contacts');
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+  });
+
+  it('patches a contact rather than replacing it', async () => {
+    await run('update_contact');
+    expect(requests[0].method).toBe('PATCH');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/contacts/${UUID}`);
+    expect(requests[0].body).toEqual({ display_name: 'Ada O.', fields: { plan_tier: 'Pro' } });
+  });
+
+  it('carries the workspace on a field create, which the API reads from the query', async () => {
+    await run('create_contact_field');
+    const url = new URL(requests[0].url);
+    expect(requests[0].method).toBe('POST');
+    expect(url.pathname).toBe('/v1/contacts/fields');
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+  });
+
+  it('reads per-conversation analytics under analytics, not under contacts', async () => {
+    await run('get_conversation_analytics');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/analytics/inbox/conversations');
   });
 });
 
@@ -423,6 +558,75 @@ describe('account group requests', () => {
     expect(requests[0].body).not.toHaveProperty('accounts');
   });
 
+  it('switches the Discord channel with PATCH', async () => {
+    await run('switch_discord_channel');
+    expect(requests[0].method).toBe('PATCH');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/discord/channels/current`);
+    expect(requests[0].body).toEqual({ channel_id: '100000000000000002' });
+  });
+
+  it('routes each manage_discord_message action to its own request', async () => {
+    await run('manage_discord_message', {
+      account_id: UUID,
+      message_id: '100000000000000003',
+      action: 'pin',
+    });
+    await run('manage_discord_message', {
+      account_id: UUID,
+      message_id: '100000000000000003',
+      action: 'unpin',
+    });
+    await run('manage_discord_message', {
+      account_id: UUID,
+      message_id: '100000000000000003',
+      action: 'delete',
+    });
+    await run('manage_discord_message', {
+      account_id: UUID,
+      message_id: '100000000000000003',
+      action: 'thread',
+      thread_name: 'Launch chat',
+    });
+
+    const base = `/v1/accounts/${UUID}/discord/messages/100000000000000003`;
+    expect(requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)).toEqual([
+      `POST ${base}/pin`,
+      `DELETE ${base}/pin`,
+      `DELETE ${base}`,
+      `POST ${base}/thread`,
+    ]);
+    expect(requests[3].body).toEqual({ name: 'Launch chat' });
+  });
+
+  it('sends a Discord event body in snake_case and a member search as q', async () => {
+    await run('create_discord_event');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/discord/events`);
+    expect(requests[0].body).toMatchObject({
+      name: 'Launch stream',
+      start_time: '2026-10-01T18:00:00.000Z',
+      location: 'https://example.com/live',
+    });
+
+    await run('list_discord_members');
+    expect(new URL(requests[1].url).searchParams.get('q')).toBe('ada');
+  });
+
+  it('assigns and unassigns a Discord role on the same path', async () => {
+    await run('assign_discord_role');
+    await run('assign_discord_role', {
+      account_id: UUID,
+      role_id: '100000000000000006',
+      member_id: '100000000000000004',
+      action: 'remove',
+    });
+
+    const path = `/v1/accounts/${UUID}/discord/roles/100000000000000006/members/100000000000000004`;
+    expect(requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)).toEqual([
+      `PUT ${path}`,
+      `DELETE ${path}`,
+    ]);
+  });
+
   it('exposes no tool that moves an account between workspaces', () => {
     expect(allTools().some((t) => /move/.test(t.name))).toBe(false);
   });
@@ -455,6 +659,59 @@ describe('telegram requests', () => {
     expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/telegram/commands`);
     expect(requests[0].body).toEqual({ commands: [{ command: 'help', description: 'Show help' }] });
     expect(requests[1].method).toBe('DELETE');
+  });
+
+  it('reads, replaces and clears each messaging setting on its own path', async () => {
+    await run('get_messaging_setting');
+    expect(requests[0].method).toBe('GET');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/messaging/ice-breakers`);
+
+    await run('set_ice_breakers');
+    expect(requests[1].method).toBe('PUT');
+    expect(requests[1].body).toEqual({
+      ice_breakers: [{ question: 'What are your hours?', payload: 'HOURS' }],
+    });
+
+    await run('set_persistent_menu');
+    expect(new URL(requests[2].url).pathname).toBe(
+      `/v1/accounts/${UUID}/messaging/persistent-menu`,
+    );
+    // The tool takes a flat item list and wraps it in the default-locale entry.
+    expect(requests[2].body).toEqual({
+      persistent_menu: [
+        {
+          locale: 'default',
+          call_to_actions: [{ type: 'postback', title: 'Talk to Us', payload: 'HUMAN' }],
+        },
+      ],
+    });
+
+    await run('set_greeting');
+    expect(requests[3].body).toEqual({
+      greeting: [{ locale: 'default', text: 'Hi! Ask us anything.' }],
+    });
+
+    await run('clear_messaging_setting');
+    expect(requests[4].method).toBe('DELETE');
+    expect(new URL(requests[4].url).pathname).toBe(`/v1/accounts/${UUID}/messaging/greeting`);
+  });
+
+  it('reports and re-subscribes the webhook on one path', async () => {
+    await run('get_webhook_subscription');
+    await run('resubscribe_webhook');
+    expect(requests[0].method).toBe('GET');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/webhook-subscription`);
+    expect(requests[1].method).toBe('POST');
+    expect(new URL(requests[1].url).pathname).toBe(`/v1/accounts/${UUID}/webhook-subscription`);
+  });
+
+  it('hands a Messenger thread over, and takes it back without an app id', async () => {
+    await run('handover_conversation');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/inbox/conversations/c1/handover');
+    expect(requests[0].body).toEqual({ account_id: UUID, app_id: '263902037430900' });
+
+    await run('handover_conversation', { conversation_id: 'c1', account_id: UUID });
+    expect(requests[1].body).toEqual({ account_id: UUID });
   });
 
   it('rejects a command with a leading slash', () => {
