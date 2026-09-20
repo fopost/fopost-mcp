@@ -1,6 +1,6 @@
 # @fopost/mcp
 
-MCP server for [FoPost](https://fopost.com): manage social media posts, accounts, AI usage, the inbox, and ads from any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue, etc.).
+MCP server for [FoPost](https://fopost.com): manage social media posts, accounts, AI usage, the inbox, contacts, broadcasts, and ads from any MCP-aware client (Claude Desktop, Cursor, ChatGPT desktop, Continue, etc.).
 
 Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 
@@ -86,6 +86,34 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `approve_inbox_reply`          | Approve and send a drafted reply                                 |
 | `reject_inbox_reply`           | Reject a drafted reply                                           |
 | `refresh_inbox`                | Poll every inbox-capable account now                             |
+| `list_contacts`                | List the people behind the inbox, most recently active first     |
+| `get_contact`                  | Read one contact                                                 |
+| `create_contact`               | File a person by hand; folds into whoever holds the handle       |
+| `update_contact`               | Change a name, note, channels or custom fields                   |
+| `delete_contact`               | Remove a contact; the messages stay in the inbox                 |
+| `list_contact_conversations`   | The inbox threads one contact appears in                         |
+| `import_contacts`              | Import from CSV text                                             |
+| `list_contact_fields`          | The columns this workspace keeps about a contact                 |
+| `create_contact_field`         | Add a column                                                     |
+| `update_contact_field`         | Rename a field, change its options, or move it                   |
+| `delete_contact_field`         | Remove a field and every answer to it                            |
+| `get_conversation_analytics`   | Inbox volume and reply time per thread (needs `analytics`)       |
+| `list_broadcasts`              | List broadcasts, newest first                                    |
+| `get_broadcast`                | Read one broadcast                                               |
+| `create_broadcast`             | Write one without sending it                                     |
+| `update_broadcast`             | Edit a draft or scheduled broadcast                              |
+| `send_broadcast`               | Send it; closed windows are skipped (needs `publish`)            |
+| `cancel_broadcast`             | Stop it where it stands (needs `publish`)                        |
+| `list_broadcast_recipients`    | Who it reached, who it skipped, and why                          |
+| `delete_broadcast`             | Remove it; sent messages stay in their conversations             |
+| `list_sequences`               | List drip sequences                                              |
+| `get_sequence`                 | Read one sequence and its steps                                  |
+| `create_sequence`              | Write one; creating it enrolls nobody                            |
+| `update_sequence`              | Edit the steps, or pause and resume it                           |
+| `enroll_in_sequence`           | Put contacts on it, by id or audience (needs `publish`)          |
+| `unenroll_from_sequence`       | Take contacts off it (needs `publish`)                           |
+| `list_sequence_enrollments`    | Who is on it and what step they are at                           |
+| `delete_sequence`              | Remove it and every enrollment on it                             |
 | `list_ads`                     | List boosts and ads created through FoPost                       |
 | `list_external_ads`            | List ads on connected ad accounts made elsewhere                 |
 | `list_boostable_posts`         | List published posts that can be boosted                         |
