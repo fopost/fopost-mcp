@@ -6,6 +6,14 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- WhatsApp Business tools (9): `get_whatsapp_profile`, `update_whatsapp_profile`,
+  `list_whatsapp_templates`, `get_whatsapp_template_library`,
+  `create_whatsapp_template` (from scratch or from a library entry),
+  `list_whatsapp_flows`, `get_whatsapp_flow_responses`, `list_whatsapp_groups` and
+  `get_whatsapp_account_state`. The platform owns these resources, so every tool is
+  a live read or write and all of them answer 503 until WhatsApp is set up. They
+  need the `accounts` scope.
+
 - Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the

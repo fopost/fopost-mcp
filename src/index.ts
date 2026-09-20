@@ -22,6 +22,7 @@ import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
 import { adsTools } from './tools/ads.js';
+import { whatsappTools } from './tools/whatsapp.js';
 import type { ToolDefinition } from './types.js';
 
 const DEFAULT_API_URL = 'https://api.fopost.com';
@@ -50,6 +51,7 @@ async function main() {
     ...aiTools(client),
     ...inboxTools(client),
     ...adsTools(client),
+    ...whatsappTools(client),
   ];
   const toolMap = new Map(allTools.map((t) => [t.name, t]));
 
