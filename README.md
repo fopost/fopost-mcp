@@ -172,3 +172,16 @@ npm run build    # tsup -> dist/
 ## License
 
 MIT
+
+### Google Ads
+
+The shared ads tools work across networks. What only Google has is its own set:
+`list_google_keywords`, `create_google_keyword`, `set_google_keyword_status`,
+`delete_google_keyword`, `google_keyword_ideas`, `list_google_search_terms`,
+`list_google_negative_keywords`, `list_google_assets`, `create_google_asset`,
+`list_google_asset_groups`, `list_google_local_services_leads`,
+`list_google_conversion_actions`, and `run_google_ads_query` for a raw read-only GAQL
+SELECT.
+
+Each names `connection_id` and `customer_id`; the customer has to be an account the
+connection's grant reaches. Changes need the `publish` scope as well as `ads`.

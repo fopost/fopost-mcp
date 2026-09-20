@@ -6,6 +6,12 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- Google Ads tools: keywords and keyword ideas, search terms, negative keyword lists,
+  assets, Performance Max asset groups, Local Services leads, conversion actions, and
+  `run_google_ads_query` for a raw GAQL read.
+
+### Added
+
 - Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the
