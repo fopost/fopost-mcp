@@ -17,6 +17,14 @@ All notable changes to `@fopost/mcp` are documented here.
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the
   `accounts` scope.
+- Discord bot tools (15): `list_discord_channels`, `switch_discord_channel`,
+  `get_discord_identity`, `set_discord_identity`, `list_discord_pins`,
+  `manage_discord_message` (delete, pin, unpin, crosspost, thread), `send_discord_dm`,
+  `list_discord_events`, `create_discord_event`, `update_discord_event`,
+  `delete_discord_event`, `list_discord_members`, `list_discord_roles`,
+  `create_discord_role` and `assign_discord_role`. They need the `accounts` scope,
+  plus `publish` for anything that posts; a Discord connection made with a webhook
+  answers `409 webhook_connection`.
 
 ## 0.5.0
 
