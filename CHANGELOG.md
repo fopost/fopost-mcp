@@ -46,6 +46,7 @@ All notable changes to `@fopost/mcp` are documented here.
 - Google Ads tools: keywords and keyword ideas, search terms, negative keyword lists,
   assets, Performance Max asset groups, Local Services leads, conversion actions, and
   `run_google_ads_query` for a raw GAQL read.
+- `snapchat` is accepted wherever a platform is named.
 
 ### Added
 
