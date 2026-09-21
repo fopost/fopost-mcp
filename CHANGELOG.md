@@ -87,6 +87,10 @@ All notable changes to `@fopost/mcp` are documented here.
   `get_instagram_publishing_limit`, `list_instagram_stories`,
   `get_instagram_story_insights`) and LinkedIn mentions
   (`search_linkedin_mentions`).
+- `get_account_platform_metrics` reads the numbers only an account's own network reports,
+  keyed by the platform's own metric names — ad-break earnings, story taps, a retention
+  curve, the search terms behind a listing. Needs the `analytics` scope; a network whose
+  metric access has not been granted yet answers `503 platform_metrics_unavailable`.
 
 ## 0.5.0
 

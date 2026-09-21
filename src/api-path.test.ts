@@ -78,6 +78,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   },
   list_accounts: { workspace_id: UUID },
   get_account_health: { account_id: UUID },
+  get_account_platform_metrics: { account_id: UUID },
   list_workspaces: {},
   rename_account: { account_id: UUID, display_name: null },
   list_account_groups: { workspace_id: UUID },
@@ -934,5 +935,17 @@ describe('google business requests', () => {
       .map((t) => t.name)
       .filter((name) => name.includes('google_business'));
     expect(names.some((name) => /assign|move|transfer/.test(name))).toBe(false);
+  });
+});
+
+describe('per-network metrics', () => {
+  it('asks the insights route for the raw set', async () => {
+    const tool = allTools().find((t) => t.name === 'get_account_platform_metrics')!;
+    await tool.execute(tool.inputSchema.parse({ account_id: UUID }));
+
+    const url = new URL(requests[0].url);
+    expect(requests[0].method).toBe('GET');
+    expect(url.pathname).toBe(`/v1/accounts/${UUID}/insights`);
+    expect(url.searchParams.get('raw')).toBe('true');
   });
 });
