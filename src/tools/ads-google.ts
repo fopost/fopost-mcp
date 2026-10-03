@@ -4,8 +4,9 @@ import type { ToolDefinition } from '../types.js';
 
 /**
  * Google Ads only. Campaigns, ad groups, ads, audiences and insights are on the
- * shared ads tools and dispatch by connection; what is here — keywords, assets,
- * Performance Max asset groups, Local Services leads, conversions and raw GAQL —
+ * shared ads tools and dispatch by connection; what is here — recommendations,
+ * the optimization score, keywords, assets, Performance Max asset groups,
+ * Local Services leads, conversions and raw GAQL —
  * has no equivalent on another network, and a connection on one answers 400.
  */
 
@@ -56,6 +57,77 @@ const body = (input: WriteScope) => ({
 
 export function googleAdsTools(client: FoPostClient): ToolDefinition[] {
   return [
+    {
+      name: 'list_google_recommendations',
+      description:
+        "Google's own suggestions for what to change next on a Google Ads account, with the " +
+        'clicks, conversions and spend each one is projected to move. Google Ads only. ' +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...readScope,
+        types: z
+          .array(z.string().regex(/^[A-Z_]{1,60}$/))
+          .optional()
+          .describe('Limit to these recommendation types, e.g. ["KEYWORD", "TARGET_CPA_OPT_IN"]'),
+      }),
+      async execute(input) {
+        return client.get(
+          '/v1/ads/google/recommendations',
+          query(input, { types: input.types?.length ? input.types.join(',') : undefined }),
+        );
+      },
+    },
+
+    {
+      name: 'get_google_optimization_score',
+      description:
+        "Google's estimate of how well a Google Ads account is set up, from 0 to 1, with each " +
+        "live campaign's score. Google Ads only. Needs the ads scope.",
+      inputSchema: z.object({ ...readScope }),
+      async execute(input) {
+        return client.get('/v1/ads/google/optimization-score', query(input));
+      },
+    },
+
+    {
+      name: 'apply_google_recommendations',
+      description:
+        'Apply Google Ads recommendations. This changes what the live account serves or bids ' +
+        'straight away, so it needs the ads and publish scopes. Each id has to name a ' +
+        'recommendation on this customer.',
+      inputSchema: z.object({
+        ...writeScope,
+        ids: z
+          .array(z.string())
+          .min(1)
+          .max(100)
+          .describe('Recommendation ids, as list_google_recommendations returns them'),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/google/recommendations/apply', {
+          ...body(input),
+          ids: input.ids,
+        });
+      },
+    },
+
+    {
+      name: 'dismiss_google_recommendations',
+      description:
+        'Hide Google Ads recommendations so Google stops surfacing them. Nothing the account ' +
+        'serves changes. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        ...writeScope,
+        ids: z.array(z.string()).min(1).max(100).describe('Recommendation ids'),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/google/recommendations/dismiss', {
+          ...body(input),
+          ids: input.ids,
+        });
+      },
+    },
+
     {
       name: 'list_google_keywords',
       description:
