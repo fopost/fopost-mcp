@@ -442,6 +442,18 @@ Prefer to run the server yourself? The stdio package below is the same product, 
 | `list_lead_pages`                | List pages subscribed to new leads                               |
 | `subscribe_lead_page`            | Subscribe a page to new leads and backfill                       |
 | `unsubscribe_lead_page`          | Unsubscribe a page from new leads                                |
+| `list_ad_networks`               | List the ad networks and what each one supports                  |
+| `add_audience_companies`         | Add companies to a company-list audience                         |
+| `get_ad_bid_pricing`             | Quote what an audience costs at auction                          |
+| `get_ad_supply_forecast`         | Forecast what a budget would deliver                             |
+| `list_conversion_rules`          | List the conversion rules on an ad account                       |
+| `create_conversion_rule`         | Create a conversion rule                                         |
+| `get_conversion_rule`            | Read one conversion rule                                         |
+| `update_conversion_rule`         | Change a conversion rule                                         |
+| `delete_conversion_rule`         | Turn a conversion rule off                                       |
+| `set_conversion_rule_ad_set`     | Attach or detach a conversion rule and an ad set                 |
+| `get_conversion_metrics`         | Read what a conversion rule recorded                             |
+| `send_conversion_events`         | Send off-site conversions back to the network                    |
 
 ## Setup
 
