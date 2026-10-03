@@ -508,6 +508,8 @@ MIT
 ### Google Ads
 
 The shared ads tools work across networks. What only Google has is its own set:
+`list_google_recommendations`, `get_google_optimization_score`,
+`apply_google_recommendations`, `dismiss_google_recommendations`,
 `list_google_keywords`, `create_google_keyword`, `set_google_keyword_status`,
 `delete_google_keyword`, `google_keyword_ideas`, `list_google_search_terms`,
 `list_google_negative_keywords`, `list_google_assets`, `create_google_asset`,
@@ -517,3 +519,5 @@ SELECT.
 
 Each names `connection_id` and `customer_id`; the customer has to be an account the
 connection's grant reaches. Changes need the `publish` scope as well as `ads`.
+Applying a recommendation changes what the live account serves or bids straight
+away; dismissing one only hides it.

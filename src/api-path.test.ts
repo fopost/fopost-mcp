@@ -237,6 +237,27 @@ const TOOL_INPUTS: Record<string, unknown> = {
   reject_inbox_reply: { id: 7 },
   refresh_inbox: { workspace_id: UUID },
   // Google Ads only: every call names the connection and the Google account.
+  list_google_recommendations: {
+    connection_id: UUID,
+    customer_id: '1234567890',
+    types: ['KEYWORD'],
+  },
+  get_google_optimization_score: {
+    connection_id: UUID,
+    customer_id: '1234567890',
+  },
+  apply_google_recommendations: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    customer_id: '1234567890',
+    ids: ['customers/1234567890/recommendations/ABC~1'],
+  },
+  dismiss_google_recommendations: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    customer_id: '1234567890',
+    ids: ['customers/1234567890/recommendations/ABC~1'],
+  },
   list_google_keywords: {
     connection_id: UUID,
     customer_id: '1234567890',
