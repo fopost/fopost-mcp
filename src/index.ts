@@ -2,7 +2,7 @@
 /**
  * @fopost/mcp — MCP server that exposes the FoPost REST API as MCP
  * tools so users can manage social media posts, accounts, AI usage,
- * the inbox, and ads
+ * the inbox, contacts, broadcasts, and ads
  * from any MCP-aware client (Claude Desktop, Cursor, ChatGPT, etc.).
  *
  * Configuration via environment variables:
@@ -21,8 +21,14 @@ import { postsTools } from './tools/posts.js';
 import { accountsTools } from './tools/accounts.js';
 import { aiTools } from './tools/ai.js';
 import { inboxTools } from './tools/inbox.js';
+import { contactsTools } from './tools/contacts.js';
+import { broadcastsTools } from './tools/broadcasts.js';
 import { adsTools } from './tools/ads.js';
 import { analyticsTools } from './tools/analytics.js';
+import { knowledgeTools } from './tools/knowledge.js';
+import { activityTools } from './tools/activity.js';
+import { googleBusinessTools } from './tools/google-business.js';
+import { googleAdsTools } from './tools/ads-google.js';
 import type { ToolDefinition } from './types.js';
 
 const DEFAULT_API_URL = 'https://api.fopost.com';
@@ -50,8 +56,14 @@ async function main() {
     ...accountsTools(client),
     ...aiTools(client),
     ...inboxTools(client),
+    ...contactsTools(client),
+    ...broadcastsTools(client),
     ...adsTools(client),
     ...analyticsTools(client),
+    ...knowledgeTools(client),
+    ...activityTools(client),
+    ...googleBusinessTools(client),
+    ...googleAdsTools(client),
   ];
   const toolMap = new Map(allTools.map((t) => [t.name, t]));
 

@@ -12,6 +12,7 @@ const PLATFORM_ENUM = z.enum([
   'slack',
   'reddit',
   'pinterest',
+  'snapchat',
   'tumblr',
   'dribbble',
   'mewe',

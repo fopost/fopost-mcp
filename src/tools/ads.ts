@@ -4,6 +4,18 @@ import type { ToolDefinition } from '../types.js';
 
 const namedItem = z.object({ id: z.string(), name: z.string() });
 
+/** One offline conversion, as `upload_ad_conversions` takes it. */
+const conversionEvent = z.object({
+  event_name: z.string().max(64),
+  occurred_at: z.string().describe('ISO 8601'),
+  email: z.string().email().optional(),
+  phone: z.string().max(32).optional(),
+  value_minor: z.number().int().min(0).optional(),
+  currency: z.string().length(3).optional(),
+  order_id: z.string().max(128).optional(),
+});
+type ConversionEvent = z.infer<typeof conversionEvent>;
+
 const adBudget = z.object({
   minor: z.number().int().positive().describe('Amount in the ad account currency, minor units'),
   type: z.enum(['daily', 'lifetime']),
@@ -31,14 +43,35 @@ const adTargeting = z.object({
   interests: z.array(namedItem).optional(),
   behaviors: z.array(namedItem).optional(),
   income: z.array(namedItem).optional(),
+  facets: z
+    .record(z.string(), z.array(namedItem))
+    .optional()
+    .describe(
+      'Facets the network defines for itself, keyed by the search_ad_targeting type they came ' +
+        'from — job_title, company_size, industry and the rest of the B2B set. ' +
+        'list_ad_networks says which a network accepts.',
+    ),
 });
 
 const adBase = {
   workspace_id: z.string().uuid(),
   connection_id: z.string().uuid().describe('An ads connection in the workspace'),
-  ad_account_id: z.string().describe('Ad account id, `act_…`'),
+  ad_account_id: z
+    .string()
+    .describe('Ad account id as the network addresses it, from list_ad_sources'),
   name: z.string().min(1).max(255),
-  goal: z.enum(['engagement', 'traffic', 'awareness', 'video_views']),
+  goal: z
+    .enum([
+      'engagement',
+      'traffic',
+      'awareness',
+      'video_views',
+      'messages',
+      'calls',
+      'whatsapp',
+      'sales',
+    ])
+    .describe('Check list_ad_goals first; a goal the deployment cannot run is refused'),
   budget: adBudget,
   targeting: adTargeting,
   paused: z.boolean().optional().describe('Default true; set false to go live at once'),
@@ -89,6 +122,7 @@ function targetingBody(t: z.infer<typeof adTargeting>) {
     interests: t.interests,
     behaviors: t.behaviors,
     income: t.income,
+    facets: t.facets,
   };
 }
 
@@ -107,7 +141,7 @@ const creativeCard = z.object({
   description: z.string().max(255).optional(),
 });
 
-const metaId = z.string().min(1).max(64).describe('Ad platform object id');
+const metaId = z.string().min(1).max(64).describe('Ad network object id');
 const objectStatus = z.enum(['active', 'paused']);
 const pausedFlag = z.boolean().optional().describe('Default true; set false to go live at once');
 
@@ -125,6 +159,54 @@ function metaQuery(input: { workspace_id?: string; connection_id: string }) {
   return { workspace_id: input.workspace_id, connection_id: input.connection_id };
 }
 
+const CONVERSION_TYPES = [
+  'purchase',
+  'lead',
+  'sign_up',
+  'add_to_cart',
+  'download',
+  'install',
+  'key_page_view',
+  'other',
+] as const;
+
+const conversionRulePath = (id: string) => `/v1/ads/linkedin/conversion-rules/${id}`;
+
+const adCompany = z.object({
+  name: z.string().max(255).optional(),
+  domain: z.string().max(255).optional(),
+  page_url: z.string().max(500).optional(),
+  ticker: z.string().max(10).optional(),
+  country: z.string().length(2).optional(),
+});
+
+const conversionApiEvent = z.object({
+  happened_at: z.number().int().min(0).describe('Epoch milliseconds'),
+  value_minor: z.number().int().min(0).optional(),
+  currency: z.string().length(3).optional(),
+  event_id: z.string().max(128).optional().describe('Your own id, so a replay is counted once'),
+  email: z.string().email().optional(),
+  click_id: z.string().max(128).optional(),
+});
+
+function forecastBody(input: {
+  workspace_id: string;
+  connection_id: string;
+  ad_account_id: string;
+  goal: string;
+  targeting: z.infer<typeof adTargeting>;
+  placements?: string[];
+}) {
+  return {
+    workspaceId: input.workspace_id,
+    connectionId: input.connection_id,
+    adAccountId: input.ad_account_id,
+    goal: input.goal,
+    targeting: targetingBody(input.targeting),
+    placements: input.placements,
+  };
+}
+
 const insightsRange = {
   since: z.string().describe('YYYY-MM-DD, inclusive'),
   until: z.string().describe('YYYY-MM-DD, inclusive'),
@@ -140,6 +222,27 @@ function rangeQuery(input: { since: string; until: string; breakdown?: string; d
     daily: input.daily === undefined ? undefined : String(input.daily),
   };
 }
+
+/** One upsert or delete in a catalog products batch. */
+const catalogProductWrite = z.object({
+  op: z.enum(['upsert', 'delete']),
+  retailer_id: z.string().describe('Your own key for the product'),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  url: z.string().optional().describe('The product page'),
+  image_url: z.string().optional(),
+  price_minor: z
+    .number()
+    .int()
+    .optional()
+    .describe('Minor units of currency: 12900 with USD is $129.00'),
+  currency: z.string().length(3).optional(),
+  availability: z.string().optional().describe('in stock, out of stock, preorder, …'),
+  condition: z.enum(['new', 'refurbished', 'used']).optional(),
+  brand: z.string().optional(),
+});
+
+type CatalogProductWrite = z.infer<typeof catalogProductWrite>;
 
 const workspaceFilter = z.object({
   workspace_id: z.string().uuid().optional().describe('Restrict to one workspace'),
@@ -216,6 +319,13 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         destination_url: z.string().url().optional(),
         media_url: z.string().optional().describe('A media library asset url'),
         url_tags: urlTags,
+        spark_post_id: z
+          .string()
+          .max(128)
+          .optional()
+          .describe(
+            'A post already live on the network, from list_spark_posts. Runs it as a Spark ad, so text, headline and media_url are ignored.',
+          ),
       }),
       async execute(input) {
         return client.post('/v1/ads', {
@@ -226,6 +336,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
           destinationUrl: input.destination_url,
           mediaUrl: input.media_url,
           urlTags: input.url_tags,
+          sparkPostId: input.spark_post_id,
         });
       },
     },
@@ -317,6 +428,154 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'list_ad_business_centers',
+      description:
+        'List the TikTok Business Centers an ads connection reaches. The one network-named read here, because no other network groups ad accounts this way. Needs the ads scope.',
+      inputSchema: z.object(metaRead),
+      async execute(input) {
+        return client.get('/v1/ads/tiktok/business-centers', metaQuery(input));
+      },
+    },
+
+    {
+      name: 'list_ad_identities',
+      description:
+        'List the TikTok identities an ad can run as on one ad account. An identity id is what every other ads tool calls page_id. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_account_id: z.string().describe('Ad account id'),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/tiktok/identities', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+        });
+      },
+    },
+
+    {
+      name: 'list_spark_posts',
+      description:
+        'List posts already live under an identity, each a candidate Spark ad for create_ad. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_account_id: z.string().describe('Ad account id'),
+        identity_id: z.string().describe('Identity id, from list_ad_identities'),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/spark-posts', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+          identity_id: input.identity_id,
+        });
+      },
+    },
+
+    {
+      name: 'upload_ad_conversions',
+      description:
+        'Send offline conversions against a pixel the ad account owns. Emails and phone numbers are hashed before they leave FoPost. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_account_id: z.string().describe('Ad account id'),
+        pixel_id: z.string().describe('A pixel on that ad account, from list_audiences'),
+        events: z.array(conversionEvent).min(1).max(1000),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/conversions', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adAccountId: input.ad_account_id,
+          pixelId: input.pixel_id,
+          events: input.events.map((event: ConversionEvent) => ({
+            eventName: event.event_name,
+            occurredAt: event.occurred_at,
+            email: event.email,
+            phone: event.phone,
+            valueMinor: event.value_minor,
+            currency: event.currency,
+            orderId: event.order_id,
+          })),
+        });
+      },
+    },
+
+    {
+      name: 'list_ad_comments',
+      description:
+        'Read one page of the comments on an ad, live from the network. Pass next_cursor back as after. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_id: metaId,
+        after: z.string().max(200).optional().describe("The previous page's next_cursor"),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/comments', {
+          ...metaQuery(input),
+          ad_id: input.ad_id,
+          after: input.after,
+        });
+      },
+    },
+
+    {
+      name: 'reply_to_ad_comment',
+      description:
+        "Answer a comment on an ad. The reply is published under the ad's identity. Needs the ads and publish scopes.",
+      inputSchema: z.object({
+        id: metaId.describe('Comment id'),
+        ...metaWrite,
+        ad_id: metaId,
+        text: z.string().min(1).max(500),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/comments/${input.id}/reply`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adId: input.ad_id,
+          text: input.text,
+        });
+      },
+    },
+
+    {
+      name: 'set_ad_comment_hidden',
+      description: 'Hide or show a comment on an ad. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        id: metaId.describe('Comment id'),
+        ...metaWrite,
+        ad_id: metaId,
+        hidden: z.boolean(),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/comments/${input.id}/hide`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adId: input.ad_id,
+          hidden: input.hidden,
+        });
+      },
+    },
+
+    {
+      name: 'delete_ad_comment',
+      description:
+        'Remove a comment from the ad on the network. One already gone succeeds. Cannot be undone. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        id: metaId.describe('Comment id'),
+        ...metaWrite,
+        ad_id: metaId,
+      }),
+      async execute(input) {
+        return client.request('DELETE', `/v1/ads/comments/${input.id}`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adId: input.ad_id,
+        });
+      },
+    },
+
+    {
       name: 'list_lead_forms',
       description: 'List lead forms on the connected pages. Needs the ads scope.',
       inputSchema: workspaceFilter,
@@ -369,6 +628,12 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         name: z.string().min(1).max(255),
         goal: z.enum(['engagement', 'traffic', 'awareness', 'video_views']),
         paused: pausedFlag,
+        smart_plus: z
+          .boolean()
+          .optional()
+          .describe(
+            'Hands targeting and creative rotation to the network. Only where the network reports the smartPlus capability.',
+          ),
       }),
       async execute(input) {
         return client.post('/v1/ads/campaigns', {
@@ -378,6 +643,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
           name: input.name,
           goal: input.goal,
           paused: input.paused,
+          smartPlus: input.smart_plus,
         });
       },
     },
@@ -940,6 +1206,301 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'list_ad_networks',
+      description:
+        'List the ad networks this deployment knows, with what each one supports, which ' +
+        'search_ad_targeting types it takes and the macros it expands in tracking parameters. ' +
+        'A network reported as not configured cannot be connected yet. Needs the ads scope.',
+      inputSchema: z.object({}),
+      async execute() {
+        return client.get('/v1/ads/providers', {});
+      },
+    },
+
+    {
+      name: 'add_audience_companies',
+      description:
+        'Add companies to a company-list audience on a business-to-business network. Each row ' +
+        'needs a name, domain, page_url or ticker; the rows travel with the request and are ' +
+        'never stored. Needs the ads scope.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        companies: z.array(adCompany).min(1).max(10000),
+      }),
+      async execute(input) {
+        return client.request(
+          'POST',
+          `/v1/ads/audiences/${input.id}/companies`,
+          {
+            companies: input.companies.map((company: z.infer<typeof adCompany>) => ({
+              name: company.name,
+              domain: company.domain,
+              pageUrl: company.page_url,
+              ticker: company.ticker,
+              country: company.country,
+            })),
+          },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'get_ad_bid_pricing',
+      description:
+        'Quote what an audience currently costs at auction, before spending anything. Available ' +
+        'on a network whose capabilities include forecasts. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_account_id: z.string(),
+        goal: z.enum(['engagement', 'traffic', 'awareness', 'video_views']),
+        targeting: adTargeting,
+        placements: z.array(z.string()).max(10).optional(),
+        bid_type: z.enum(['CPC', 'CPM', 'CPV']).optional(),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/linkedin/bid-pricing', {
+          ...forecastBody(input),
+          bidType: input.bid_type,
+        });
+      },
+    },
+
+    {
+      name: 'get_ad_supply_forecast',
+      description:
+        'Forecast what a budget would deliver to an audience: impressions, clicks and spend over ' +
+        'the network’s own window. Available on a network whose capabilities include forecasts. ' +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_account_id: z.string(),
+        goal: z.enum(['engagement', 'traffic', 'awareness', 'video_views']),
+        targeting: adTargeting,
+        placements: z.array(z.string()).max(10).optional(),
+        budget_minor: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe('Budget for the forecast window, minor units'),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/linkedin/supply-forecast', {
+          ...forecastBody(input),
+          budgetMinor: input.budget_minor,
+        });
+      },
+    },
+
+    {
+      name: 'list_conversion_rules',
+      description:
+        'List the conversion rules on one ad account. A rule is how the network attributes a ' +
+        'sale or a sign-up back to an ad set. Needs the ads scope.',
+      inputSchema: z.object({ ...metaRead, ad_account_id: z.string() }),
+      async execute(input) {
+        return client.get('/v1/ads/linkedin/conversion-rules', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+        });
+      },
+    },
+
+    {
+      name: 'create_conversion_rule',
+      description: 'Create a conversion rule on an ad account. Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaWrite,
+        ad_account_id: z.string(),
+        name: z.string().min(1).max(255),
+        type: z.enum(CONVERSION_TYPES),
+        attribution: z.enum(['last_touch', 'each_campaign']),
+        post_click_window_days: z.number().int().min(1).max(90).optional(),
+        view_through_window_days: z.number().int().min(1).max(90).optional(),
+        value_minor: z
+          .number()
+          .int()
+          .min(0)
+          .optional()
+          .describe('What one conversion is worth, minor units'),
+        currency: z.string().length(3).optional(),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/linkedin/conversion-rules', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          adAccountId: input.ad_account_id,
+          name: input.name,
+          type: input.type,
+          attribution: input.attribution,
+          postClickWindowDays: input.post_click_window_days,
+          viewThroughWindowDays: input.view_through_window_days,
+          valueMinor: input.value_minor,
+          currency: input.currency,
+        });
+      },
+    },
+
+    {
+      name: 'get_conversion_rule',
+      description:
+        'Read one conversion rule with the ad sets it is attached to. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaRead }),
+      async execute(input) {
+        return client.get(conversionRulePath(input.id), metaQuery(input));
+      },
+    },
+
+    {
+      name: 'update_conversion_rule',
+      description: 'Change a conversion rule. Needs the ads scope.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        name: z.string().min(1).max(255).optional(),
+        type: z.enum(CONVERSION_TYPES).optional(),
+        attribution: z.enum(['last_touch', 'each_campaign']).optional(),
+        post_click_window_days: z.number().int().min(1).max(90).optional(),
+        view_through_window_days: z.number().int().min(1).max(90).optional(),
+        value_minor: z.number().int().min(0).optional(),
+        currency: z.string().length(3).optional(),
+        enabled: z.boolean().optional(),
+      }),
+      async execute(input) {
+        return client.request(
+          'PATCH',
+          conversionRulePath(input.id),
+          {
+            name: input.name,
+            type: input.type,
+            attribution: input.attribution,
+            postClickWindowDays: input.post_click_window_days,
+            viewThroughWindowDays: input.view_through_window_days,
+            valueMinor: input.value_minor,
+            currency: input.currency,
+            enabled: input.enabled,
+          },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'delete_conversion_rule',
+      description:
+        'Turn a conversion rule off. The network keeps the history, so the rule stops counting ' +
+        'rather than going away. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...metaWrite }),
+      async execute(input) {
+        return client.request('DELETE', conversionRulePath(input.id), undefined, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'set_conversion_rule_ad_set',
+      description:
+        'Attach a conversion rule to an ad set on the same connection, or detach it. Needs the ads scope.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        campaign_id: metaId.describe('An ad set on the same connection'),
+        attached: z.boolean().describe('True to attach, false to detach'),
+      }),
+      async execute(input) {
+        return client.request(
+          input.attached ? 'POST' : 'DELETE',
+          `${conversionRulePath(input.id)}/associations`,
+          { campaignId: input.campaign_id },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'get_conversion_metrics',
+      description:
+        'Read what a conversion rule recorded over a date range: conversions, their value and ' +
+        'what each one cost. Needs the ads scope.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaRead,
+        since: z.string().describe('YYYY-MM-DD, inclusive'),
+        until: z.string().describe('YYYY-MM-DD, inclusive'),
+      }),
+      async execute(input) {
+        return client.get(`${conversionRulePath(input.id)}/metrics`, {
+          ...metaQuery(input),
+          since: input.since,
+          until: input.until,
+        });
+      },
+    },
+
+    {
+      name: 'send_conversion_events',
+      description:
+        'Send conversions that happened off the website back to the network, so it can attribute ' +
+        'them. Each event needs an email or a click id; the address is hashed inside FoPost and ' +
+        'nothing about an event is stored. Needs the ads scope.',
+      inputSchema: z.object({
+        id: metaId,
+        ...metaWrite,
+        events: z.array(conversionApiEvent).min(1).max(100),
+      }),
+      async execute(input) {
+        return client.request(
+          'POST',
+          `${conversionRulePath(input.id)}/events`,
+          {
+            events: input.events.map((event: z.infer<typeof conversionApiEvent>) => ({
+              happenedAt: event.happened_at,
+              valueMinor: event.value_minor,
+              currency: event.currency,
+              eventId: event.event_id,
+              email: event.email,
+              clickId: event.click_id,
+            })),
+          },
+          metaQuery(input),
+        );
+      },
+    },
+
+    {
+      name: 'search_ad_library',
+      description:
+        'Search the network’s own public ad library — ads it publishes for everyone, not the ' +
+        'connection’s ads. Available on a network whose capabilities include adLibrary. ' +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        keyword: z.string().max(200).optional(),
+        advertiser: z.string().max(200).optional(),
+        countries: z
+          .array(z.string().length(2))
+          .max(20)
+          .optional()
+          .describe('ISO 3166-1 alpha-2 codes'),
+        since: z.string().optional().describe('YYYY-MM-DD'),
+        until: z.string().optional().describe('YYYY-MM-DD'),
+        cursor: z.string().max(64).optional().describe('next_cursor from the previous page'),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/ad-library', {
+          ...metaQuery(input),
+          keyword: input.keyword,
+          advertiser: input.advertiser,
+          countries: input.countries?.join(','),
+          since: input.since,
+          until: input.until,
+          cursor: input.cursor,
+        });
+      },
+    },
+
+    {
       name: 'unsubscribe_lead_page',
       description: 'Turn off new-lead notifications for a page. Needs the ads scope.',
       inputSchema: z.object({ page_id: z.string(), ...metaWrite }),
@@ -950,6 +1511,166 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
           undefined,
           metaQuery(input),
         );
+      },
+    },
+    {
+      name: 'list_ad_goals',
+      description:
+        'List the goals this ads connection can run right now. Ask rather than assume: a goal the ' +
+        'deployment is not set up for is absent here and is refused if sent anyway. Needs the ads scope.',
+      inputSchema: z.object(metaRead),
+      async execute(input) {
+        return client.get('/v1/ads/goals', metaQuery(input));
+      },
+    },
+
+    {
+      name: 'list_ad_catalogs',
+      description:
+        'List the product catalogs this connection reaches, read live and never stored. A catalog ' +
+        'ad runs from a product set inside one. Needs the ads scope.',
+      inputSchema: z.object(metaRead),
+      async execute(input) {
+        return client.get('/v1/ads/catalogs', metaQuery(input));
+      },
+    },
+
+    {
+      name: 'create_ad_catalog',
+      description:
+        "Create a product catalog on the connection's business portfolio. Needs the ads and " +
+        'publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        name: z.string().min(1).max(255),
+        vertical: z.string().optional().describe('Catalog vertical; commerce by default'),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/catalogs', {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          name: input.name,
+          vertical: input.vertical,
+        });
+      },
+    },
+
+    {
+      name: 'list_catalog_products',
+      description:
+        "List one page of a catalog's products. Pass next_cursor back as after for the next page. " +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        catalog_id: z.string().describe('From list_ad_catalogs'),
+        after: z.string().optional().describe('A next_cursor from a previous page'),
+      }),
+      async execute(input) {
+        return client.get(`/v1/ads/catalogs/${input.catalog_id}/products`, {
+          ...metaQuery(input),
+          after: input.after,
+        });
+      },
+    },
+
+    {
+      name: 'write_catalog_products',
+      description:
+        'Add, replace or remove up to 500 products in one batch, keyed by your own retailer_id. ' +
+        'Upserts and deletes travel together. Needs the ads and publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        catalog_id: z.string().describe('From list_ad_catalogs'),
+        products: z.array(catalogProductWrite).min(1).max(500),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/catalogs/${input.catalog_id}/products`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          products: input.products.map((product: CatalogProductWrite) => ({
+            op: product.op,
+            retailerId: product.retailer_id,
+            name: product.name,
+            description: product.description,
+            url: product.url,
+            imageUrl: product.image_url,
+            priceMinor: product.price_minor,
+            currency: product.currency,
+            availability: product.availability,
+            condition: product.condition,
+            brand: product.brand,
+          })),
+        });
+      },
+    },
+
+    {
+      name: 'list_catalog_product_sets',
+      description:
+        'List the product sets in a catalog. A catalog ad runs from a set, not the whole catalog. ' +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        catalog_id: z.string().describe('From list_ad_catalogs'),
+      }),
+      async execute(input) {
+        return client.get(`/v1/ads/catalogs/${input.catalog_id}/product-sets`, metaQuery(input));
+      },
+    },
+
+    {
+      name: 'create_catalog_product_set',
+      description:
+        'Create a product set in a catalog. Without a filter the set is the whole catalog. Needs ' +
+        'the ads and publish scopes.',
+      inputSchema: z.object({
+        ...metaWrite,
+        catalog_id: z.string().describe('From list_ad_catalogs'),
+        name: z.string().min(1).max(255),
+        filter: z.record(z.unknown()).optional().describe("The network's own product-set filter"),
+      }),
+      async execute(input) {
+        return client.post(`/v1/ads/catalogs/${input.catalog_id}/product-sets`, {
+          workspaceId: input.workspace_id,
+          connectionId: input.connection_id,
+          name: input.name,
+          filter: input.filter,
+        });
+      },
+    },
+
+    {
+      name: 'list_reach_frequency',
+      description:
+        'List the reach-and-frequency predictions on an ad account. A prediction prices a fixed ' +
+        'flight; nothing is bought until it is reserved. Needs the ads scope.',
+      inputSchema: z.object({ ...metaRead, ad_account_id: z.string().describe('`act_…`') }),
+      async execute(input) {
+        return client.get('/v1/ads/reach-frequency', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+        });
+      },
+    },
+
+    {
+      name: 'list_ad_account_activity',
+      description:
+        "Read an ad account's change log: who changed what, and when. Read live and never stored. " +
+        'Needs the ads scope.',
+      inputSchema: z.object({
+        ...metaRead,
+        ad_account_id: z.string().describe('`act_…`'),
+        since: z.string().optional().describe('YYYY-MM-DD'),
+        until: z.string().optional().describe('YYYY-MM-DD'),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/account/activity', {
+          ...metaQuery(input),
+          ad_account_id: input.ad_account_id,
+          since: input.since,
+          until: input.until,
+        });
       },
     },
   ];
