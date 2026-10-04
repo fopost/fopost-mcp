@@ -24,6 +24,7 @@ import { inboxTools } from './tools/inbox.js';
 import { contactsTools } from './tools/contacts.js';
 import { broadcastsTools } from './tools/broadcasts.js';
 import { adsTools } from './tools/ads.js';
+import { analyticsTools } from './tools/analytics.js';
 import { knowledgeTools } from './tools/knowledge.js';
 import { activityTools } from './tools/activity.js';
 import { googleBusinessTools } from './tools/google-business.js';
@@ -58,6 +59,7 @@ async function main() {
     ...contactsTools(client),
     ...broadcastsTools(client),
     ...adsTools(client),
+    ...analyticsTools(client),
     ...knowledgeTools(client),
     ...activityTools(client),
     ...googleBusinessTools(client),

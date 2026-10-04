@@ -7,6 +7,7 @@ import { inboxTools } from './tools/inbox.js';
 import { contactsTools } from './tools/contacts.js';
 import { broadcastsTools } from './tools/broadcasts.js';
 import { adsTools } from './tools/ads.js';
+import { analyticsTools } from './tools/analytics.js';
 import { knowledgeTools } from './tools/knowledge.js';
 import { activityTools } from './tools/activity.js';
 import { googleBusinessTools } from './tools/google-business.js';
@@ -236,6 +237,12 @@ const TOOL_INPUTS: Record<string, unknown> = {
   approve_inbox_reply: { id: 7, text: 'hi' },
   reject_inbox_reply: { id: 7 },
   refresh_inbox: { workspace_id: UUID },
+  get_content_decay: { days: 30 },
+  get_posting_frequency: { days: 90 },
+  get_post_timeline: { post: UUID },
+  get_analytics_changes: { since: '2026-03-02T00:00:00Z' },
+  collect_post_analytics: { post: UUID },
+  list_native_posts: { account_id: UUID },
   // Google Ads only: every call names the connection and the Google account.
   list_google_recommendations: {
     connection_id: UUID,
@@ -549,6 +556,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...contactsTools(client),
     ...broadcastsTools(client),
     ...adsTools(client),
+    ...analyticsTools(client),
     ...knowledgeTools(client),
     ...activityTools(client),
     ...googleBusinessTools(client),
