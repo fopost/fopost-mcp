@@ -6,6 +6,15 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- Blog tools (15): `blog_get_settings`, `blog_update_settings`, `blog_list_keywords`,
+  `blog_plan_keywords`, `blog_add_keyword`, `blog_update_keyword`, `blog_delete_keyword`,
+  `blog_list_articles`, `blog_request_article`, `blog_get_article`, `blog_update_article`,
+  `blog_regenerate_article`, `blog_publish_article`, `blog_reject_article` and
+  `blog_delete_article`. Reads, settings and keyword edits need the `posts` scope;
+  planning, requesting and regenerating spend AI credits and need `ai`;
+  `blog_publish_article` needs `publish` and goes live on the configured target at
+  once. Rotating the website secret and the website test are dashboard only and have
+  no tool. These routes take `workspaceId` in camelCase on the query.
 - Broadcast tools (8): `list_broadcasts`, `get_broadcast`, `create_broadcast`,
   `update_broadcast`, `send_broadcast`, `cancel_broadcast`,
   `list_broadcast_recipients` and `delete_broadcast` — one message into every
