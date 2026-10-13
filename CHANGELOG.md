@@ -6,6 +6,13 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- `get_upload_limits`: the largest file the account may upload, what unlocks the
+  next size, the multipart ceiling and the allowed types. Needs the `posts` scope.
+- `schedule_post` and `edit_post` take `file_paths`, up to 5 local files the server
+  reads itself. Files at or under the multipart ceiling go in one request with the
+  post; a bigger one is uploaded directly and attached by url. An oversize file
+  answers a plain message naming the account's limit.
+
 - Broadcast tools (8): `list_broadcasts`, `get_broadcast`, `create_broadcast`,
   `update_broadcast`, `send_broadcast`, `cancel_broadcast`,
   `list_broadcast_recipients` and `delete_broadcast` — one message into every
