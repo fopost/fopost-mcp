@@ -39,6 +39,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   cancel_post: { id: UUID },
   delete_post: { id: UUID },
   list_post_deliveries: { id: UUID },
+  get_upload_limits: { workspace_id: UUID },
   get_google_business_location: { account_id: UUID },
   update_google_business_location: { account_id: UUID, title: 'Corner Bakery' },
   get_google_business_attributes: { account_id: UUID },
