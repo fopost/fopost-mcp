@@ -13,8 +13,9 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | --------------------------------------- | ---------------------------------------------------------------- |
 | `list_posts`                            | List posts in a workspace, filter by status                      |
 | `get_post`                              | Fetch a post by id                                               |
-| `schedule_post`                         | Create a post for accounts or an account group                   |
-| `edit_post`                             | Update an existing post                                          |
+| `schedule_post`                         | Create a post for accounts or an account group, with local files |
+| `edit_post`                             | Update an existing post, optionally attaching local files        |
+| `get_upload_limits`                     | Largest file the account may upload, and the allowed types       |
 | `cancel_post`                           | Cancel a scheduled post                                          |
 | `delete_post`                           | Permanently delete a post                                        |
 | `list_post_deliveries`                  | Per-account delivery status for a post                           |
@@ -184,8 +185,9 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | --------------------------------------- | ---------------------------------------------------------------- |
 | `list_posts`                            | List posts in a workspace, filter by status                      |
 | `get_post`                              | Fetch a post by id                                               |
-| `schedule_post`                         | Create a post for accounts or an account group                   |
-| `edit_post`                             | Update an existing post                                          |
+| `schedule_post`                         | Create a post for accounts or an account group, with local files |
+| `edit_post`                             | Update an existing post, optionally attaching local files        |
+| `get_upload_limits`                     | Largest file the account may upload, and the allowed types       |
 | `cancel_post`                           | Cancel a scheduled post                                          |
 | `delete_post`                           | Permanently delete a post                                        |
 | `list_post_deliveries`                  | Per-account delivery status for a post                           |
@@ -328,6 +330,7 @@ Prefer to run the server yourself? The stdio package below is the same product, 
 | `get_post`                       | Fetch a post by id                                               |
 | `schedule_post`                  | Create a post for accounts or an account group                   |
 | `edit_post`                      | Update an existing post                                          |
+| `get_upload_limits`              | Largest file the account may upload, and the allowed types       |
 | `cancel_post`                    | Cancel a scheduled post                                          |
 | `delete_post`                    | Permanently delete a post                                        |
 | `list_post_deliveries`           | Per-account delivery status for a post                           |
