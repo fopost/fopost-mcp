@@ -12,6 +12,7 @@ import { knowledgeTools } from './tools/knowledge.js';
 import { activityTools } from './tools/activity.js';
 import { googleBusinessTools } from './tools/google-business.js';
 import { googleAdsTools } from './tools/ads-google.js';
+import { blogTools } from './tools/blog.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -541,6 +542,21 @@ const TOOL_INPUTS: Record<string, unknown> = {
   delete_knowledge_source: { id: UUID },
   list_activity: { workspace_id: UUID, kind: 'security' },
   list_audit_events: { workspace_id: UUID },
+  blog_get_settings: { workspace_id: UUID },
+  blog_update_settings: { workspace_id: UUID, cadence_per_week: 2, target_kind: 'website' },
+  blog_list_keywords: { workspace_id: UUID, status: ['suggested', 'planned'], limit: 50 },
+  blog_plan_keywords: { workspace_id: UUID, seeds: ['social scheduling'] },
+  blog_add_keyword: { workspace_id: UUID, keyword: 'social scheduling', planned_for: '2026-10-20' },
+  blog_update_keyword: { workspace_id: UUID, id: UUID, status: 'planned' },
+  blog_delete_keyword: { workspace_id: UUID, id: UUID },
+  blog_list_articles: { workspace_id: UUID, status: ['draft'] },
+  blog_request_article: { workspace_id: UUID, keyword_id: UUID, instructions: 'Keep it short' },
+  blog_get_article: { workspace_id: UUID, id: UUID },
+  blog_update_article: { workspace_id: UUID, id: UUID, title: 'New title', publish_at: null },
+  blog_regenerate_article: { workspace_id: UUID, id: UUID },
+  blog_publish_article: { workspace_id: UUID, id: UUID },
+  blog_reject_article: { workspace_id: UUID, id: UUID },
+  blog_delete_article: { workspace_id: UUID, id: UUID },
 };
 
 let urls: string[];
@@ -562,6 +578,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...activityTools(client),
     ...googleBusinessTools(client),
     ...googleAdsTools(client),
+    ...blogTools(client),
   ];
 }
 
@@ -1055,5 +1072,78 @@ describe('per-network metrics', () => {
     expect(requests[0].method).toBe('GET');
     expect(url.pathname).toBe(`/v1/accounts/${UUID}/insights`);
     expect(url.searchParams.get('raw')).toBe('true');
+  });
+});
+
+describe('blog requests', () => {
+  function run(name: string, input: unknown = TOOL_INPUTS[name]) {
+    const tool = allTools().find((t) => t.name === name)!;
+    return tool.execute(tool.inputSchema.parse(input));
+  }
+
+  it('sends workspaceId in camelCase on the query, and statuses comma-separated', async () => {
+    await run('blog_list_keywords');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/blog/keywords');
+    expect(url.searchParams.get('workspaceId')).toBe(UUID);
+    expect(url.searchParams.has('workspace_id')).toBe(false);
+    expect(url.searchParams.get('status')).toBe('suggested,planned');
+    expect(url.searchParams.get('limit')).toBe('50');
+  });
+
+  it('requests an article with a camelCase body and exactly one subject', async () => {
+    await run('blog_request_article');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/blog/articles');
+    expect(requests[0].body).toEqual({
+      workspaceId: UUID,
+      keywordId: UUID,
+      instructions: 'Keep it short',
+    });
+
+    const tool = allTools().find((t) => t.name === 'blog_request_article')!;
+    expect(tool.inputSchema.safeParse({ workspace_id: UUID }).success).toBe(false);
+    expect(
+      tool.inputSchema.safeParse({ workspace_id: UUID, title: 'A', keyword: 'b' }).success,
+    ).toBe(false);
+    expect(tool.inputSchema.safeParse({ workspace_id: UUID, title: 'A' }).success).toBe(true);
+  });
+
+  it('publishes on the publish route with the workspace in the query, never in the body', async () => {
+    await run('blog_publish_article');
+    const url = new URL(requests[0].url);
+    expect(requests[0].method).toBe('POST');
+    expect(url.pathname).toBe(`/v1/blog/articles/${UUID}/publish`);
+    expect(url.searchParams.get('workspaceId')).toBe(UUID);
+    expect(requests[0].body).toEqual({});
+  });
+
+  it('patches settings and an article with camelCase bodies, keeping an explicit null', async () => {
+    await run('blog_update_settings');
+    expect(requests[0].method).toBe('PATCH');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/blog/settings');
+    expect(requests[0].body).toEqual({
+      workspaceId: UUID,
+      cadencePerWeek: 2,
+      targetKind: 'website',
+    });
+
+    await run('blog_update_article');
+    expect(requests[1].method).toBe('PATCH');
+    expect(new URL(requests[1].url).pathname).toBe(`/v1/blog/articles/${UUID}`);
+    expect(new URL(requests[1].url).searchParams.get('workspaceId')).toBe(UUID);
+    expect(requests[1].body).toEqual({ title: 'New title', publishAt: null });
+  });
+
+  it('exposes no tool that rotates the website secret or sends a test article', () => {
+    const names = allTools().map((t) => t.name);
+    expect(names.some((n) => /secret|test_website|website_test/.test(n))).toBe(false);
+    expect(names.filter((n) => n.startsWith('blog_'))).toHaveLength(15);
+  });
+
+  it('never calls an article a post', () => {
+    for (const tool of allTools().filter((t) => t.name.startsWith('blog_'))) {
+      expect(tool.description).not.toMatch(/\bposts?\b(?! scope)/i);
+    }
   });
 });
