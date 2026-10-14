@@ -6,6 +6,12 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- `get_upload_limits`: the largest file the account may upload, what unlocks the
+  next size, the multipart ceiling and the allowed types. Needs the `posts` scope.
+- `schedule_post` and `edit_post` take `file_paths`, up to 5 local files the server
+  reads itself. Files at or under the multipart ceiling go in one request with the
+  post; a bigger one is uploaded directly and attached by url. An oversize file
+  answers a plain message naming the account's limit.
 - Blog tools (15): `blog_get_settings`, `blog_update_settings`, `blog_list_keywords`,
   `blog_plan_keywords`, `blog_add_keyword`, `blog_update_keyword`, `blog_delete_keyword`,
   `blog_list_articles`, `blog_request_article`, `blog_get_article`, `blog_update_article`,
