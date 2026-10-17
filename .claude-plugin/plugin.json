@@ -1,0 +1,13 @@
+{
+  "name": "fopost",
+  "version": "0.1.0",
+  "description": "Connects Claude Code to your FoPost workspace over the hosted MCP server, with skills for the flows people run every week: scheduling a week of posts, triaging the social inbox, and writing the weekly report.",
+  "author": {
+    "name": "FoPost",
+    "url": "https://fopost.com"
+  },
+  "homepage": "https://fopost.com/docs/mcp/plugin",
+  "repository": "https://github.com/fopost/fopost-mcp",
+  "license": "MIT",
+  "keywords": ["fopost", "social-media", "scheduling", "inbox", "mcp"]
+}

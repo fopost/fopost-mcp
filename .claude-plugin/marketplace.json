@@ -1,0 +1,16 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "fopost",
+  "description": "The official FoPost plugin: the hosted MCP server and skills for scheduling, inbox triage and reporting.",
+  "owner": {
+    "name": "FoPost",
+    "url": "https://fopost.com"
+  },
+  "plugins": [
+    {
+      "name": "fopost",
+      "source": "./",
+      "description": "FoPost for Claude Code: the hosted MCP server plus skills for scheduling, inbox triage and reporting"
+    }
+  ]
+}

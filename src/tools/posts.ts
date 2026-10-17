@@ -1,6 +1,20 @@
 import { z } from 'zod';
 import type { FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
+import { MAX_FILES_PER_POST, sendPostWithFiles, type PostMediaItem } from '../files.js';
+
+const filePathsSchema = z
+  .array(z.string().min(1))
+  .max(MAX_FILES_PER_POST)
+  .optional()
+  .describe(
+    `Local file paths (up to ${MAX_FILES_PER_POST}) to upload and attach; large files take direct upload automatically`,
+  );
+
+type ExistingPost = {
+  workspace_id: string | null;
+  content?: Array<{ text?: string | null; media?: PostMediaItem[] | null; position?: number }>;
+};
 
 export function postsTools(client: FoPostClient): ToolDefinition[] {
   return [
@@ -62,6 +76,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
           .optional()
           .describe('Pre-uploaded media URLs from /v1/media/upload'),
         labels: z.array(z.string().uuid()).optional(),
+        file_paths: filePathsSchema,
       }),
       async execute(input) {
         const body = {
@@ -83,7 +98,16 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
           account_group_id: input.account_group_id,
           labels: input.labels,
         };
-        const created = await client.post<{ id: string }>('/v1/posts', body);
+        const created = input.file_paths?.length
+          ? await sendPostWithFiles<{ id: string }>(
+              client,
+              'POST',
+              '/v1/posts',
+              body,
+              input.file_paths,
+              input.workspace_id,
+            )
+          : await client.post<{ id: string }>('/v1/posts', body);
         if (input.publish_now && created?.id) {
           return client.post(`/v1/posts/${created.id}/publish`);
         }
@@ -99,6 +123,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         content: z.string().optional(),
         schedule_at: z.string().optional(),
         labels: z.array(z.string().uuid()).optional(),
+        file_paths: filePathsSchema,
       }),
       async execute(input) {
         const body: Record<string, unknown> = {};
@@ -107,7 +132,38 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         }
         if (input.schedule_at !== undefined) body.schedule_at = input.schedule_at;
         if (input.labels !== undefined) body.labels = input.labels;
-        return client.put(`/v1/posts/${input.id}`, body);
+        if (!input.file_paths?.length) return client.put(`/v1/posts/${input.id}`, body);
+
+        // Direct upload needs the workspace, and the existing blocks to append to.
+        const existing = await client.get<ExistingPost>(`/v1/posts/${input.id}`);
+        if (!existing.workspace_id) throw new Error('Post has no workspace');
+        if (body.content === undefined && existing.content?.length) {
+          body.content = existing.content.map((block, position) => ({
+            text: block.text ?? null,
+            media: (block.media ?? []).map(({ type, url, name }) => ({ type, url, name })),
+            position: block.position ?? position,
+          }));
+        }
+        return sendPostWithFiles(
+          client,
+          'PUT',
+          `/v1/posts/${input.id}`,
+          body,
+          input.file_paths,
+          existing.workspace_id,
+        );
+      },
+    },
+
+    {
+      name: 'get_upload_limits',
+      description:
+        'Show the largest file this account may upload, how it is unlocked, and the allowed file types. Check before attaching a big video.',
+      inputSchema: z.object({
+        workspace_id: z.string().uuid().optional().describe('Workspace id (uuid)'),
+      }),
+      async execute(input) {
+        return client.get('/v1/media/limits', { workspaceId: input.workspace_id });
       },
     },
 

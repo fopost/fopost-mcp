@@ -12,10 +12,12 @@ export type FoPostClientOptions = {
 export class FoPostApiError extends Error {
   status: number;
   code?: string;
-  constructor(message: string, status: number, code?: string) {
+  details?: Record<string, unknown>;
+  constructor(message: string, status: number, code?: string, details?: Record<string, unknown>) {
     super(message);
     this.status = status;
     this.code = code;
+    this.details = details;
     this.name = 'FoPostApiError';
   }
 }
@@ -43,14 +45,16 @@ export class FoPostClient {
       }
     }
 
+    // A FormData body lets fetch set the multipart boundary itself.
+    const isForm = body instanceof FormData;
     const res = await fetch(url, {
       method,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isForm ? {} : { 'Content-Type': 'application/json' }),
         'X-API-Key': this.apiKey,
         'User-Agent': '@fopost/mcp',
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: isForm ? body : body ? JSON.stringify(body) : undefined,
     });
 
     const contentType = res.headers.get('content-type') ?? '';
@@ -69,7 +73,7 @@ export class FoPostClient {
         (typeof json.message === 'string' && json.message) ||
         (typeof json.error === 'string' && json.error) ||
         `HTTP ${res.status}`;
-      throw new FoPostApiError(message, res.status, json.error as string | undefined);
+      throw new FoPostApiError(message, res.status, json.error as string | undefined, json);
     }
 
     // Most endpoints wrap in `{ data: ... }`. Unwrap when single-key.
@@ -89,6 +93,10 @@ export class FoPostClient {
 
   put<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>('PUT', path, body);
+  }
+
+  patch<T>(path: string, body?: unknown): Promise<T> {
+    return this.request<T>('PATCH', path, body);
   }
 
   delete<T>(path: string, body?: unknown): Promise<T> {
