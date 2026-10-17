@@ -6,6 +6,13 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- WhatsApp Business tools (9): `get_whatsapp_profile`, `update_whatsapp_profile`,
+  `list_whatsapp_templates`, `get_whatsapp_template_library`,
+  `create_whatsapp_template` (from scratch or from a library entry),
+  `list_whatsapp_flows`, `get_whatsapp_flow_responses`, `list_whatsapp_groups` and
+  `get_whatsapp_account_state`. The platform owns these resources, so every tool is
+  a live read or write and all of them answer 503 until WhatsApp is set up. They
+  need the `accounts` scope.
 - `get_upload_limits`: the largest file the account may upload, what unlocks the
   next size, the multipart ceiling and the allowed types. Needs the `posts` scope.
 - `schedule_post` and `edit_post` take `file_paths`, up to 5 local files the server

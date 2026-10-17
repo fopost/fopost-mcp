@@ -30,6 +30,7 @@ import { activityTools } from './tools/activity.js';
 import { googleBusinessTools } from './tools/google-business.js';
 import { googleAdsTools } from './tools/ads-google.js';
 import { blogTools } from './tools/blog.js';
+import { whatsappTools } from './tools/whatsapp.js';
 import type { ToolDefinition } from './types.js';
 
 const DEFAULT_API_URL = 'https://api.fopost.com';
@@ -66,6 +67,7 @@ async function main() {
     ...googleBusinessTools(client),
     ...googleAdsTools(client),
     ...blogTools(client),
+    ...whatsappTools(client),
   ];
   const toolMap = new Map(allTools.map((t) => [t.name, t]));
 

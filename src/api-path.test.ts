@@ -13,6 +13,7 @@ import { activityTools } from './tools/activity.js';
 import { googleBusinessTools } from './tools/google-business.js';
 import { googleAdsTools } from './tools/ads-google.js';
 import { blogTools } from './tools/blog.js';
+import { whatsappTools } from './tools/whatsapp.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -90,6 +91,21 @@ const TOOL_INPUTS: Record<string, unknown> = {
   rename_account_group: { id: UUID, name: 'US' },
   set_account_group_members: { id: UUID, account_ids: [UUID] },
   delete_account_group: { id: UUID },
+  get_whatsapp_profile: { account_id: UUID },
+  update_whatsapp_profile: { account_id: UUID, about: 'We ship on Fridays' },
+  list_whatsapp_templates: { account_id: UUID },
+  get_whatsapp_template_library: { account_id: UUID },
+  create_whatsapp_template: {
+    account_id: UUID,
+    name: 'order_shipped',
+    language: 'en_US',
+    category: 'UTILITY',
+    body: 'On its way.',
+  },
+  list_whatsapp_flows: { account_id: UUID },
+  get_whatsapp_flow_responses: { account_id: UUID },
+  list_whatsapp_groups: { account_id: UUID },
+  get_whatsapp_account_state: { account_id: UUID },
   create_telegram_connect_code: { workspace_id: UUID },
   get_telegram_connect_status: { code: 'abc123' },
   get_telegram_bot_commands: { account_id: UUID },
@@ -579,6 +595,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...googleBusinessTools(client),
     ...googleAdsTools(client),
     ...blogTools(client),
+    ...whatsappTools(client),
   ];
 }
 
