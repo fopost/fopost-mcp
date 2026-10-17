@@ -415,16 +415,18 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `blog_get_settings`                     | Read the blog settings and publish target                        |
 | `blog_update_settings`                  | Change blog settings or the publish target                       |
 | `blog_list_keywords`                    | List the keyword plan                                            |
-| `blog_plan_keywords`                    | Research keywords and fill the plan (AI credits)                 |
+| `blog_suggest_seeds`                    | Suggest search terms from the blog goal (AI credits)             |
+| `blog_plan_keywords`                    | Research search terms into suggested keywords (AI credits)       |
 | `blog_add_keyword`                      | Add a keyword to the plan                                        |
-| `blog_update_keyword`                   | Move, plan or dismiss a keyword                                  |
+| `blog_update_keyword`                   | Move, pick or dismiss a keyword                                  |
 | `blog_delete_keyword`                   | Remove a keyword from the plan                                   |
 | `blog_list_articles`                    | List articles with status and published URL                      |
 | `blog_request_article`                  | Write an article from a title or keyword (AI credits)            |
 | `blog_get_article`                      | Read an article in full, body and images                         |
-| `blog_update_article`                   | Edit a draft or set its publish date                             |
+| `blog_update_article`                   | Edit an article or set its publish date once in review           |
 | `blog_regenerate_article`               | Rewrite an article from scratch (AI credits)                     |
-| `blog_publish_article`                  | Publish an article to its target now                             |
+| `blog_submit_article`                   | Submit an article for approval                                   |
+| `blog_publish_article`                  | Approve an article in review and publish it now                  |
 | `blog_reject_article`                   | Reject a draft so it never publishes                             |
 | `blog_delete_article`                   | Permanently delete an article                                    |
 
@@ -675,15 +677,23 @@ away; dismissing one only hides it.
 ### Blog
 
 The blog tools run a workspace's article pipeline: `blog_get_settings` and
-`blog_update_settings`, the keyword plan (`blog_list_keywords`, `blog_plan_keywords`,
-`blog_add_keyword`, `blog_update_keyword`, `blog_delete_keyword`) and the articles
-written from it (`blog_list_articles`, `blog_request_article`, `blog_get_article`,
-`blog_update_article`, `blog_regenerate_article`, `blog_publish_article`,
-`blog_reject_article`, `blog_delete_article`). An article is website content and never a
-social post.
+`blog_update_settings`, the keyword plan (`blog_list_keywords`, `blog_suggest_seeds`,
+`blog_plan_keywords`, `blog_add_keyword`, `blog_update_keyword`, `blog_delete_keyword`)
+and the articles written from it (`blog_list_articles`, `blog_request_article`,
+`blog_get_article`, `blog_update_article`, `blog_regenerate_article`,
+`blog_submit_article`, `blog_publish_article`, `blog_reject_article`,
+`blog_delete_article`). An article is website content and never a social post.
 
-Reads, settings and keyword edits need the `posts` scope. `blog_plan_keywords`,
-`blog_request_article` and `blog_regenerate_article` spend AI credits and need `ai`.
+Planning is goal-driven. The settings carry a `goal`, `focus_topics` and `avoid_topics`;
+`blog_suggest_seeds` proposes search terms from them, and `blog_plan_keywords` researches
+the terms into `suggested` keywords without touching the calendar. Setting a keyword to
+`planned` picks it, and it takes the next free date. A finished draft goes to
+`in_review` through `blog_submit_article`, and only then can it be published or
+scheduled.
+
+Reads, settings, keyword edits and `blog_submit_article` need the `posts` scope.
+`blog_suggest_seeds`, `blog_plan_keywords`, `blog_request_article` and
+`blog_regenerate_article` spend AI credits and need `ai`.
 `blog_publish_article` sends the article to the target in the settings (the product blog, a
 connected account, or your own website as a signed webhook) and needs `publish`; it goes
 live at once and the tool says so, so a client only calls it on an explicit ask. The

@@ -4,8 +4,28 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ## Unreleased
 
+### Breaking
+
+- `blog_update_settings` no longer takes `auto_publish`. Nothing publishes without
+  approval: an article must be submitted with `blog_submit_article` before
+  `blog_publish_article` or a `publish_at` on `blog_update_article` will take it;
+  a draft answers 409.
+
+### Changed
+
+- `blog_plan_keywords` no longer fills the calendar. Results land as `suggested`
+  keywords; setting one to `planned` with `blog_update_keyword` picks it for the next
+  free date. `review_hold_days` is now the days before its planned date that a picked
+  keyword starts being written.
+
 ### Added
 
+- `blog_suggest_seeds`: about 10 search terms from the blog goal and topics; pass the
+  current seeds to refine and a prompt to steer. Spends AI credits, needs `ai`.
+- `blog_submit_article`: moves a draft, failed or rejected article to `in_review`.
+  Needs the `posts` scope.
+- `blog_update_settings` takes `goal`, `focus_topics` and `avoid_topics`, and
+  `blog_list_articles` filters on `in_review`.
 - WhatsApp Business tools (9): `get_whatsapp_profile`, `update_whatsapp_profile`,
   `list_whatsapp_templates`, `get_whatsapp_template_library`,
   `create_whatsapp_template` (from scratch or from a library entry),
