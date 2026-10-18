@@ -159,8 +159,8 @@ untested logic.
    publishes with `npm publish --access public --provenance`. It skips silently if that version is
    already on npm, so a re-run is safe.
 
-Requires repo secret **`NPM_TOKEN`** (the job errors out explicitly when it is unset). Provenance
-needs `id-token: write`, which the workflow already grants. `workflow_dispatch` runs everything
+Auth is npm trusted publishing (OIDC through `id-token: write`, which the workflow grants), so
+there is no `NPM_TOKEN` secret. `workflow_dispatch` runs everything
 except the publish step.
 
 ## Git
