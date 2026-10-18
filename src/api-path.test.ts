@@ -1100,12 +1100,12 @@ describe('blog requests', () => {
     return tool.execute(tool.inputSchema.parse(input));
   }
 
-  it('sends workspaceId in camelCase on the query, and statuses comma-separated', async () => {
+  it('sends workspace_id on the query, and statuses comma-separated', async () => {
     await run('blog_list_keywords');
     const url = new URL(requests[0].url);
     expect(url.pathname).toBe('/v1/blog/keywords');
-    expect(url.searchParams.get('workspaceId')).toBe(UUID);
-    expect(url.searchParams.has('workspace_id')).toBe(false);
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+    expect(url.searchParams.has('workspaceId')).toBe(false);
     expect(url.searchParams.get('status')).toBe('suggested,planned');
     expect(url.searchParams.get('limit')).toBe('50');
   });
@@ -1133,7 +1133,7 @@ describe('blog requests', () => {
     const url = new URL(requests[0].url);
     expect(requests[0].method).toBe('POST');
     expect(url.pathname).toBe(`/v1/blog/articles/${UUID}/publish`);
-    expect(url.searchParams.get('workspaceId')).toBe(UUID);
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
     expect(requests[0].body).toEqual({});
   });
 
@@ -1158,7 +1158,7 @@ describe('blog requests', () => {
     const url = new URL(requests[0].url);
     expect(requests[0].method).toBe('POST');
     expect(url.pathname).toBe(`/v1/blog/articles/${UUID}/submit`);
-    expect(url.searchParams.get('workspaceId')).toBe(UUID);
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
     expect(requests[0].body).toEqual({});
   });
 
@@ -1195,7 +1195,7 @@ describe('blog requests', () => {
     await run('blog_update_article');
     expect(requests[1].method).toBe('PATCH');
     expect(new URL(requests[1].url).pathname).toBe(`/v1/blog/articles/${UUID}`);
-    expect(new URL(requests[1].url).searchParams.get('workspaceId')).toBe(UUID);
+    expect(new URL(requests[1].url).searchParams.get('workspace_id')).toBe(UUID);
     expect(requests[1].body).toEqual({ title: 'New title', publishAt: null });
   });
 

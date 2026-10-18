@@ -47,7 +47,7 @@ All notable changes to `@fopost/mcp` are documented here.
   planning, requesting and regenerating spend AI credits and need `ai`;
   `blog_publish_article` needs `publish` and goes live on the configured target at
   once. Rotating the website secret and the website test are dashboard only and have
-  no tool. These routes take `workspaceId` in camelCase on the query.
+  no tool. These routes take `workspace_id` on the query.
 - Broadcast tools (8): `list_broadcasts`, `get_broadcast`, `create_broadcast`,
   `update_broadcast`, `send_broadcast`, `cancel_broadcast`,
   `list_broadcast_recipients` and `delete_broadcast` — one message into every

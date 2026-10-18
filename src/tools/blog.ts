@@ -13,8 +13,8 @@ import type { ToolDefinition } from '../types.js';
  * publish. The website signing secret and the website
  * test are deliberately not here; both stay in the dashboard.
  *
- * Unlike most routes, the API reads `workspaceId` (camelCase) from the query
- * on these, so every per-id call carries it that way.
+ * The workspace travels as `workspace_id` on the query and as `workspaceId` in
+ * a request body, per the API's request schemas.
  */
 
 const ARTICLE_STATUS = z.enum([
@@ -39,7 +39,7 @@ const isoDate = z
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .describe('YYYY-MM-DD');
 
-const workspaceQuery = (id: string) => ({ workspaceId: id });
+const workspaceQuery = (id: string) => ({ workspace_id: id });
 
 const statusList = (status?: string[]) => (status?.length ? status.join(',') : undefined);
 
@@ -150,7 +150,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get('/v1/blog/keywords', {
-          workspaceId: input.workspace_id,
+          workspace_id: input.workspace_id,
           status: statusList(input.status),
           limit: input.limit,
         });
@@ -266,7 +266,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get('/v1/blog/articles', {
-          workspaceId: input.workspace_id,
+          workspace_id: input.workspace_id,
           status: statusList(input.status),
           limit: input.limit,
         });
