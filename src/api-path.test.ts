@@ -561,6 +561,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   blog_get_settings: { workspace_id: UUID },
   blog_update_settings: { workspace_id: UUID, cadence_per_week: 2, target_kind: 'website' },
   blog_list_keywords: { workspace_id: UUID, status: ['suggested', 'planned'], limit: 50 },
+  blog_suggest_seeds: { workspace_id: UUID, seeds: ['social scheduling'], prompt: 'For agencies' },
   blog_plan_keywords: { workspace_id: UUID, seeds: ['social scheduling'] },
   blog_add_keyword: { workspace_id: UUID, keyword: 'social scheduling', planned_for: '2026-10-20' },
   blog_update_keyword: { workspace_id: UUID, id: UUID, status: 'planned' },
@@ -570,6 +571,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   blog_get_article: { workspace_id: UUID, id: UUID },
   blog_update_article: { workspace_id: UUID, id: UUID, title: 'New title', publish_at: null },
   blog_regenerate_article: { workspace_id: UUID, id: UUID },
+  blog_submit_article: { workspace_id: UUID, id: UUID },
   blog_publish_article: { workspace_id: UUID, id: UUID },
   blog_reject_article: { workspace_id: UUID, id: UUID },
   blog_delete_article: { workspace_id: UUID, id: UUID },
@@ -1098,12 +1100,12 @@ describe('blog requests', () => {
     return tool.execute(tool.inputSchema.parse(input));
   }
 
-  it('sends workspaceId in camelCase on the query, and statuses comma-separated', async () => {
+  it('sends workspace_id on the query, and statuses comma-separated', async () => {
     await run('blog_list_keywords');
     const url = new URL(requests[0].url);
     expect(url.pathname).toBe('/v1/blog/keywords');
-    expect(url.searchParams.get('workspaceId')).toBe(UUID);
-    expect(url.searchParams.has('workspace_id')).toBe(false);
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+    expect(url.searchParams.has('workspaceId')).toBe(false);
     expect(url.searchParams.get('status')).toBe('suggested,planned');
     expect(url.searchParams.get('limit')).toBe('50');
   });
@@ -1131,8 +1133,53 @@ describe('blog requests', () => {
     const url = new URL(requests[0].url);
     expect(requests[0].method).toBe('POST');
     expect(url.pathname).toBe(`/v1/blog/articles/${UUID}/publish`);
-    expect(url.searchParams.get('workspaceId')).toBe(UUID);
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
     expect(requests[0].body).toEqual({});
+  });
+
+  it('suggests seeds with a camelCase body carrying the seeds and prompt', async () => {
+    await run('blog_suggest_seeds');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/blog/keywords/suggest');
+    expect(requests[0].body).toEqual({
+      workspaceId: UUID,
+      seeds: ['social scheduling'],
+      prompt: 'For agencies',
+    });
+
+    const tool = allTools().find((t) => t.name === 'blog_suggest_seeds')!;
+    expect(
+      tool.inputSchema.safeParse({ workspace_id: UUID, prompt: 'x'.repeat(501) }).success,
+    ).toBe(false);
+  });
+
+  it('submits an article for approval with the workspace in the query', async () => {
+    await run('blog_submit_article');
+    const url = new URL(requests[0].url);
+    expect(requests[0].method).toBe('POST');
+    expect(url.pathname).toBe(`/v1/blog/articles/${UUID}/submit`);
+    expect(url.searchParams.get('workspace_id')).toBe(UUID);
+    expect(requests[0].body).toEqual({});
+  });
+
+  it('sends the goal and topics on settings and no longer accepts auto_publish', async () => {
+    await run('blog_update_settings', {
+      workspace_id: UUID,
+      goal: 'leads',
+      focus_topics: 'Scheduling',
+      avoid_topics: null,
+    });
+    expect(requests[0].body).toEqual({
+      workspaceId: UUID,
+      goal: 'leads',
+      focusTopics: 'Scheduling',
+      avoidTopics: null,
+    });
+
+    const tool = allTools().find((t) => t.name === 'blog_update_settings')!;
+    expect(tool.inputSchema.parse({ workspace_id: UUID, auto_publish: true })).not.toHaveProperty(
+      'auto_publish',
+    );
   });
 
   it('patches settings and an article with camelCase bodies, keeping an explicit null', async () => {
@@ -1148,14 +1195,14 @@ describe('blog requests', () => {
     await run('blog_update_article');
     expect(requests[1].method).toBe('PATCH');
     expect(new URL(requests[1].url).pathname).toBe(`/v1/blog/articles/${UUID}`);
-    expect(new URL(requests[1].url).searchParams.get('workspaceId')).toBe(UUID);
+    expect(new URL(requests[1].url).searchParams.get('workspace_id')).toBe(UUID);
     expect(requests[1].body).toEqual({ title: 'New title', publishAt: null });
   });
 
   it('exposes no tool that rotates the website secret or sends a test article', () => {
     const names = allTools().map((t) => t.name);
     expect(names.some((n) => /secret|test_website|website_test/.test(n))).toBe(false);
-    expect(names.filter((n) => n.startsWith('blog_'))).toHaveLength(15);
+    expect(names.filter((n) => n.startsWith('blog_'))).toHaveLength(17);
   });
 
   it('never calls an article a post', () => {

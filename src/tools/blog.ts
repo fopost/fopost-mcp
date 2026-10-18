@@ -7,19 +7,21 @@ import type { ToolDefinition } from '../types.js';
  * settings that say where a published article goes. An article is website
  * content, never a social post.
  *
- * Reads, settings and keyword edits need the posts scope; planning keywords,
- * requesting an article and regenerating one spend AI credits and need the ai
- * scope; publishing needs publish. The website signing secret and the website
+ * Reads, settings, keyword edits and submitting for approval need the posts
+ * scope; suggesting search terms, planning keywords, requesting an article and
+ * regenerating one spend AI credits and need the ai scope; publishing needs
+ * publish. The website signing secret and the website
  * test are deliberately not here; both stay in the dashboard.
  *
- * Unlike most routes, the API reads `workspaceId` (camelCase) from the query
- * on these, so every per-id call carries it that way.
+ * The workspace travels as `workspace_id` on the query and as `workspaceId` in
+ * a request body, per the API's request schemas.
  */
 
 const ARTICLE_STATUS = z.enum([
   'queued',
   'writing',
   'draft',
+  'in_review',
   'scheduled',
   'publishing',
   'published',
@@ -27,6 +29,7 @@ const ARTICLE_STATUS = z.enum([
   'rejected',
 ]);
 const KEYWORD_STATUS = z.enum(['suggested', 'planned', 'written', 'dismissed']);
+const GOAL = z.enum(['traffic', 'leads', 'sales', 'signups', 'authority']);
 const IMAGE_TIER = z.enum(['draft', 'standard', 'best']);
 const TARGET_KIND = z.enum(['product_blog', 'account', 'website']);
 
@@ -36,7 +39,7 @@ const isoDate = z
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .describe('YYYY-MM-DD');
 
-const workspaceQuery = (id: string) => ({ workspaceId: id });
+const workspaceQuery = (id: string) => ({ workspace_id: id });
 
 const statusList = (status?: string[]) => (status?.length ? status.join(',') : undefined);
 
@@ -45,7 +48,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'blog_get_settings',
       description:
-        'Read the blog settings for a workspace: topic, audience, language, how many articles are planned per week, the review hold, auto-publish, image quality tier, word range, brand voice and where published articles go. Needs the posts scope.',
+        'Read the blog settings for a workspace: goal, topic, audience, focus and avoid topics, language, how many articles are planned per week, how early a picked keyword starts being written, image quality tier, word range, brand voice, where published articles go, and the status of the last keyword research run. Needs the posts scope.',
       inputSchema: z.object({ workspace_id: workspaceId }),
       async execute({ workspace_id }) {
         return client.get('/v1/blog/settings', workspaceQuery(workspace_id));
@@ -61,6 +64,15 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
         site_url: z.string().url().nullable().optional().describe('The site the articles are for'),
         topic: z.string().nullable().optional(),
         audience: z.string().nullable().optional(),
+        goal: GOAL.nullable()
+          .optional()
+          .describe('What the blog is for; steers suggested search terms and keyword ranking'),
+        focus_topics: z
+          .string()
+          .nullable()
+          .optional()
+          .describe('What the blog wants to write about'),
+        avoid_topics: z.string().nullable().optional().describe('What the blog never writes about'),
         language: z.string().optional(),
         location_code: z.number().int().optional().describe('Market for keyword research'),
         cadence_per_week: z
@@ -76,8 +88,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
           .min(0)
           .max(14)
           .optional()
-          .describe('Days a draft waits for review before it may auto-publish'),
-        auto_publish: z.boolean().optional(),
+          .describe('Days before its planned date that a picked keyword starts being written'),
         image_tier: IMAGE_TIER.optional(),
         in_body_images: z.number().int().min(0).max(3).optional(),
         min_words: z.number().int().optional(),
@@ -109,11 +120,13 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
           siteUrl: input.site_url,
           topic: input.topic,
           audience: input.audience,
+          goal: input.goal,
+          focusTopics: input.focus_topics,
+          avoidTopics: input.avoid_topics,
           language: input.language,
           locationCode: input.location_code,
           cadencePerWeek: input.cadence_per_week,
           reviewHoldDays: input.review_hold_days,
-          autoPublish: input.auto_publish,
           imageTier: input.image_tier,
           inBodyImages: input.in_body_images,
           minWords: input.min_words,
@@ -129,7 +142,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'blog_list_keywords',
       description:
-        'List the keyword plan: each term with its search volume, difficulty, intent, status and the date it is planned for. Needs the posts scope.',
+        'List the keyword plan: each term with its search volume, difficulty, intent, status, the date it is planned for and why it fits the blog goal. Needs the posts scope.',
       inputSchema: z.object({
         workspace_id: workspaceId,
         status: z.array(KEYWORD_STATUS).max(4).optional().describe('Limit to these statuses'),
@@ -137,7 +150,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get('/v1/blog/keywords', {
-          workspaceId: input.workspace_id,
+          workspace_id: input.workspace_id,
           status: statusList(input.status),
           limit: input.limit,
         });
@@ -145,16 +158,42 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
-      name: 'blog_plan_keywords',
+      name: 'blog_suggest_seeds',
       description:
-        'Research keywords for the blog topic and fill the plan. Runs in the background and answers queued; read blog_list_keywords afterwards. Uses AI credits. Needs the ai scope.',
+        'Suggest about 10 search terms from the blog goal and topics, for the user to edit before blog_plan_keywords. Pass the current seeds to refine them and a prompt to steer. Uses AI credits. Needs the ai scope.',
       inputSchema: z.object({
         workspace_id: workspaceId,
         seeds: z
           .array(z.string().min(1).max(80))
           .max(20)
           .optional()
-          .describe('Terms to start from; omit to work from the blog topic'),
+          .describe('The current terms, to refine'),
+        prompt: z
+          .string()
+          .max(500)
+          .optional()
+          .describe('How to steer the suggestions, e.g. more beginner terms'),
+      }),
+      async execute(input) {
+        return client.post('/v1/blog/keywords/suggest', {
+          workspaceId: input.workspace_id,
+          seeds: input.seeds,
+          prompt: input.prompt,
+        });
+      },
+    },
+
+    {
+      name: 'blog_plan_keywords',
+      description:
+        'Research search terms in the background and answer queued. Results land as suggested keywords and do not fill the calendar; pick one with blog_update_keyword status planned. Follow the run in plan_run on blog_get_settings. Uses AI credits. Needs the ai scope.',
+      inputSchema: z.object({
+        workspace_id: workspaceId,
+        seeds: z
+          .array(z.string().min(1).max(80))
+          .max(20)
+          .optional()
+          .describe('Terms to research; omit to derive them from the blog settings'),
       }),
       async execute(input) {
         return client.post('/v1/blog/keywords/plan', {
@@ -185,7 +224,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'blog_update_keyword',
       description:
-        'Change a keyword: move it to another date, plan a suggestion, or dismiss it. Needs the posts scope.',
+        'Change a keyword: move it to another date, pick a suggestion by setting status planned (it takes the next free date), or dismiss it. Needs the posts scope.',
       inputSchema: z.object({
         workspace_id: workspaceId,
         id: z.string().uuid().describe('Keyword id, as blog_list_keywords returns it'),
@@ -222,12 +261,12 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
         'List articles, newest first, with title, keyword, status, word count and where each one was published. Needs the posts scope.',
       inputSchema: z.object({
         workspace_id: workspaceId,
-        status: z.array(ARTICLE_STATUS).max(8).optional().describe('Limit to these statuses'),
+        status: z.array(ARTICLE_STATUS).max(9).optional().describe('Limit to these statuses'),
         limit: z.number().int().min(1).max(200).optional(),
       }),
       async execute(input) {
         return client.get('/v1/blog/articles', {
-          workspaceId: input.workspace_id,
+          workspace_id: input.workspace_id,
           status: statusList(input.status),
           limit: input.limit,
         });
@@ -277,7 +316,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'blog_update_article',
       description:
-        'Edit a draft or scheduled article: title, slug, excerpt, meta fields, body Markdown, tags, or the publish date. Give publish_at to put it on the calendar, or null to return it to review. An article being written or already published answers 409. Needs the posts scope.',
+        'Edit a draft or scheduled article: title, slug, excerpt, meta fields, body Markdown, tags, or the publish date. Give publish_at to put an article in review on the calendar, or null to return it to review; a draft answers 409 until blog_submit_article. An article being written or already published answers 409. Needs the posts scope.',
       inputSchema: z.object({
         workspace_id: workspaceId,
         id: z.string().uuid(),
@@ -328,9 +367,24 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'blog_submit_article',
+      description:
+        'Submit a draft, failed or rejected article for approval, moving it to in_review. Only an article in review can be published or scheduled. Any other status answers 409. Needs the posts scope.',
+      inputSchema: z.object({ workspace_id: workspaceId, id: z.string().uuid() }),
+      async execute(input) {
+        return client.request(
+          'POST',
+          `/v1/blog/articles/${input.id}/submit`,
+          {},
+          workspaceQuery(input.workspace_id),
+        );
+      },
+    },
+
+    {
       name: 'blog_publish_article',
       description:
-        'Publish an article now to the target in the blog settings: the product blog, a connected account, or your website. This goes live and cannot be recalled from here; only call it when the user has asked for this article to be published. Answers 409 no_target when no target is set. Needs the publish scope.',
+        'Approve an article in review and publish it now to the target in the blog settings: the product blog, a connected account, or your website. This goes live and cannot be recalled from here; only call it when the user has asked for this article to be published. A draft answers 409 until blog_submit_article; no target answers 409 no_target. Needs the publish scope.',
       inputSchema: z.object({ workspace_id: workspaceId, id: z.string().uuid() }),
       async execute(input) {
         return client.request(
@@ -345,7 +399,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'blog_reject_article',
       description:
-        'Reject a draft so it is never published and leaves the review queue. The article is kept and can still be read. Needs the posts scope.',
+        'Reject a draft or an article in review so it is never published and leaves the review queue. The article is kept and can still be read. Needs the posts scope.',
       inputSchema: z.object({ workspace_id: workspaceId, id: z.string().uuid() }),
       async execute(input) {
         return client.request(
