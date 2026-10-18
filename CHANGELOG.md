@@ -2,7 +2,7 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
-## Unreleased
+## 0.5.0
 
 ### Breaking
 
@@ -89,9 +89,6 @@ All notable changes to `@fopost/mcp` are documented here.
   assets, Performance Max asset groups, Local Services leads, conversion actions, and
   `run_google_ads_query` for a raw GAQL read.
 - `snapchat` is accepted wherever a platform is named.
-
-### Added
-
 - Slack tools (4): `list_slack_channels`, `list_slack_members` (a member id is the
   handle for `start_inbox_conversation`), `get_slack_identity` and
   `set_slack_identity` for the name and icon posts appear under. All need the
@@ -141,11 +138,12 @@ All notable changes to `@fopost/mcp` are documented here.
   subreddit it came from.
 - `vote_inbox_item` votes a comment or message up or down, or takes the vote
   back with `none`, where `canVote` is true (scopes `inbox` and `publish`).
-
-## 0.5.0
-
-### Added
-
+- Connected-site blog tools (8): `list_blogs`, `list_articles`, `get_article`,
+  `create_article`, `update_article`, `delete_article`, `list_products` and
+  `update_product` for the blogs, articles and products already on a connected
+  WordPress site or Shopify store, addressed by the platform's own ids.
+  `update_article` edits the live article in place and never creates a duplicate.
+  Reads need the `posts` scope; the writes need `publish` too.
 - Ads campaign tree tools (17): read an ad account's tree, and create, get,
   update, delete and duplicate campaigns, ad sets and ads inside an ad set, plus
   `bulk_set_ad_status`. Changes need the `ads` and `publish` scopes and start

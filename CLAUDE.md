@@ -150,7 +150,7 @@ untested logic.
 
 ## Releasing
 
-`@fopost/mcp` **is published on npm** (0.2.1 at the time of writing). Releasing is a tag:
+`@fopost/mcp` **is published on npm** (0.5.0 at the time of writing). Releasing is a tag:
 
 1. Bump `version` in `package.json` and commit.
 2. `git tag v<version> && git push --tags` — the tag must match `package.json` exactly or the
