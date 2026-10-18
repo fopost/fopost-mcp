@@ -403,7 +403,48 @@ const TOOL_INPUTS: Record<string, unknown> = {
     connection_id: UUID,
     ad_account_id: 'act_1',
     pixel_id: 'px_1',
-    events: [{ event_name: 'CompletePayment', occurred_at: '2026-09-18T10:04:00Z' }],
+    events: [
+      {
+        event_name: 'Purchase',
+        occurred_at: '2026-09-18T10:04:00Z',
+        event_id: 'ord_1',
+        action_source: 'website',
+        email: 'buyer@yourbrand.com',
+        external_id: 'u_1',
+        click_id: 'fb.1.1',
+        content_ids: ['sku_1'],
+      },
+    ],
+  },
+  list_conversion_events: { workspace_id: UUID, connection_id: UUID, limit: 10 },
+  list_pixels: { connection_id: UUID, ad_account_id: 'act_1' },
+  create_pixel: { workspace_id: UUID, connection_id: UUID, ad_account_id: 'act_1', name: 'Shop' },
+  get_pixel: { id: 'px_1', connection_id: UUID, ad_account_id: 'act_1' },
+  update_pixel: {
+    id: 'px_1',
+    workspace_id: UUID,
+    connection_id: UUID,
+    ad_account_id: 'act_1',
+    data_use_setting: 'analytics_only',
+  },
+  get_pixel_stats: { id: 'px_1', connection_id: UUID, ad_account_id: 'act_1' },
+  get_event_match_quality: { id: 'px_1', connection_id: UUID, ad_account_id: 'act_1' },
+  list_custom_conversions: { connection_id: UUID, ad_account_id: 'act_1' },
+  create_custom_conversion: {
+    workspace_id: UUID,
+    connection_id: UUID,
+    ad_account_id: 'act_1',
+    pixel_id: 'px_1',
+    name: 'Checkout',
+    event_type: 'PURCHASE',
+    rule: { url_contains: '/thank-you' },
+    default_value_minor: 4900,
+  },
+  delete_custom_conversion: {
+    id: 'cc_1',
+    workspace_id: UUID,
+    connection_id: UUID,
+    ad_account_id: 'act_1',
   },
   list_ad_comments: { connection_id: UUID, ad_id: 'ad_1' },
   reply_to_ad_comment: {
@@ -885,6 +926,95 @@ describe('inbox and ads requests', () => {
         headers: { 'content-type': 'application/json' },
       })) as unknown as typeof fetch;
     expect(await ads.execute({ workspace_id: UUID })).toEqual([{ id: UUID, status: 'paused' }]);
+  });
+});
+
+describe('ads tracking requests', () => {
+  function run(name: string) {
+    const tool = allTools().find((t) => t.name === name)!;
+    return tool.execute(tool.inputSchema.parse(TOOL_INPUTS[name]));
+  }
+
+  it('uploads conversions as a camelCase body with the new event fields', async () => {
+    await run('upload_ad_conversions');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/ads/conversions');
+    const body = requests[0].body as { pixelId: string; events: Record<string, unknown>[] };
+    expect(body.pixelId).toBe('px_1');
+    expect(body.events[0]).toMatchObject({
+      eventName: 'Purchase',
+      eventId: 'ord_1',
+      actionSource: 'website',
+      externalId: 'u_1',
+      clickId: 'fb.1.1',
+      contentIds: ['sku_1'],
+    });
+    expect(body.events[0]).not.toHaveProperty('event_name');
+  });
+
+  it('reads a pixel with the account ids in the query', async () => {
+    await run('get_pixel');
+    const url = new URL(requests[0].url);
+    expect(requests[0].method).toBe('GET');
+    expect(url.pathname).toBe('/v1/ads/pixels/px_1');
+    expect(url.searchParams.get('connection_id')).toBe(UUID);
+    expect(url.searchParams.get('ad_account_id')).toBe('act_1');
+
+    await run('get_pixel_stats');
+    expect(new URL(requests[1].url).pathname).toBe('/v1/ads/pixels/px_1/stats');
+    await run('get_event_match_quality');
+    expect(new URL(requests[2].url).pathname).toBe('/v1/ads/pixels/px_1/match-quality');
+  });
+
+  it('patches a pixel with a camelCase body', async () => {
+    await run('update_pixel');
+    expect(requests[0].method).toBe('PATCH');
+    expect(requests[0].body).toEqual({
+      workspaceId: UUID,
+      connectionId: UUID,
+      adAccountId: 'act_1',
+      dataUseSetting: 'analytics_only',
+    });
+  });
+
+  it('creates a custom conversion with a camelCase body and rule', async () => {
+    await run('create_custom_conversion');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/ads/custom-conversions');
+    expect(requests[0].body).toEqual({
+      workspaceId: UUID,
+      connectionId: UUID,
+      adAccountId: 'act_1',
+      pixelId: 'px_1',
+      name: 'Checkout',
+      eventType: 'PURCHASE',
+      rule: { urlContains: '/thank-you' },
+      defaultValueMinor: 4900,
+    });
+  });
+
+  it('deletes a custom conversion with the account ids in the body', async () => {
+    await run('delete_custom_conversion');
+    expect(requests[0].method).toBe('DELETE');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/ads/custom-conversions/cc_1');
+    expect(requests[0].body).toEqual({
+      workspaceId: UUID,
+      connectionId: UUID,
+      adAccountId: 'act_1',
+    });
+  });
+
+  it('lists sent batches with the filters in the query', async () => {
+    await run('list_conversion_events');
+    const url = new URL(requests[0].url);
+    expect(url.pathname).toBe('/v1/ads/conversions/events');
+    expect(url.searchParams.get('limit')).toBe('10');
+  });
+
+  it('exposes no tool for the idempotent send or pixel sharing', () => {
+    const names = allTools().map((t) => t.name);
+    expect(names).not.toContain('share_pixel');
+    expect(allTools().filter((t) => t.name === 'send_conversion_events')).toHaveLength(1);
   });
 });
 

@@ -2,6 +2,21 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
+## Unreleased
+
+### Added
+
+- Ads tracking tools (10): `list_pixels`, `create_pixel`, `get_pixel`, `update_pixel`,
+  `get_pixel_stats`, `get_event_match_quality`, `list_custom_conversions`,
+  `create_custom_conversion`, `delete_custom_conversion` and `list_conversion_events`.
+  All need the `ads` scope.
+
+### Changed
+
+- `upload_ad_conversions` events take `event_id`, `action_source`, `source_url`,
+  `external_id`, `client_ip_address`, `client_user_agent`, `click_id`, `browser_id` and
+  `content_ids`; the answer carries `id`, `accepted`, `eventCount` and `replayed`.
+
 ## 0.6.0
 
 ### Added

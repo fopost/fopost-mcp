@@ -620,6 +620,17 @@ Prefer to run the server yourself? The stdio package below is the same product, 
 | `set_conversion_rule_ad_set`     | Attach or detach a conversion rule and an ad set                 |
 | `get_conversion_metrics`         | Read what a conversion rule recorded                             |
 | `send_conversion_events`         | Send off-site conversions back to the network                    |
+| `upload_ad_conversions`          | Send offline conversions against a pixel                         |
+| `list_conversion_events`         | List the conversion batches sent to the network                  |
+| `list_pixels`                    | List the pixels on an ad account                                 |
+| `create_pixel`                   | Create a pixel and get its install script                        |
+| `get_pixel`                      | Read one pixel                                                   |
+| `update_pixel`                   | Rename a pixel or change its data-use setting                    |
+| `get_pixel_stats`                | What a pixel fired over the last 28 days                         |
+| `get_event_match_quality`        | How well each pixel event matches people                         |
+| `list_custom_conversions`        | List the custom conversions on an ad account                     |
+| `create_custom_conversion`       | Create a custom conversion on a pixel                            |
+| `delete_custom_conversion`       | Delete a custom conversion                                       |
 | `get_content_decay`              | How long a post keeps earning, by age band                       |
 | `get_posting_frequency`          | What each weekly posting cadence earned per post                 |
 | `get_post_timeline`              | Every metric reading held for one post, oldest first             |
