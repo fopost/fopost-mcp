@@ -33,6 +33,10 @@ import { googleAdsTools } from './tools/ads-google.js';
 import { blogTools } from './tools/blog.js';
 import { whatsappTools } from './tools/whatsapp.js';
 import { blogsTools } from './tools/blogs.js';
+import { connectSessionsTools } from './tools/connect-sessions.js';
+import { webhooksTools } from './tools/webhooks.js';
+import { queueTools } from './tools/queue.js';
+import { automationsTools } from './tools/automations.js';
 import type { ToolDefinition } from './types.js';
 
 const DEFAULT_API_URL = 'https://api.fopost.com';
@@ -71,6 +75,10 @@ async function main() {
     ...blogTools(client),
     ...whatsappTools(client),
     ...blogsTools(client),
+    ...connectSessionsTools(client),
+    ...webhooksTools(client),
+    ...queueTools(client),
+    ...automationsTools(client),
   ];
   const toolMap = new Map(allTools.map((t) => [t.name, t]));
 

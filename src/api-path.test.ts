@@ -15,6 +15,10 @@ import { googleAdsTools } from './tools/ads-google.js';
 import { blogTools } from './tools/blog.js';
 import { whatsappTools } from './tools/whatsapp.js';
 import { blogsTools } from './tools/blogs.js';
+import { connectSessionsTools } from './tools/connect-sessions.js';
+import { webhooksTools } from './tools/webhooks.js';
+import { queueTools } from './tools/queue.js';
+import { automationsTools } from './tools/automations.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -40,6 +44,7 @@ const TOOL_INPUTS: Record<string, unknown> = {
   schedule_post: { workspace_id: UUID, content: 'hi', account_ids: [UUID] },
   edit_post: { id: UUID, content: 'hi' },
   cancel_post: { id: UUID },
+  unpublish_post: { id: UUID },
   delete_post: { id: UUID },
   list_post_deliveries: { id: UUID },
   get_upload_limits: { workspace_id: UUID },
@@ -633,6 +638,31 @@ const TOOL_INPUTS: Record<string, unknown> = {
   delete_article: { account_id: UUID, blog_id: '11', article_id: '99' },
   list_products: { account_id: UUID, status: 'active' },
   update_product: { account_id: UUID, product_id: '7', title: 'Mug XL' },
+  create_connect_session: { external_user_id: 'user-42', platforms: ['linkedin'] },
+  get_connect_session: { id: UUID },
+  list_webhooks: {},
+  create_webhook: {
+    workspace_id: UUID,
+    url: 'https://yourbrand.com/hooks/fopost',
+    events: ['post.published'],
+  },
+  update_webhook: { id: UUID, active: true },
+  delete_webhook: { id: UUID },
+  test_webhook: { id: UUID },
+  list_webhook_deliveries: { id: UUID },
+  get_webhook_delivery: { id: UUID, delivery_id: UUID },
+  redeliver_webhook_delivery: { id: UUID, delivery_id: UUID },
+  list_queue_slots: { workspace_id: UUID },
+  create_queue_slot: { workspace_id: UUID, weekday: 1, time: '09:00', timezone: 'Europe/Berlin' },
+  update_queue_slot: { id: UUID, time: '10:30' },
+  delete_queue_slot: { id: UUID },
+  get_queue_next: { workspace_id: UUID },
+  preview_queue: { workspace_id: UUID, count: 3 },
+  list_automations: {},
+  get_automation: { id: UUID },
+  list_automation_versions: { id: UUID },
+  get_automation_version: { id: UUID, version: 2 },
+  restore_automation_version: { id: UUID, version: 2 },
 };
 
 let urls: string[];
@@ -657,6 +687,10 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...blogTools(client),
     ...whatsappTools(client),
     ...blogsTools(client),
+    ...connectSessionsTools(client),
+    ...webhooksTools(client),
+    ...queueTools(client),
+    ...automationsTools(client),
   ];
 }
 

@@ -443,6 +443,28 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `delete_article`                        | Remove an article from a connected site                          |
 | `list_products`                         | List a connected store's products                                |
 | `update_product`                        | Change a product on a connected store                            |
+| `unpublish_post`                        | Take a published post down on every network (needs `publish`)    |
+| `create_connect_session`                | Mint a hosted connect link for one of your end users             |
+| `get_connect_session`                   | Poll a hosted connect link for the connected account             |
+| `list_webhooks`                         | List webhooks with their events, state and failure count         |
+| `create_webhook`                        | Register an endpoint for workspace events (secret returned once) |
+| `update_webhook`                        | Change a webhook, rotate its secret, or re-enable it             |
+| `delete_webhook`                        | Delete a webhook                                                 |
+| `test_webhook`                          | Send a test `post.published` payload to one webhook              |
+| `list_webhook_deliveries`               | Every delivery attempt to a webhook, newest first                |
+| `get_webhook_delivery`                  | One delivery attempt, with the payload that was sent             |
+| `redeliver_webhook_delivery`            | Send a delivery again with the identical body                    |
+| `list_queue_slots`                      | List the weekly posting slots of a workspace                     |
+| `create_queue_slot`                     | Add a weekly posting slot                                        |
+| `update_queue_slot`                     | Change a posting slot; moved posts come back in `moved`          |
+| `delete_queue_slot`                     | Remove a posting slot; moved posts come back in `moved`          |
+| `get_queue_next`                        | The time a post added to the queue now would get                 |
+| `preview_queue`                         | The next free slot occurrences, in order                         |
+| `list_automations`                      | List automations with trigger type, state and run count          |
+| `get_automation`                        | Read one automation with its graph and steps                     |
+| `list_automation_versions`              | Every saved version of an automation graph, newest first         |
+| `get_automation_version`                | The graph as it was saved at one version                         |
+| `restore_automation_version`            | Save an old version's graph as a new version on top              |
 
 ## Claude Code plugin
 
