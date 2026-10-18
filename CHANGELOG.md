@@ -134,6 +134,13 @@ All notable changes to `@fopost/mcp` are documented here.
   keyed by the platform's own metric names — ad-break earnings, story taps, a retention
   curve, the search terms behind a listing. Needs the `analytics` scope; a network whose
   metric access has not been granted yet answers `503 platform_metrics_unavailable`.
+- Reddit tools (5): `list_reddit_subreddits`, `list_reddit_subreddit_rules`,
+  `list_reddit_flairs` and `set_reddit_default_subreddit` (scope `accounts`),
+  plus `validate_subreddit`, which answers whether a subreddit exists and takes
+  a post before one is created (scope `posts`). A flair id is valid only in the
+  subreddit it came from.
+- `vote_inbox_item` votes a comment or message up or down, or takes the vote
+  back with `none`, where `canVote` is true (scopes `inbox` and `publish`).
 
 ## 0.5.0
 
