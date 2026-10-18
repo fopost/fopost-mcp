@@ -8,13 +8,63 @@ const namedItem = z.object({ id: z.string(), name: z.string() });
 const conversionEvent = z.object({
   event_name: z.string().max(64),
   occurred_at: z.string().describe('ISO 8601'),
+  event_id: z
+    .string()
+    .max(128)
+    .optional()
+    .describe('Your own id, so a browser and server pair is counted once'),
+  action_source: z
+    .enum([
+      'website',
+      'app',
+      'email',
+      'phone_call',
+      'chat',
+      'physical_store',
+      'system_generated',
+      'business_messaging',
+      'other',
+    ])
+    .optional()
+    .describe('Where the conversion happened; website when omitted'),
+  source_url: z.string().url().max(2048).optional().describe('The page the event fired on'),
   email: z.string().email().optional(),
   phone: z.string().max(32).optional(),
+  external_id: z.string().max(128).optional().describe('Your own user id, hashed before it leaves'),
+  client_ip_address: z.string().ip().optional(),
+  client_user_agent: z.string().max(512).optional(),
+  click_id: z.string().max(256).optional().describe("The network's click id"),
+  browser_id: z.string().max(256).optional().describe("The network's browser id"),
   value_minor: z.number().int().min(0).optional(),
   currency: z.string().length(3).optional(),
   order_id: z.string().max(128).optional(),
+  content_ids: z.array(z.string().max(128)).max(100).optional(),
 });
 type ConversionEvent = z.infer<typeof conversionEvent>;
+
+const CUSTOM_CONVERSION_EVENT_TYPES = [
+  'ADD_PAYMENT_INFO',
+  'ADD_TO_CART',
+  'ADD_TO_WISHLIST',
+  'COMPLETE_REGISTRATION',
+  'CONTENT_VIEW',
+  'INITIATED_CHECKOUT',
+  'LEAD',
+  'PURCHASE',
+  'SEARCH',
+  'CONTACT',
+  'CUSTOMIZE_PRODUCT',
+  'DONATE',
+  'FIND_LOCATION',
+  'SCHEDULE',
+  'START_TRIAL',
+  'SUBMIT_APPLICATION',
+  'SUBSCRIBE',
+  'OTHER',
+] as const;
+
+const pixelPath = (id: string) => `/v1/ads/pixels/${id}`;
+const customConversionPath = (id: string) => `/v1/ads/custom-conversions/${id}`;
 
 const adBudget = z.object({
   minor: z.number().int().positive().describe('Amount in the ad account currency, minor units'),
@@ -157,6 +207,30 @@ const metaWrite = {
 
 function metaQuery(input: { workspace_id?: string; connection_id: string }) {
   return { workspace_id: input.workspace_id, connection_id: input.connection_id };
+}
+
+/** Pixels and custom conversions live on one ad account, so every read names it. */
+const trackingRead = { ...metaRead, ad_account_id: z.string().describe('Ad account id') };
+const trackingWrite = { ...metaWrite, ad_account_id: z.string().describe('Ad account id') };
+
+function trackingQuery(input: {
+  workspace_id?: string;
+  connection_id: string;
+  ad_account_id: string;
+}) {
+  return { ...metaQuery(input), ad_account_id: input.ad_account_id };
+}
+
+function trackingBody(input: {
+  workspace_id: string;
+  connection_id: string;
+  ad_account_id: string;
+}) {
+  return {
+    workspaceId: input.workspace_id,
+    connectionId: input.connection_id,
+    adAccountId: input.ad_account_id,
+  };
 }
 
 const CONVERSION_TYPES = [
@@ -474,29 +548,189 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'upload_ad_conversions',
       description:
-        'Send offline conversions against a pixel the ad account owns. Emails and phone numbers are hashed before they leave FoPost. Needs the ads scope.',
+        'Send offline conversions against a pixel the ad account owns. Emails, phones and external ids are hashed before they leave FoPost. Answers the batch id, how many the network accepted and the event count. Needs the ads scope.',
       inputSchema: z.object({
-        ...metaWrite,
-        ad_account_id: z.string().describe('Ad account id'),
-        pixel_id: z.string().describe('A pixel on that ad account, from list_audiences'),
+        ...trackingWrite,
+        pixel_id: z.string().describe('A pixel on that ad account, from list_pixels'),
         events: z.array(conversionEvent).min(1).max(1000),
       }),
       async execute(input) {
         return client.post('/v1/ads/conversions', {
-          workspaceId: input.workspace_id,
-          connectionId: input.connection_id,
-          adAccountId: input.ad_account_id,
+          ...trackingBody(input),
           pixelId: input.pixel_id,
           events: input.events.map((event: ConversionEvent) => ({
             eventName: event.event_name,
             occurredAt: event.occurred_at,
+            eventId: event.event_id,
+            actionSource: event.action_source,
+            sourceUrl: event.source_url,
             email: event.email,
             phone: event.phone,
+            externalId: event.external_id,
+            clientIpAddress: event.client_ip_address,
+            clientUserAgent: event.client_user_agent,
+            clickId: event.click_id,
+            browserId: event.browser_id,
             valueMinor: event.value_minor,
             currency: event.currency,
             orderId: event.order_id,
+            contentIds: event.content_ids,
           })),
         });
+      },
+    },
+
+    // No tool for POST /v1/ads/conversions/events (machine-sent, idempotent) or pixel sharing (an admin action).
+    {
+      name: 'list_conversion_events',
+      description:
+        'List the conversion batches FoPost sent to the network, newest first, with each event as its hashed identifiers. Needs the ads scope.',
+      inputSchema: z.object({
+        workspace_id: z.string().uuid().optional(),
+        connection_id: z.string().uuid().optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+      }),
+      async execute(input) {
+        return client.get('/v1/ads/conversions/events', {
+          workspace_id: input.workspace_id,
+          connection_id: input.connection_id,
+          limit: input.limit,
+        });
+      },
+    },
+
+    {
+      name: 'list_pixels',
+      description: 'List the pixels on one ad account. Needs the ads scope.',
+      inputSchema: z.object({ ...trackingRead }),
+      async execute(input) {
+        return client.get('/v1/ads/pixels', trackingQuery(input));
+      },
+    },
+
+    {
+      name: 'create_pixel',
+      description:
+        'Create a pixel on an ad account. The answer carries the install script. Needs the ads scope.',
+      inputSchema: z.object({ ...trackingWrite, name: z.string().min(1).max(100) }),
+      async execute(input) {
+        return client.post('/v1/ads/pixels', { ...trackingBody(input), name: input.name });
+      },
+    },
+
+    {
+      name: 'get_pixel',
+      description:
+        'Read one pixel: its install script, data-use setting and when it last fired. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...trackingRead }),
+      async execute(input) {
+        return client.get(pixelPath(input.id), trackingQuery(input));
+      },
+    },
+
+    {
+      name: 'update_pixel',
+      description: 'Rename a pixel or change its data-use setting. Needs the ads scope.',
+      inputSchema: z.object({
+        id: metaId,
+        ...trackingWrite,
+        name: z.string().min(1).max(100).optional(),
+        data_use_setting: z.enum(['advertising_and_analytics', 'analytics_only']).optional(),
+      }),
+      async execute(input) {
+        return client.request('PATCH', pixelPath(input.id), {
+          ...trackingBody(input),
+          name: input.name,
+          dataUseSetting: input.data_use_setting,
+        });
+      },
+    },
+
+    {
+      name: 'get_pixel_stats',
+      description:
+        'Count what a pixel fired over the last 28 days, per event name. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...trackingRead }),
+      async execute(input) {
+        return client.get(`${pixelPath(input.id)}/stats`, trackingQuery(input));
+      },
+    },
+
+    {
+      name: 'get_event_match_quality',
+      description:
+        'Read how well each pixel event matches people: the score and which identifiers reach it. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...trackingRead }),
+      async execute(input) {
+        return client.get(`${pixelPath(input.id)}/match-quality`, trackingQuery(input));
+      },
+    },
+
+    {
+      name: 'list_custom_conversions',
+      description:
+        'List the custom conversions on one ad account, with the rule each one reads. Needs the ads scope.',
+      inputSchema: z.object({ ...trackingRead }),
+      async execute(input) {
+        return client.get('/v1/ads/custom-conversions', trackingQuery(input));
+      },
+    },
+
+    {
+      name: 'create_custom_conversion',
+      description:
+        'Create a custom conversion on a pixel: a standard event type plus a URL rule on a pixel event. Needs the ads scope.',
+      inputSchema: z.object({
+        ...trackingWrite,
+        pixel_id: z
+          .string()
+          .min(1)
+          .max(64)
+          .describe('A pixel on that ad account, from list_pixels'),
+        name: z.string().min(1).max(100),
+        event_type: z.enum(CUSTOM_CONVERSION_EVENT_TYPES),
+        rule: z.object({
+          event_name: z.string().min(1).max(64).optional().describe('Default PageView'),
+          url_contains: z.string().min(1).max(500).optional(),
+          url_equals: z
+            .string()
+            .url()
+            .max(2048)
+            .optional()
+            .describe('Pick one of url_contains and url_equals'),
+        }),
+        description: z.string().max(1000).optional(),
+        default_value_minor: z
+          .number()
+          .int()
+          .min(0)
+          .optional()
+          .describe('What one conversion is worth, account currency, minor units'),
+      }),
+      async execute(input) {
+        return client.post('/v1/ads/custom-conversions', {
+          ...trackingBody(input),
+          pixelId: input.pixel_id,
+          name: input.name,
+          eventType: input.event_type,
+          rule: {
+            eventName: input.rule.event_name,
+            urlContains: input.rule.url_contains,
+            urlEquals: input.rule.url_equals,
+          },
+          description: input.description,
+          defaultValueMinor: input.default_value_minor,
+        });
+      },
+    },
+
+    {
+      name: 'delete_custom_conversion',
+      description:
+        'Delete a custom conversion. The network keeps its history. Needs the ads scope.',
+      inputSchema: z.object({ id: metaId, ...trackingWrite }),
+      async execute(input) {
+        return client.request('DELETE', customConversionPath(input.id), trackingBody(input));
       },
     },
 

@@ -6,6 +6,10 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ### Added
 
+- Ads tracking tools (10): `list_pixels`, `create_pixel`, `get_pixel`, `update_pixel`,
+  `get_pixel_stats`, `get_event_match_quality`, `list_custom_conversions`,
+  `create_custom_conversion`, `delete_custom_conversion` and `list_conversion_events`.
+  All need the `ads` scope.
 - X engagement on inbox items: `repost_inbox_item`, `unrepost_inbox_item`,
   `bookmark_inbox_item` and `unbookmark_inbox_item`, X only where `can_repost` or
   `can_bookmark` is true. Inbox items carry `reposted`, `bookmarked`, `can_repost` and
@@ -18,6 +22,33 @@ All notable changes to `@fopost/mcp` are documented here.
 - Existing X accounts must be reconnected before repost, bookmark and follow work; an
   older token answers `409 reconnect_required`. Every one of these calls is an X call
   metered to the workspace, and a spent X balance answers `402 platform_balance_spent`.
+
+### Changed
+
+- `upload_ad_conversions` events take `event_id`, `action_source`, `source_url`,
+  `external_id`, `client_ip_address`, `client_user_agent`, `click_id`, `browser_id` and
+  `content_ids`; the answer carries `id`, `accepted`, `eventCount` and `replayed`.
+
+## 0.6.0
+
+### Added
+
+- `create_connect_session` and `get_connect_session`: hosted connect links that let
+  one of your end users connect a social account into the workspace with no FoPost
+  login. Need the `accounts` scope.
+- Webhook tools (8): `list_webhooks`, `create_webhook`, `update_webhook`,
+  `delete_webhook`, `test_webhook`, `list_webhook_deliveries`, `get_webhook_delivery`
+  and `redeliver_webhook_delivery`. The signing secret comes back once, on create or
+  rotate. Need the `webhooks` scope.
+- Posting queue tools (6): `list_queue_slots`, `create_queue_slot`,
+  `update_queue_slot`, `delete_queue_slot`, `get_queue_next` and `preview_queue`.
+  `schedule_post` and `edit_post` take `schedule: "queue"` to drop a post into the
+  next free slot. Need the `posts` scope.
+- `unpublish_post`: takes a published post down on every network it is live on; the
+  post stays as a record. Needs the `publish` scope.
+- Automation tools (5): `list_automations`, `get_automation`,
+  `list_automation_versions`, `get_automation_version` and
+  `restore_automation_version`. Need the `automations` scope.
 
 ## 0.5.0
 

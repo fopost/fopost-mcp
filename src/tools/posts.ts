@@ -55,7 +55,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
     {
       name: 'schedule_post',
       description:
-        'Create and schedule a post. Pass the body text, target account ids or an account group, and an ISO 8601 schedule_at. Omit schedule_at to save as draft. Use publish_now=true to publish immediately after creation.',
+        'Create and schedule a post. Pass the body text, target account ids or an account group, and an ISO 8601 schedule_at, or schedule="queue" for the next free posting slot. Omit both to save as draft. Use publish_now=true to publish immediately after creation.',
       inputSchema: z.object({
         workspace_id: z.string().uuid().describe('Workspace id (uuid)'),
         content: z.string().describe('Post body text'),
@@ -70,6 +70,12 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
           .optional()
           .describe('Post to every account in this group, merged with account_ids'),
         schedule_at: z.string().optional().describe('ISO 8601 timestamp; omit to save as draft'),
+        schedule: z
+          .enum(['queue'])
+          .optional()
+          .describe(
+            '"queue" drops the post into the next free posting slot instead of schedule_at',
+          ),
         publish_now: z.boolean().default(false),
         media_urls: z
           .array(z.string().url())
@@ -94,6 +100,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
             },
           ],
           schedule_at: input.schedule_at,
+          schedule: input.schedule,
           accounts: input.account_ids?.map((id: string) => ({ id })),
           account_group_id: input.account_group_id,
           labels: input.labels,
@@ -117,11 +124,16 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
 
     {
       name: 'edit_post',
-      description: 'Update an existing post. Only provided fields are changed.',
+      description:
+        'Update an existing post. Only provided fields are changed. Pass schedule="queue" to move it onto the next free posting slot.',
       inputSchema: z.object({
         id: z.string().uuid().describe('Post id (uuid)'),
         content: z.string().optional(),
         schedule_at: z.string().optional(),
+        schedule: z
+          .enum(['queue'])
+          .optional()
+          .describe('"queue" moves the post into the next free posting slot'),
         labels: z.array(z.string().uuid()).optional(),
         file_paths: filePathsSchema,
       }),
@@ -131,6 +143,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
           body.content = [{ text: input.content, media: [], position: 0 }];
         }
         if (input.schedule_at !== undefined) body.schedule_at = input.schedule_at;
+        if (input.schedule !== undefined) body.schedule = input.schedule;
         if (input.labels !== undefined) body.labels = input.labels;
         if (!input.file_paths?.length) return client.put(`/v1/posts/${input.id}`, body);
 
@@ -176,6 +189,18 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.post(`/v1/posts/${input.id}/cancel`);
+      },
+    },
+
+    {
+      name: 'unpublish_post',
+      description:
+        'Take a published post down on every network it is live on; the post stays as a record. Refused with 409 when one of those networks cannot delete a live post. Needs the publish scope.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Post id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/posts/${input.id}/unpublish`);
       },
     },
 
