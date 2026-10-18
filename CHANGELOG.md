@@ -2,6 +2,27 @@
 
 All notable changes to `@fopost/mcp` are documented here.
 
+## 0.6.0
+
+### Added
+
+- `create_connect_session` and `get_connect_session`: hosted connect links that let
+  one of your end users connect a social account into the workspace with no FoPost
+  login. Need the `accounts` scope.
+- Webhook tools (8): `list_webhooks`, `create_webhook`, `update_webhook`,
+  `delete_webhook`, `test_webhook`, `list_webhook_deliveries`, `get_webhook_delivery`
+  and `redeliver_webhook_delivery`. The signing secret comes back once, on create or
+  rotate. Need the `webhooks` scope.
+- Posting queue tools (6): `list_queue_slots`, `create_queue_slot`,
+  `update_queue_slot`, `delete_queue_slot`, `get_queue_next` and `preview_queue`.
+  `schedule_post` and `edit_post` take `schedule: "queue"` to drop a post into the
+  next free slot. Need the `posts` scope.
+- `unpublish_post`: takes a published post down on every network it is live on; the
+  post stays as a record. Needs the `publish` scope.
+- Automation tools (5): `list_automations`, `get_automation`,
+  `list_automation_versions`, `get_automation_version` and
+  `restore_automation_version`. Need the `automations` scope.
+
 ## 0.5.0
 
 ### Breaking
