@@ -14,6 +14,7 @@ import { googleBusinessTools } from './tools/google-business.js';
 import { googleAdsTools } from './tools/ads-google.js';
 import { blogTools } from './tools/blog.js';
 import { whatsappTools } from './tools/whatsapp.js';
+import { blogsTools } from './tools/blogs.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -581,6 +582,16 @@ const TOOL_INPUTS: Record<string, unknown> = {
   blog_publish_article: { workspace_id: UUID, id: UUID },
   blog_reject_article: { workspace_id: UUID, id: UUID },
   blog_delete_article: { workspace_id: UUID, id: UUID },
+  // Blog ids are the platform's own, not uuids: 'default' on WordPress, a
+  // numeric id on Shopify.
+  list_blogs: { account_id: UUID },
+  list_articles: { account_id: UUID, blog_id: '11', status: 'draft', q: 'spring' },
+  get_article: { account_id: UUID, blog_id: '11', article_id: '99' },
+  create_article: { account_id: UUID, blog_id: '11', title: 'Spring drop', body: 'Hello' },
+  update_article: { account_id: UUID, blog_id: '11', article_id: '99', title: 'Restocked' },
+  delete_article: { account_id: UUID, blog_id: '11', article_id: '99' },
+  list_products: { account_id: UUID, status: 'active' },
+  update_product: { account_id: UUID, product_id: '7', title: 'Mug XL' },
 };
 
 let urls: string[];
@@ -604,6 +615,7 @@ function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {
     ...googleAdsTools(client),
     ...blogTools(client),
     ...whatsappTools(client),
+    ...blogsTools(client),
   ];
 }
 
@@ -649,6 +661,19 @@ describe('request paths', () => {
       expect(path).not.toContain('/api/v1');
       expect(path.startsWith('/v1/')).toBe(true);
     }
+  });
+
+  it('edits a live article in place instead of creating a second one', async () => {
+    const tools = allTools();
+    const update = tools.find((t) => t.name === 'update_article')!;
+    await update.execute(update.inputSchema.parse(TOOL_INPUTS.update_article));
+
+    const sent = requests.at(-1)!;
+    // The article id is in the path, and the ids that address it never travel
+    // in the body, so the site changes that row rather than adding one.
+    expect(sent.method).toBe('PATCH');
+    expect(new URL(sent.url).pathname).toBe(`/v1/accounts/${UUID}/blogs/11/articles/99`);
+    expect(sent.body).toEqual({ title: 'Restocked' });
   });
 
   it('appends /v1 to the configured host without doubling the prefix', async () => {
