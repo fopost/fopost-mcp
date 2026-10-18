@@ -10,6 +10,18 @@ All notable changes to `@fopost/mcp` are documented here.
   `get_pixel_stats`, `get_event_match_quality`, `list_custom_conversions`,
   `create_custom_conversion`, `delete_custom_conversion` and `list_conversion_events`.
   All need the `ads` scope.
+- X engagement on inbox items: `repost_inbox_item`, `unrepost_inbox_item`,
+  `bookmark_inbox_item` and `unbookmark_inbox_item`, X only where `can_repost` or
+  `can_bookmark` is true. Inbox items carry `reposted`, `bookmarked`, `can_repost` and
+  `can_bookmark` next to `liked` and `can_like`. Need the `inbox` and `publish` scopes.
+- `follow_x_user` and `unfollow_x_user`: follow from a connected X account by numeric
+  user id. Need the `inbox` and `publish` scopes.
+- `get_x_post` and `search_x_posts`: read one X post, or search recent posts with
+  `max_results` (10 to 100) and `next_token`, through a connected X account. Need the
+  `inbox` scope.
+- Existing X accounts must be reconnected before repost, bookmark and follow work; an
+  older token answers `409 reconnect_required`. Every one of these calls is an X call
+  metered to the workspace, and a spent X balance answers `402 platform_balance_spent`.
 
 ### Changed
 

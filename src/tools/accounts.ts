@@ -803,6 +803,56 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         return client.get(`/v1/accounts/${account_id}/linkedin/mentions`, query);
       },
     },
+    {
+      name: 'follow_x_user',
+      description:
+        'Follow a user from a connected X account. Older X connections answer 409 reconnect_required until reconnected. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        account_id: z.string().uuid().describe('The X account that follows'),
+        user_id: z.string().regex(/^\d+$/).describe('Numeric X user id'),
+      }),
+      async execute({ account_id, user_id }) {
+        return client.post(`/v1/accounts/${account_id}/x/follow`, { user_id });
+      },
+    },
+    {
+      name: 'unfollow_x_user',
+      description:
+        'Unfollow a user from a connected X account. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        account_id: z.string().uuid().describe('The X account that unfollows'),
+        user_id: z.string().regex(/^\d+$/).describe('Numeric X user id'),
+      }),
+      async execute({ account_id, user_id }) {
+        return client.post(`/v1/accounts/${account_id}/x/unfollow`, { user_id });
+      },
+    },
+    {
+      name: 'get_x_post',
+      description:
+        'Look up one X post by id, read with a connected X account. Every lookup is an X call metered to the workspace. Needs the inbox scope.',
+      inputSchema: z.object({
+        account_id: z.string().uuid().describe('The X account whose token does the read'),
+        id: z.string().min(1).describe('X post id'),
+      }),
+      async execute({ account_id, id }) {
+        return client.get(`/v1/x/posts/${encodeURIComponent(id)}`, { account_id });
+      },
+    },
+    {
+      name: 'search_x_posts',
+      description:
+        'Search recent X posts with a connected X account; pass next_token to page. Every search is an X call metered to the workspace. Needs the inbox scope.',
+      inputSchema: z.object({
+        account_id: z.string().uuid().describe('The X account whose token does the read'),
+        q: z.string().min(1).max(512).describe('X search query'),
+        max_results: z.number().int().min(10).max(100).optional(),
+        next_token: z.string().optional().describe('Cursor from the previous page'),
+      }),
+      async execute({ account_id, ...query }) {
+        return client.get('/v1/x/search', { account_id, ...query });
+      },
+    },
 
     {
       name: 'get_account_health',

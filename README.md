@@ -59,6 +59,10 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `delete_inbox_item`                     | Delete a comment, or your own reply, on the platform             |
 | `like_inbox_item`                       | Like a comment or message on the platform                        |
 | `unlike_inbox_item`                     | Remove your like                                                 |
+| `repost_inbox_item`                     | Repost a post on X, where can_repost is true                     |
+| `unrepost_inbox_item`                   | Undo your repost on X                                            |
+| `bookmark_inbox_item`                   | Bookmark a post on X, where can_bookmark is true                 |
+| `unbookmark_inbox_item`                 | Remove your bookmark on X                                        |
 | `vote_inbox_item`                       | Vote up or down, or take the vote back                           |
 | `pin_inbox_item`                        | Pin your own comment                                             |
 | `unpin_inbox_item`                      | Unpin your own comment                                           |
@@ -194,6 +198,10 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `delete_inbox_item`                     | Delete a comment, or your own reply, on the platform             |
 | `like_inbox_item`                       | Like a comment or message on the platform                        |
 | `unlike_inbox_item`                     | Remove your like                                                 |
+| `repost_inbox_item`                     | Repost a post on X, where can_repost is true                     |
+| `unrepost_inbox_item`                   | Undo your repost on X                                            |
+| `bookmark_inbox_item`                   | Bookmark a post on X, where can_bookmark is true                 |
+| `unbookmark_inbox_item`                 | Remove your bookmark on X                                        |
 | `pin_inbox_item`                        | Pin your own comment                                             |
 | `unpin_inbox_item`                      | Unpin your own comment                                           |
 | `react_to_inbox_item`                   | React to a DM, or remove your reaction                           |
@@ -343,6 +351,10 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `delete_inbox_item`                     | Delete a comment, or your own reply, on the platform             |
 | `like_inbox_item`                       | Like a comment or message on the platform                        |
 | `unlike_inbox_item`                     | Remove your like                                                 |
+| `repost_inbox_item`                     | Repost a post on X, where can_repost is true                     |
+| `unrepost_inbox_item`                   | Undo your repost on X                                            |
+| `bookmark_inbox_item`                   | Bookmark a post on X, where can_bookmark is true                 |
+| `unbookmark_inbox_item`                 | Remove your bookmark on X                                        |
 | `pin_inbox_item`                        | Pin your own comment                                             |
 | `unpin_inbox_item`                      | Unpin your own comment                                           |
 | `react_to_inbox_item`                   | React to a DM, or remove your reaction                           |
@@ -535,6 +547,10 @@ Prefer to run the server yourself? The stdio package below is the same product, 
 | `list_instagram_stories`         | List the stories still inside their 24 hours                     |
 | `get_instagram_story_insights`   | Read the insight set for one live story                          |
 | `search_linkedin_mentions`       | Find the organizations a LinkedIn post can mention               |
+| `follow_x_user`                  | Follow a user from a connected X account                         |
+| `unfollow_x_user`                | Unfollow a user from a connected X account                       |
+| `get_x_post`                     | Look up one X post by id                                         |
+| `search_x_posts`                 | Search recent X posts, paged by next_token                       |
 | `generate_caption`               | AI-generate or improve a caption (1 credit)                      |
 | `rewrite_for_platforms`          | Rewrite content per target platform (1 credit each)              |
 | `repurpose_url`                  | Turn a blog URL into N platform-optimized posts (6 credits)      |
@@ -552,6 +568,10 @@ Prefer to run the server yourself? The stdio package below is the same product, 
 | `delete_inbox_item`              | Delete a comment, or your own reply, on the platform             |
 | `like_inbox_item`                | Like a comment or message on the platform                        |
 | `unlike_inbox_item`              | Remove your like                                                 |
+| `repost_inbox_item`              | Repost a post on X, where can_repost is true                     |
+| `unrepost_inbox_item`            | Undo your repost on X                                            |
+| `bookmark_inbox_item`            | Bookmark a post on X, where can_bookmark is true                 |
+| `unbookmark_inbox_item`          | Remove your bookmark on X                                        |
 | `pin_inbox_item`                 | Pin your own comment                                             |
 | `unpin_inbox_item`               | Unpin your own comment                                           |
 | `react_to_inbox_item`            | React to a DM, or remove your reaction                           |
