@@ -180,6 +180,10 @@ const TOOL_INPUTS: Record<string, unknown> = {
   list_instagram_stories: { account_id: UUID },
   get_instagram_story_insights: { account_id: UUID, story_id: 's1' },
   search_linkedin_mentions: { account_id: UUID, q: 'devtestco' },
+  follow_x_user: { account_id: UUID, user_id: '783214' },
+  unfollow_x_user: { account_id: UUID, user_id: '783214' },
+  get_x_post: { account_id: UUID, id: '1460323737035677698' },
+  search_x_posts: { account_id: UUID, q: 'fopost', max_results: 25, next_token: 'b26v' },
   list_reddit_subreddits: { account_id: UUID },
   list_reddit_subreddit_rules: { account_id: UUID, subreddit: 'webdev' },
   list_reddit_flairs: { account_id: UUID, subreddit: 'webdev' },
@@ -251,6 +255,10 @@ const TOOL_INPUTS: Record<string, unknown> = {
   edit_inbox_comment: { id: UUID, text: 'fixed' },
   like_inbox_item: { id: UUID },
   unlike_inbox_item: { id: UUID },
+  repost_inbox_item: { id: UUID },
+  unrepost_inbox_item: { id: UUID },
+  bookmark_inbox_item: { id: UUID },
+  unbookmark_inbox_item: { id: UUID },
   vote_inbox_item: { id: UUID, direction: 'down' },
   pin_inbox_item: { id: UUID },
   unpin_inbox_item: { id: UUID },
@@ -761,6 +769,50 @@ describe('inbox and ads requests', () => {
     await run('set_inbox_typing');
     expect(new URL(requests[4].url).pathname).toBe('/v1/inbox/conversations/c1/typing');
     expect(requests[4].body).toEqual({ account_id: UUID, on: false });
+  });
+
+  it('reposts and bookmarks an X item with an empty POST, like a like', async () => {
+    for (const [i, action] of ['repost', 'unrepost', 'bookmark', 'unbookmark'].entries()) {
+      await run(`${action}_inbox_item`);
+      expect(requests[i].method).toBe('POST');
+      expect(new URL(requests[i].url).pathname).toBe(`/v1/inbox/${UUID}/${action}`);
+      expect(requests[i].body).toBeUndefined();
+    }
+  });
+
+  it('follows an X user with the numeric id in the body, and rejects a handle', async () => {
+    await run('follow_x_user');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe(`/v1/accounts/${UUID}/x/follow`);
+    expect(requests[0].body).toEqual({ user_id: '783214' });
+
+    await run('unfollow_x_user');
+    expect(new URL(requests[1].url).pathname).toBe(`/v1/accounts/${UUID}/x/unfollow`);
+    expect(requests[1].body).toEqual({ user_id: '783214' });
+
+    const follow = allTools().find((t) => t.name === 'follow_x_user')!;
+    expect(() => follow.inputSchema.parse({ account_id: UUID, user_id: '@fopost' })).toThrow();
+  });
+
+  it('reads X posts with account_id in the query', async () => {
+    await run('get_x_post');
+    const lookup = new URL(requests[0].url);
+    expect(requests[0].method).toBe('GET');
+    expect(lookup.pathname).toBe('/v1/x/posts/1460323737035677698');
+    expect(lookup.searchParams.get('account_id')).toBe(UUID);
+
+    await run('search_x_posts');
+    const search = new URL(requests[1].url);
+    expect(search.pathname).toBe('/v1/x/search');
+    expect(Object.fromEntries(search.searchParams)).toEqual({
+      account_id: UUID,
+      q: 'fopost',
+      max_results: '25',
+      next_token: 'b26v',
+    });
+
+    const tool = allTools().find((t) => t.name === 'search_x_posts')!;
+    expect(() => tool.inputSchema.parse({ account_id: UUID, q: 'x', max_results: 5 })).toThrow();
   });
 
   it('posts a boost as a camelCase body that starts paused unless told otherwise', async () => {
