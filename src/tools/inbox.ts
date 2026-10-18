@@ -204,6 +204,53 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'repost_inbox_item',
+      description:
+        'Repost a post on X, where can_repost is true. X only. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/repost`);
+      },
+    },
+
+    {
+      name: 'unrepost_inbox_item',
+      description: 'Undo your repost of a post on X. X only. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/unrepost`);
+      },
+    },
+
+    {
+      name: 'bookmark_inbox_item',
+      description:
+        'Bookmark a post on X, where can_bookmark is true. X only. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/bookmark`);
+      },
+    },
+
+    {
+      name: 'unbookmark_inbox_item',
+      description:
+        'Remove your bookmark from a post on X. X only. Needs the inbox and publish scopes.',
+      inputSchema: z.object({
+        id: z.string().uuid().describe('Inbox item id (uuid)'),
+      }),
+      async execute(input) {
+        return client.post(`/v1/inbox/${input.id}/unbookmark`);
+      },
+    },
+
+    {
       name: 'vote_inbox_item',
       description:
         'Vote a comment or message up or down on a network that ranks by votes (Reddit), where canVote is true. Pass "none" to take an earlier vote back. An upvote is the same call a like makes, so liked moves with it. Needs the inbox and publish scopes.',
