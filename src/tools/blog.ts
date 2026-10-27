@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 /**
@@ -234,7 +234,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'PATCH',
-          `/v1/blog/keywords/${input.id}`,
+          `/v1/blog/keywords/${seg(input.id)}`,
           { status: input.status, plannedFor: input.planned_for },
           workspaceQuery(input.workspace_id),
         );
@@ -248,7 +248,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'DELETE',
-          `/v1/blog/keywords/${input.id}`,
+          `/v1/blog/keywords/${seg(input.id)}`,
           undefined,
           workspaceQuery(input.workspace_id),
         );
@@ -309,7 +309,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
         'Read one article in full: outline, body as Markdown and HTML, images, excerpt, meta title and description, tags and status. Needs the posts scope.',
       inputSchema: z.object({ workspace_id: workspaceId, id: z.string().uuid() }),
       async execute(input) {
-        return client.get(`/v1/blog/articles/${input.id}`, workspaceQuery(input.workspace_id));
+        return client.get(`/v1/blog/articles/${seg(input.id)}`, workspaceQuery(input.workspace_id));
       },
     },
 
@@ -335,7 +335,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'PATCH',
-          `/v1/blog/articles/${input.id}`,
+          `/v1/blog/articles/${seg(input.id)}`,
           {
             title: input.title,
             slug: input.slug,
@@ -359,7 +359,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/blog/articles/${input.id}/regenerate`,
+          `/v1/blog/articles/${seg(input.id)}/regenerate`,
           {},
           workspaceQuery(input.workspace_id),
         );
@@ -374,7 +374,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/blog/articles/${input.id}/submit`,
+          `/v1/blog/articles/${seg(input.id)}/submit`,
           {},
           workspaceQuery(input.workspace_id),
         );
@@ -389,7 +389,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/blog/articles/${input.id}/publish`,
+          `/v1/blog/articles/${seg(input.id)}/publish`,
           {},
           workspaceQuery(input.workspace_id),
         );
@@ -404,7 +404,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/blog/articles/${input.id}/reject`,
+          `/v1/blog/articles/${seg(input.id)}/reject`,
           {},
           workspaceQuery(input.workspace_id),
         );
@@ -419,7 +419,7 @@ export function blogTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'DELETE',
-          `/v1/blog/articles/${input.id}`,
+          `/v1/blog/articles/${seg(input.id)}`,
           undefined,
           workspaceQuery(input.workspace_id),
         );

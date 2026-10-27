@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const INBOX_STATE = z.enum(['unread', 'read', 'resolved', 'snoozed']);
@@ -107,7 +107,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
           .describe('Answer buttons under a DM, where canQuickReply is true'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/reply`, {
+        return client.post(`/v1/inbox/${seg(input.id)}/reply`, {
           text: input.text,
           media_ids: input.media_ids,
           quick_replies: input.quick_replies,
@@ -124,7 +124,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         text: z.string().min(1),
       }),
       async execute(input) {
-        return client.request('PATCH', `/v1/inbox/${input.id}`, { text: input.text });
+        return client.request('PATCH', `/v1/inbox/${seg(input.id)}`, { text: input.text });
       },
     },
 
@@ -138,7 +138,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         snoozed_until: z.string().optional().describe('ISO 8601, in the future'),
       }),
       async execute(input) {
-        return client.request('PATCH', `/v1/inbox/${input.id}`, {
+        return client.request('PATCH', `/v1/inbox/${seg(input.id)}`, {
           state: input.state,
           snoozedUntil: input.snoozed_until,
         });
@@ -152,7 +152,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/hide`);
+        return client.post(`/v1/inbox/${seg(input.id)}/hide`);
       },
     },
 
@@ -163,7 +163,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/unhide`);
+        return client.post(`/v1/inbox/${seg(input.id)}/unhide`);
       },
     },
 
@@ -175,7 +175,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.delete(`/v1/inbox/${input.id}`);
+        return client.delete(`/v1/inbox/${seg(input.id)}`);
       },
     },
 
@@ -187,7 +187,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/like`);
+        return client.post(`/v1/inbox/${seg(input.id)}/like`);
       },
     },
 
@@ -199,7 +199,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/unlike`);
+        return client.post(`/v1/inbox/${seg(input.id)}/unlike`);
       },
     },
 
@@ -211,7 +211,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/repost`);
+        return client.post(`/v1/inbox/${seg(input.id)}/repost`);
       },
     },
 
@@ -222,7 +222,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/unrepost`);
+        return client.post(`/v1/inbox/${seg(input.id)}/unrepost`);
       },
     },
 
@@ -234,7 +234,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/bookmark`);
+        return client.post(`/v1/inbox/${seg(input.id)}/bookmark`);
       },
     },
 
@@ -246,7 +246,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/unbookmark`);
+        return client.post(`/v1/inbox/${seg(input.id)}/unbookmark`);
       },
     },
 
@@ -259,7 +259,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         direction: z.enum(['up', 'down', 'none']),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/vote`, { direction: input.direction });
+        return client.post(`/v1/inbox/${seg(input.id)}/vote`, { direction: input.direction });
       },
     },
 
@@ -271,7 +271,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/pin`);
+        return client.post(`/v1/inbox/${seg(input.id)}/pin`);
       },
     },
 
@@ -282,7 +282,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Inbox item id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/unpin`);
+        return client.post(`/v1/inbox/${seg(input.id)}/unpin`);
       },
     },
 
@@ -295,7 +295,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         reaction: z.string().max(32).nullable().describe('An emoji, or null to remove yours'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/${input.id}/react`, { reaction: input.reaction });
+        return client.post(`/v1/inbox/${seg(input.id)}/react`, { reaction: input.reaction });
       },
     },
 
@@ -329,7 +329,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         on: z.boolean().optional().describe('Default true; false clears the indicator'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/conversations/${input.conversation_id}/typing`, {
+        return client.post(`/v1/inbox/conversations/${seg(input.conversation_id)}/typing`, {
           account_id: input.account_id,
           on: input.on,
         });
@@ -351,7 +351,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         metadata: z.string().max(1000).optional(),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/conversations/${input.conversation_id}/handover`, {
+        return client.post(`/v1/inbox/conversations/${seg(input.conversation_id)}/handover`, {
           account_id: input.account_id,
           app_id: input.app_id,
           metadata: input.metadata,
@@ -381,7 +381,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.post(
-          `/v1/inbox/approvals/${input.id}/approve`,
+          `/v1/inbox/approvals/${seg(input.id)}/approve`,
           input.text === undefined ? {} : { text: input.text },
         );
       },
@@ -394,7 +394,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         id: z.number().int().describe('Approval id (integer)'),
       }),
       async execute(input) {
-        return client.post(`/v1/inbox/approvals/${input.id}/reject`);
+        return client.post(`/v1/inbox/approvals/${seg(input.id)}/reject`);
       },
     },
 

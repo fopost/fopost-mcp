@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const CONNECT_PLATFORMS = [
@@ -76,7 +76,7 @@ export function connectSessionsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Connect session id (uuid)'),
       }),
       async execute(input) {
-        return client.get(`/v1/connect-sessions/${input.id}`);
+        return client.get(`/v1/connect-sessions/${seg(input.id)}`);
       },
     },
   ];

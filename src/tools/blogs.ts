@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 /**
@@ -21,7 +21,7 @@ export function blogsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid().describe('A WordPress or Shopify account'),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/blogs`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/blogs`);
       },
     },
 
@@ -37,11 +37,14 @@ export function blogsTools(client: FoPostClient): ToolDefinition[] {
         q: z.string().max(200).optional().describe('Match the article title'),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/blogs/${input.blog_id}/articles`, {
-          limit: input.limit,
-          status: input.status,
-          q: input.q,
-        });
+        return client.get(
+          `/v1/accounts/${seg(input.account_id)}/blogs/${seg(input.blog_id)}/articles`,
+          {
+            limit: input.limit,
+            status: input.status,
+            q: input.q,
+          },
+        );
       },
     },
 
@@ -55,7 +58,7 @@ export function blogsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get(
-          `/v1/accounts/${input.account_id}/blogs/${input.blog_id}/articles/${input.article_id}`,
+          `/v1/accounts/${seg(input.account_id)}/blogs/${seg(input.blog_id)}/articles/${seg(input.article_id)}`,
         );
       },
     },
@@ -77,7 +80,7 @@ export function blogsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         const { account_id: accountId, blog_id: blogId, ...body } = input;
-        return client.post(`/v1/accounts/${accountId}/blogs/${blogId}/articles`, body);
+        return client.post(`/v1/accounts/${seg(accountId)}/blogs/${seg(blogId)}/articles`, body);
       },
     },
 
@@ -101,7 +104,7 @@ export function blogsTools(client: FoPostClient): ToolDefinition[] {
         const { account_id: accountId, blog_id: blogId, article_id: articleId, ...body } = input;
         return client.request(
           'PATCH',
-          `/v1/accounts/${accountId}/blogs/${blogId}/articles/${articleId}`,
+          `/v1/accounts/${seg(accountId)}/blogs/${seg(blogId)}/articles/${seg(articleId)}`,
           body,
         );
       },
@@ -119,7 +122,7 @@ export function blogsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'DELETE',
-          `/v1/accounts/${input.account_id}/blogs/${input.blog_id}/articles/${input.article_id}`,
+          `/v1/accounts/${seg(input.account_id)}/blogs/${seg(input.blog_id)}/articles/${seg(input.article_id)}`,
         );
       },
     },
@@ -135,7 +138,7 @@ export function blogsTools(client: FoPostClient): ToolDefinition[] {
         q: z.string().max(200).optional().describe('Match the product title'),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/products`, {
+        return client.get(`/v1/accounts/${seg(input.account_id)}/products`, {
           limit: input.limit,
           status: input.status,
           q: input.q,
@@ -159,7 +162,11 @@ export function blogsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         const { account_id: accountId, product_id: productId, ...body } = input;
-        return client.request('PATCH', `/v1/accounts/${accountId}/products/${productId}`, body);
+        return client.request(
+          'PATCH',
+          `/v1/accounts/${seg(accountId)}/products/${seg(productId)}`,
+          body,
+        );
       },
     },
   ];

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 type MessagingSetting = 'ice_breakers' | 'persistent_menu' | 'greeting';
@@ -12,7 +12,7 @@ function messagingPath(accountId: string, setting: MessagingSetting): string {
       : setting === 'persistent_menu'
         ? 'persistent-menu'
         : 'greeting';
-  return `/v1/accounts/${accountId}/messaging/${segment}`;
+  return `/v1/accounts/${seg(accountId)}/messaging/${segment}`;
 }
 
 export function accountsTools(client: FoPostClient): ToolDefinition[] {
@@ -42,7 +42,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         display_name: z.string().max(255).nullable(),
       }),
       async execute(input) {
-        return client.request('PATCH', `/v1/accounts/${input.account_id}`, {
+        return client.request('PATCH', `/v1/accounts/${seg(input.account_id)}`, {
           display_name: input.display_name,
         });
       },
@@ -67,7 +67,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Account group id (uuid)'),
       }),
       async execute(input) {
-        return client.get(`/v1/account-groups/${input.id}`);
+        return client.get(`/v1/account-groups/${seg(input.id)}`);
       },
     },
 
@@ -96,7 +96,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         name: z.string().min(1).max(100),
       }),
       async execute(input) {
-        return client.request('PATCH', `/v1/account-groups/${input.id}`, { name: input.name });
+        return client.request('PATCH', `/v1/account-groups/${seg(input.id)}`, { name: input.name });
       },
     },
 
@@ -109,7 +109,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_ids: z.array(z.string().uuid()).max(200),
       }),
       async execute(input) {
-        return client.put(`/v1/account-groups/${input.id}/members`, {
+        return client.put(`/v1/account-groups/${seg(input.id)}/members`, {
           account_ids: input.account_ids,
         });
       },
@@ -122,7 +122,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Account group id (uuid)'),
       }),
       async execute(input) {
-        return client.delete(`/v1/account-groups/${input.id}`);
+        return client.delete(`/v1/account-groups/${seg(input.id)}`);
       },
     },
 
@@ -163,7 +163,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/telegram/commands`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/telegram/commands`);
       },
     },
 
@@ -187,7 +187,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
           .max(100),
       }),
       async execute(input) {
-        return client.put(`/v1/accounts/${input.account_id}/telegram/commands`, {
+        return client.put(`/v1/accounts/${seg(input.account_id)}/telegram/commands`, {
           commands: input.commands,
         });
       },
@@ -200,7 +200,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.delete(`/v1/accounts/${input.account_id}/telegram/commands`);
+        return client.delete(`/v1/accounts/${seg(input.account_id)}/telegram/commands`);
       },
     },
 
@@ -212,7 +212,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/reddit/subreddits`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/reddit/subreddits`);
       },
     },
 
@@ -226,7 +226,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get(
-          `/v1/accounts/${input.account_id}/reddit/subreddits/${encodeURIComponent(input.subreddit)}/rules`,
+          `/v1/accounts/${seg(input.account_id)}/reddit/subreddits/${seg(input.subreddit)}/rules`,
         );
       },
     },
@@ -240,7 +240,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         subreddit: z.string().describe('Subreddit name, without the r/ prefix'),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/reddit/flairs`, {
+        return client.get(`/v1/accounts/${seg(input.account_id)}/reddit/flairs`, {
           subreddit: input.subreddit,
         });
       },
@@ -277,7 +277,9 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
           .describe('Subreddit name without the r/ prefix, or null for the profile page'),
       }),
       async execute({ account_id, subreddit }) {
-        return client.put(`/v1/accounts/${account_id}/reddit/default-subreddit`, { subreddit });
+        return client.put(`/v1/accounts/${seg(account_id)}/reddit/default-subreddit`, {
+          subreddit,
+        });
       },
     },
 
@@ -289,7 +291,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/slack/channels`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/slack/channels`);
       },
     },
 
@@ -301,7 +303,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/slack/members`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/slack/members`);
       },
     },
 
@@ -312,7 +314,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/slack/identity`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/slack/identity`);
       },
     },
 
@@ -332,7 +334,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
           .describe('Emoji code, e.g. :rocket:'),
       }),
       async execute({ account_id, ...body }) {
-        return client.request('PATCH', `/v1/accounts/${account_id}/slack/identity`, body);
+        return client.request('PATCH', `/v1/accounts/${seg(account_id)}/slack/identity`, body);
       },
     },
 
@@ -344,7 +346,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/discord/channels`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/discord/channels`);
       },
     },
 
@@ -357,7 +359,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         channel_id: z.string().min(1).describe('Discord channel id'),
       }),
       async execute({ account_id, channel_id }) {
-        return client.request('PATCH', `/v1/accounts/${account_id}/discord/channels/current`, {
+        return client.request('PATCH', `/v1/accounts/${seg(account_id)}/discord/channels/current`, {
           channel_id,
         });
       },
@@ -370,7 +372,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/discord/identity`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/discord/identity`);
       },
     },
 
@@ -384,7 +386,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         avatar_url: z.string().url().max(2048).nullable().optional().describe('http(s) image URL'),
       }),
       async execute({ account_id, ...body }) {
-        return client.request('PATCH', `/v1/accounts/${account_id}/discord/identity`, body);
+        return client.request('PATCH', `/v1/accounts/${seg(account_id)}/discord/identity`, body);
       },
     },
 
@@ -395,7 +397,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/discord/messages/pinned`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/discord/messages/pinned`);
       },
     },
 
@@ -414,7 +416,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
           .describe('Minutes of inactivity before a thread archives'),
       }),
       async execute({ account_id, message_id, action, thread_name, auto_archive_duration }) {
-        const base = `/v1/accounts/${account_id}/discord/messages/${message_id}`;
+        const base = `/v1/accounts/${seg(account_id)}/discord/messages/${seg(message_id)}`;
         switch (action) {
           case 'delete':
             return client.delete(base);
@@ -443,7 +445,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         content: z.string().min(1).max(2000),
       }),
       async execute({ account_id, ...body }) {
-        return client.post(`/v1/accounts/${account_id}/discord/dm`, body);
+        return client.post(`/v1/accounts/${seg(account_id)}/discord/dm`, body);
       },
     },
 
@@ -454,7 +456,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/discord/events`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/discord/events`);
       },
     },
 
@@ -472,7 +474,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         location: z.string().min(1).max(100).optional(),
       }),
       async execute({ account_id, ...body }) {
-        return client.post(`/v1/accounts/${account_id}/discord/events`, body);
+        return client.post(`/v1/accounts/${seg(account_id)}/discord/events`, body);
       },
     },
 
@@ -494,7 +496,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       async execute({ account_id, event_id, ...body }) {
         return client.request(
           'PATCH',
-          `/v1/accounts/${account_id}/discord/events/${event_id}`,
+          `/v1/accounts/${seg(account_id)}/discord/events/${seg(event_id)}`,
           body,
         );
       },
@@ -508,7 +510,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         event_id: z.string().min(1).describe('Discord event id'),
       }),
       async execute({ account_id, event_id }) {
-        return client.delete(`/v1/accounts/${account_id}/discord/events/${event_id}`);
+        return client.delete(`/v1/accounts/${seg(account_id)}/discord/events/${seg(event_id)}`);
       },
     },
 
@@ -522,7 +524,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         limit: z.number().int().min(1).max(1000).optional(),
       }),
       async execute({ account_id, query, limit }) {
-        return client.get(`/v1/accounts/${account_id}/discord/members`, { q: query, limit });
+        return client.get(`/v1/accounts/${seg(account_id)}/discord/members`, { q: query, limit });
       },
     },
 
@@ -533,7 +535,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/discord/roles`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/discord/roles`);
       },
     },
 
@@ -548,7 +550,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         mentionable: z.boolean().optional(),
       }),
       async execute({ account_id, ...body }) {
-        return client.post(`/v1/accounts/${account_id}/discord/roles`, body);
+        return client.post(`/v1/accounts/${seg(account_id)}/discord/roles`, body);
       },
     },
 
@@ -563,7 +565,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         action: z.enum(['add', 'remove']).default('add'),
       }),
       async execute({ account_id, role_id, member_id, action }) {
-        const path = `/v1/accounts/${account_id}/discord/roles/${role_id}/members/${member_id}`;
+        const path = `/v1/accounts/${seg(account_id)}/discord/roles/${seg(role_id)}/members/${seg(member_id)}`;
         return action === 'add' ? client.put(path) : client.delete(path);
       },
     },
@@ -575,7 +577,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/pinterest/boards`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/pinterest/boards`);
       },
     },
     {
@@ -589,7 +591,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         privacy: z.enum(['PUBLIC', 'PROTECTED', 'SECRET']).optional(),
       }),
       async execute({ account_id, ...body }) {
-        return client.post(`/v1/accounts/${account_id}/pinterest/boards`, body);
+        return client.post(`/v1/accounts/${seg(account_id)}/pinterest/boards`, body);
       },
     },
     {
@@ -600,7 +602,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/youtube/playlists`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/youtube/playlists`);
       },
     },
     {
@@ -613,7 +615,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         privacy: z.enum(['public', 'unlisted', 'private']).optional(),
       }),
       async execute({ account_id, ...body }) {
-        return client.post(`/v1/accounts/${account_id}/youtube/playlists`, body);
+        return client.post(`/v1/accounts/${seg(account_id)}/youtube/playlists`, body);
       },
     },
     {
@@ -625,7 +627,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         playlist_id: z.string().min(1).max(100).nullable(),
       }),
       async execute({ account_id, playlist_id }) {
-        return client.put(`/v1/accounts/${account_id}/youtube/playlists/default`, {
+        return client.put(`/v1/accounts/${seg(account_id)}/youtube/playlists/default`, {
           playlist_id,
         });
       },
@@ -639,7 +641,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get(
-          `/v1/accounts/${input.account_id}/youtube/videos/${input.video_id}/captions`,
+          `/v1/accounts/${seg(input.account_id)}/youtube/videos/${seg(input.video_id)}/captions`,
         );
       },
     },
@@ -656,7 +658,10 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         is_draft: z.boolean().optional(),
       }),
       async execute({ account_id, video_id, ...body }) {
-        return client.post(`/v1/accounts/${account_id}/youtube/videos/${video_id}/captions`, body);
+        return client.post(
+          `/v1/accounts/${seg(account_id)}/youtube/videos/${seg(video_id)}/captions`,
+          body,
+        );
       },
     },
     {
@@ -667,7 +672,9 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         caption_id: z.string().min(1),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/youtube/captions/${input.caption_id}`);
+        return client.get(
+          `/v1/accounts/${seg(input.account_id)}/youtube/captions/${seg(input.caption_id)}`,
+        );
       },
     },
     {
@@ -678,7 +685,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/bluesky/languages`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/bluesky/languages`);
       },
     },
     {
@@ -690,7 +697,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         languages: z.array(z.string().min(2).max(20)).max(3),
       }),
       async execute({ account_id, languages }) {
-        return client.put(`/v1/accounts/${account_id}/bluesky/languages`, { languages });
+        return client.put(`/v1/accounts/${seg(account_id)}/bluesky/languages`, { languages });
       },
     },
     {
@@ -701,7 +708,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/tiktok/creator-info`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/tiktok/creator-info`);
       },
     },
     {
@@ -714,7 +721,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         limit: z.number().int().min(1).max(50).optional(),
       }),
       async execute({ account_id, ...query }) {
-        return client.get(`/v1/accounts/${account_id}/tiktok/music`, query);
+        return client.get(`/v1/accounts/${seg(account_id)}/tiktok/music`, query);
       },
     },
     {
@@ -727,7 +734,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         limit: z.number().int().min(1).max(50).optional(),
       }),
       async execute({ account_id, ...query }) {
-        return client.get(`/v1/accounts/${account_id}/tiktok/locations`, query);
+        return client.get(`/v1/accounts/${seg(account_id)}/tiktok/locations`, query);
       },
     },
     {
@@ -739,7 +746,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         url: z.string().url(),
       }),
       async execute({ account_id, url }) {
-        return client.post(`/v1/accounts/${account_id}/tiktok/video-download`, { url });
+        return client.post(`/v1/accounts/${seg(account_id)}/tiktok/video-download`, { url });
       },
     },
     {
@@ -752,7 +759,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         audio_type: z.enum(['music', 'original_sound']).optional(),
       }),
       async execute({ account_id, ...query }) {
-        return client.get(`/v1/accounts/${account_id}/instagram/audio`, query);
+        return client.get(`/v1/accounts/${seg(account_id)}/instagram/audio`, query);
       },
     },
     {
@@ -763,7 +770,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/instagram/publishing-limit`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/instagram/publishing-limit`);
       },
     },
     {
@@ -775,7 +782,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         insights: z.boolean().optional(),
       }),
       async execute({ account_id, ...query }) {
-        return client.get(`/v1/accounts/${account_id}/instagram/stories`, query);
+        return client.get(`/v1/accounts/${seg(account_id)}/instagram/stories`, query);
       },
     },
     {
@@ -787,7 +794,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.get(
-          `/v1/accounts/${input.account_id}/instagram/stories/${input.story_id}/insights`,
+          `/v1/accounts/${seg(input.account_id)}/instagram/stories/${seg(input.story_id)}/insights`,
         );
       },
     },
@@ -800,7 +807,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         q: z.string().min(1),
       }),
       async execute({ account_id, ...query }) {
-        return client.get(`/v1/accounts/${account_id}/linkedin/mentions`, query);
+        return client.get(`/v1/accounts/${seg(account_id)}/linkedin/mentions`, query);
       },
     },
     {
@@ -812,7 +819,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         user_id: z.string().regex(/^\d+$/).describe('Numeric X user id'),
       }),
       async execute({ account_id, user_id }) {
-        return client.post(`/v1/accounts/${account_id}/x/follow`, { user_id });
+        return client.post(`/v1/accounts/${seg(account_id)}/x/follow`, { user_id });
       },
     },
     {
@@ -824,7 +831,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         user_id: z.string().regex(/^\d+$/).describe('Numeric X user id'),
       }),
       async execute({ account_id, user_id }) {
-        return client.post(`/v1/accounts/${account_id}/x/unfollow`, { user_id });
+        return client.post(`/v1/accounts/${seg(account_id)}/x/unfollow`, { user_id });
       },
     },
     {
@@ -836,7 +843,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().min(1).describe('X post id'),
       }),
       async execute({ account_id, id }) {
-        return client.get(`/v1/x/posts/${encodeURIComponent(id)}`, { account_id });
+        return client.get(`/v1/x/posts/${seg(id)}`, { account_id });
       },
     },
     {
@@ -862,7 +869,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/health`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/health`);
       },
     },
 
@@ -902,7 +909,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
           .max(4),
       }),
       async execute(input) {
-        return client.put(`/v1/accounts/${input.account_id}/messaging/ice-breakers`, {
+        return client.put(`/v1/accounts/${seg(input.account_id)}/messaging/ice-breakers`, {
           ice_breakers: input.ice_breakers,
         });
       },
@@ -937,7 +944,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
           .describe('Defaults to `default`, the menu every language falls back to'),
       }),
       async execute(input) {
-        return client.put(`/v1/accounts/${input.account_id}/messaging/persistent-menu`, {
+        return client.put(`/v1/accounts/${seg(input.account_id)}/messaging/persistent-menu`, {
           persistent_menu: [
             { locale: input.locale ?? 'default', call_to_actions: input.call_to_actions },
           ],
@@ -955,7 +962,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         locale: z.string().optional().describe('Defaults to `default`'),
       }),
       async execute(input) {
-        return client.put(`/v1/accounts/${input.account_id}/messaging/greeting`, {
+        return client.put(`/v1/accounts/${seg(input.account_id)}/messaging/greeting`, {
           greeting: [{ locale: input.locale ?? 'default', text: input.text }],
         });
       },
@@ -982,7 +989,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/webhook-subscription`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/webhook-subscription`);
       },
     },
 
@@ -996,7 +1003,7 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         // A network whose metric access has not been granted yet answers 503
         // platform_metrics_unavailable rather than an empty set.
-        return client.get(`/v1/accounts/${input.account_id}/insights`, { raw: 'true' });
+        return client.get(`/v1/accounts/${seg(input.account_id)}/insights`, { raw: 'true' });
       },
     },
 
@@ -1008,10 +1015,10 @@ export function accountsTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.post(`/v1/accounts/${input.account_id}/webhook-subscription`, {});
+        return client.post(`/v1/accounts/${seg(input.account_id)}/webhook-subscription`, {});
         // A network whose metric access has not been granted yet answers 503
         // platform_metrics_unavailable rather than an empty set.
-        return client.get(`/v1/accounts/${input.account_id}/insights`, { raw: 'true' });
+        return client.get(`/v1/accounts/${seg(input.account_id)}/insights`, { raw: 'true' });
       },
     },
 

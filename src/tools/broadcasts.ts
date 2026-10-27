@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 /**
@@ -76,7 +76,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Read one broadcast by id. Needs the inbox scope.',
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.get(`/v1/broadcasts/${id}`);
+        return client.get(`/v1/broadcasts/${seg(id)}`);
       },
     },
 
@@ -111,7 +111,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         scheduled_at: z.string().datetime().nullable().optional(),
       }),
       async execute({ id, ...body }) {
-        return client.request('PATCH', `/v1/broadcasts/${id}`, body);
+        return client.request('PATCH', `/v1/broadcasts/${seg(id)}`, body);
       },
     },
 
@@ -121,7 +121,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         "Send a broadcast into every conversation its audience matches. The messages go out and cannot be recalled. Contacts a network's messaging window has closed on are skipped with window_closed rather than attempted, so the number sent is often lower than the audience — read list_broadcast_recipients with status=skipped to see who and why. Needs the inbox and publish scopes.",
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.post(`/v1/broadcasts/${id}/send`, {});
+        return client.post(`/v1/broadcasts/${seg(id)}/send`, {});
       },
     },
 
@@ -131,7 +131,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         'Stop a broadcast where it stands. Anyone not yet written to stays unsent; messages already delivered are not recalled. Needs the inbox and publish scopes.',
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.post(`/v1/broadcasts/${id}/cancel`, {});
+        return client.post(`/v1/broadcasts/${seg(id)}/cancel`, {});
       },
     },
 
@@ -146,7 +146,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         per_page: z.number().int().min(1).max(200).optional(),
       }),
       async execute({ id, ...query }) {
-        return client.get(`/v1/broadcasts/${id}/recipients`, query);
+        return client.get(`/v1/broadcasts/${seg(id)}/recipients`, query);
       },
     },
 
@@ -156,7 +156,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         'Delete a broadcast and its recipient records. Messages already sent stay in the conversations they went to. This cannot be undone. Needs the inbox scope.',
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.delete(`/v1/broadcasts/${id}`);
+        return client.delete(`/v1/broadcasts/${seg(id)}`);
       },
     },
 
@@ -179,7 +179,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Read one sequence and the steps it walks. Needs the inbox scope.',
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.get(`/v1/sequences/${id}`);
+        return client.get(`/v1/sequences/${seg(id)}`);
       },
     },
 
@@ -210,7 +210,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         status: SEQUENCE_STATUS.optional(),
       }),
       async execute({ id, ...body }) {
-        return client.request('PATCH', `/v1/sequences/${id}`, body);
+        return client.request('PATCH', `/v1/sequences/${seg(id)}`, body);
       },
     },
 
@@ -224,7 +224,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         audience: audience.optional(),
       }),
       async execute({ id, ...body }) {
-        return client.post(`/v1/sequences/${id}/enroll`, body);
+        return client.post(`/v1/sequences/${seg(id)}/enroll`, body);
       },
     },
 
@@ -237,7 +237,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         contact_ids: z.array(z.string().uuid()).min(1).max(5000),
       }),
       async execute({ id, contact_ids }) {
-        return client.post(`/v1/sequences/${id}/unenroll`, { contact_ids });
+        return client.post(`/v1/sequences/${seg(id)}/unenroll`, { contact_ids });
       },
     },
 
@@ -251,7 +251,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         per_page: z.number().int().min(1).max(200).optional(),
       }),
       async execute({ id, ...query }) {
-        return client.get(`/v1/sequences/${id}/enrollments`, query);
+        return client.get(`/v1/sequences/${seg(id)}/enrollments`, query);
       },
     },
 
@@ -261,7 +261,7 @@ export function broadcastsTools(client: FoPostClient): ToolDefinition[] {
         'Delete a sequence and every enrollment on it. Messages already sent stay in the conversations they went to. This cannot be undone. Needs the inbox scope.',
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.delete(`/v1/sequences/${id}`);
+        return client.delete(`/v1/sequences/${seg(id)}`);
       },
     },
   ];

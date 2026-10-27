@@ -13,155 +13,26 @@
  * Transport: stdio (standard for MCP servers).
  */
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import { FoPostClient, FoPostApiError } from './client.js';
-import { postsTools } from './tools/posts.js';
-import { accountsTools } from './tools/accounts.js';
-import { aiTools } from './tools/ai.js';
-import { inboxTools } from './tools/inbox.js';
-import { contactsTools } from './tools/contacts.js';
-import { broadcastsTools } from './tools/broadcasts.js';
-import { adsTools } from './tools/ads.js';
-import { analyticsTools } from './tools/analytics.js';
-import { knowledgeTools } from './tools/knowledge.js';
-import { activityTools } from './tools/activity.js';
-import { googleBusinessTools } from './tools/google-business.js';
-import { googleAdsTools } from './tools/ads-google.js';
-import { blogTools } from './tools/blog.js';
-import { whatsappTools } from './tools/whatsapp.js';
-import { blogsTools } from './tools/blogs.js';
-import { connectSessionsTools } from './tools/connect-sessions.js';
-import { webhooksTools } from './tools/webhooks.js';
-import { queueTools } from './tools/queue.js';
-import { automationsTools } from './tools/automations.js';
-import type { ToolDefinition } from './types.js';
-
-const DEFAULT_API_URL = 'https://api.fopost.com';
-
-function readConfig(): { apiKey: string; baseUrl: string } {
-  const apiKey = process.env.FOPOST_API_KEY;
-  if (!apiKey) {
-    console.error(
-      '[fopost-mcp] Missing FOPOST_API_KEY. Generate one at https://fopost.com/dashboard/api-keys',
-    );
-    process.exit(1);
-  }
-  return {
-    apiKey,
-    baseUrl: process.env.FOPOST_API_URL ?? DEFAULT_API_URL,
-  };
-}
+import { ConfigError, createServer, readConfig } from './server.js';
 
 async function main() {
-  const config = readConfig();
-  const client = new FoPostClient(config);
+  let config;
+  try {
+    config = readConfig(process.env);
+  } catch (err) {
+    if (!(err instanceof ConfigError)) throw err;
+    console.error(`[fopost-mcp] ${err.message}`);
+    process.exit(1);
+  }
 
-  const allTools: ToolDefinition[] = [
-    ...postsTools(client),
-    ...accountsTools(client),
-    ...aiTools(client),
-    ...inboxTools(client),
-    ...contactsTools(client),
-    ...broadcastsTools(client),
-    ...adsTools(client),
-    ...analyticsTools(client),
-    ...knowledgeTools(client),
-    ...activityTools(client),
-    ...googleBusinessTools(client),
-    ...googleAdsTools(client),
-    ...blogTools(client),
-    ...whatsappTools(client),
-    ...blogsTools(client),
-    ...connectSessionsTools(client),
-    ...webhooksTools(client),
-    ...queueTools(client),
-    ...automationsTools(client),
-  ];
-  const toolMap = new Map(allTools.map((t) => [t.name, t]));
-
-  const server = new Server(
-    {
-      name: 'fopost-mcp',
-      version: __PKG_VERSION__,
-    },
-    {
-      capabilities: {
-        tools: {},
-      },
-    },
-  );
-
-  // ─── List tools ─────────────────────────────────────────────────
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: allTools.map((t) => ({
-      name: t.name,
-      description: t.description,
-      inputSchema: zodToJsonSchema(t.inputSchema, { target: 'jsonSchema7' }),
-    })),
-  }));
-
-  // ─── Call tool ──────────────────────────────────────────────────
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
-    const tool = toolMap.get(name);
-    if (!tool) {
-      return {
-        isError: true,
-        content: [{ type: 'text', text: `Unknown tool: ${name}` }],
-      };
-    }
-
-    const parsed = tool.inputSchema.safeParse(args ?? {});
-    if (!parsed.success) {
-      return {
-        isError: true,
-        content: [
-          {
-            type: 'text',
-            text: `Invalid arguments for ${name}: ${parsed.error.message}`,
-          },
-        ],
-      };
-    }
-
-    try {
-      const result = await tool.execute(parsed.data);
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-      };
-    } catch (err) {
-      if (err instanceof FoPostApiError) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text',
-              text: `FoPost API ${err.status}${err.code ? ` (${err.code})` : ''}: ${err.message}`,
-            },
-          ],
-        };
-      }
-      return {
-        isError: true,
-        content: [
-          {
-            type: 'text',
-            text: err instanceof Error ? err.message : 'Unknown error',
-          },
-        ],
-      };
-    }
-  });
-
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  const server = createServer(config, __PKG_VERSION__);
+  await server.connect(new StdioServerTransport());
   console.error('[fopost-mcp] Server running on stdio');
 }
 
 main().catch((err) => {
-  console.error('[fopost-mcp] Fatal:', err);
+  // Only the message: a stack or error object can carry request details.
+  console.error('[fopost-mcp] Fatal:', err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 import { MAX_FILES_PER_POST, sendPostWithFiles, type PostMediaItem } from '../files.js';
 
@@ -48,7 +48,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.get(`/v1/posts/${input.id}`);
+        return client.get(`/v1/posts/${seg(input.id)}`);
       },
     },
 
@@ -116,7 +116,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
             )
           : await client.post<{ id: string }>('/v1/posts', body);
         if (input.publish_now && created?.id) {
-          return client.post(`/v1/posts/${created.id}/publish`);
+          return client.post(`/v1/posts/${seg(created.id)}/publish`);
         }
         return created;
       },
@@ -145,10 +145,10 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         if (input.schedule_at !== undefined) body.schedule_at = input.schedule_at;
         if (input.schedule !== undefined) body.schedule = input.schedule;
         if (input.labels !== undefined) body.labels = input.labels;
-        if (!input.file_paths?.length) return client.put(`/v1/posts/${input.id}`, body);
+        if (!input.file_paths?.length) return client.put(`/v1/posts/${seg(input.id)}`, body);
 
         // Direct upload needs the workspace, and the existing blocks to append to.
-        const existing = await client.get<ExistingPost>(`/v1/posts/${input.id}`);
+        const existing = await client.get<ExistingPost>(`/v1/posts/${seg(input.id)}`);
         if (!existing.workspace_id) throw new Error('Post has no workspace');
         if (body.content === undefined && existing.content?.length) {
           body.content = existing.content.map((block, position) => ({
@@ -160,7 +160,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         return sendPostWithFiles(
           client,
           'PUT',
-          `/v1/posts/${input.id}`,
+          `/v1/posts/${seg(input.id)}`,
           body,
           input.file_paths,
           existing.workspace_id,
@@ -188,7 +188,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/posts/${input.id}/cancel`);
+        return client.post(`/v1/posts/${seg(input.id)}/cancel`);
       },
     },
 
@@ -200,7 +200,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/posts/${input.id}/unpublish`);
+        return client.post(`/v1/posts/${seg(input.id)}/unpublish`);
       },
     },
 
@@ -211,7 +211,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.delete(`/v1/posts/${input.id}`);
+        return client.delete(`/v1/posts/${seg(input.id)}`);
       },
     },
 
@@ -223,7 +223,7 @@ export function postsTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Post id (uuid)'),
       }),
       async execute(input) {
-        return client.get(`/v1/posts/${input.id}/deliveries`);
+        return client.get(`/v1/posts/${seg(input.id)}/deliveries`);
       },
     },
   ];

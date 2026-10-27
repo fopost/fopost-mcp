@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const weekdaySchema = z.number().int().min(0).max(6).describe('0 = Sunday … 6 = Saturday');
@@ -71,7 +71,7 @@ export function queueTools(client: FoPostClient): ToolDefinition[] {
         if (input.weekday !== undefined) body.weekday = input.weekday;
         if (input.time !== undefined) body.time = input.time;
         if (input.timezone !== undefined) body.timezone = input.timezone;
-        return client.put(`/v1/queue/slots/${input.id}`, body);
+        return client.put(`/v1/queue/slots/${seg(input.id)}`, body);
       },
     },
 
@@ -83,7 +83,7 @@ export function queueTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Slot id (uuid)'),
       }),
       async execute(input) {
-        return client.delete(`/v1/queue/slots/${input.id}`);
+        return client.delete(`/v1/queue/slots/${seg(input.id)}`);
       },
     },
 

@@ -1,7 +1,7 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import * as fs from 'node:fs';
 import { basename, extname } from 'node:path';
-import { FoPostApiError, type FoPostClient } from './client.js';
+import { FoPostApiError, type FoPostClient, seg } from './client.js';
 
 export const MAX_FILES_PER_POST = 5;
 export const MULTIPART_MAX_FILE_BYTES = 100 * 1024 * 1024;
@@ -31,14 +31,18 @@ function mediaType(mimeType: string): PostMediaItem['type'] {
   return mimeType.startsWith('video/') ? 'video' : 'image';
 }
 
-async function loadFile(path: string): Promise<LocalFile> {
+async function loadFile(requested: string): Promise<LocalFile> {
+  // Judge the file a symlink points at, so `photo.png -> ~/.ssh/id_ed25519` is refused.
+  const path = await realpath(requested);
   const mimeType = MIME_BY_EXT[extname(path).toLowerCase()];
   if (!mimeType) {
     throw new Error(
-      `"${basename(path)}" is not a supported file type. Allowed: ${Object.keys(MIME_BY_EXT).join(', ')}`,
+      `"${basename(requested)}" is not a supported file type. Allowed: ${Object.keys(MIME_BY_EXT).join(', ')}`,
     );
   }
-  const { size } = await stat(path);
+  const info = await stat(path);
+  if (!info.isFile()) throw new Error(`"${basename(requested)}" is not a regular file.`);
+  const { size } = info;
   // openAsBlob streams the bytes; older Node reads them into memory.
   const openAsBlob = (fs as { openAsBlob?: (p: string, o: { type: string }) => Promise<Blob> })
     .openAsBlob;
@@ -74,6 +78,10 @@ async function uploadDirect(
     mimeType: file.mimeType,
     size: file.size,
   });
+  // The file's bytes go wherever this URL says, so only to an https store.
+  if (new URL(presigned.uploadUrl).protocol !== 'https:') {
+    throw new Error(`Refusing to upload "${file.name}" to a non-https URL`);
+  }
   const res = await fetch(presigned.uploadUrl, {
     method: presigned.method,
     headers: presigned.headers,
@@ -81,7 +89,7 @@ async function uploadDirect(
   });
   if (!res.ok) throw new Error(`Uploading "${file.name}" failed: HTTP ${res.status}`);
   const stored = await client.post<{ url: string; mimeType?: string }>(
-    `/v1/media/presign/${presigned.uploadId}/complete`,
+    `/v1/media/presign/${seg(presigned.uploadId)}/complete`,
   );
   return { type: mediaType(stored.mimeType ?? file.mimeType), url: stored.url, name: file.name };
 }

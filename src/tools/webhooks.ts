@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const WEBHOOK_EVENTS = [
@@ -27,6 +27,11 @@ const WEBHOOK_EVENTS = [
 const eventsSchema = z.array(z.enum(WEBHOOK_EVENTS)).min(1).describe('Events to subscribe to');
 const secretSchema = z.string().min(16).max(255);
 const headerValue = z.string().min(1).max(1024);
+const httpsUrl = z
+  .string()
+  .url()
+  .max(2048)
+  .refine((v) => /^https:\/\//i.test(v), 'Webhook url must use https');
 
 /** Every tool here needs the `webhooks` scope. */
 export function webhooksTools(client: FoPostClient): ToolDefinition[] {
@@ -47,7 +52,7 @@ export function webhooksTools(client: FoPostClient): ToolDefinition[] {
         'Register an HTTPS endpoint for workspace events. The signing secret is returned only in this response, so store it to verify payloads.',
       inputSchema: z.object({
         workspace_id: z.string().uuid().describe('Workspace id (uuid)'),
-        url: z.string().url().max(2048).describe('HTTPS endpoint on a public host'),
+        url: httpsUrl.describe('HTTPS endpoint on a public host'),
         events: eventsSchema,
         name: z.string().min(1).max(120).optional().describe('A label for the endpoint'),
         secret: secretSchema.optional().describe('Signing secret; omit to have one generated'),
@@ -75,7 +80,7 @@ export function webhooksTools(client: FoPostClient): ToolDefinition[] {
       inputSchema: z.object({
         id: z.string().uuid().describe('Webhook id (uuid)'),
         name: z.string().min(1).max(120).nullable().optional(),
-        url: z.string().url().max(2048).optional(),
+        url: httpsUrl.optional(),
         events: eventsSchema.optional(),
         active: z.boolean().optional(),
         secret: secretSchema.optional().describe('Rotates the signing secret; returned once'),
@@ -95,7 +100,7 @@ export function webhooksTools(client: FoPostClient): ToolDefinition[] {
         if (input.active !== undefined) body.active = input.active;
         if (input.secret !== undefined) body.secret = input.secret;
         if (input.headers !== undefined) body.headers = input.headers;
-        return client.put(`/v1/webhooks/${input.id}`, body);
+        return client.put(`/v1/webhooks/${seg(input.id)}`, body);
       },
     },
 
@@ -106,7 +111,7 @@ export function webhooksTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Webhook id (uuid)'),
       }),
       async execute(input) {
-        return client.delete(`/v1/webhooks/${input.id}`);
+        return client.delete(`/v1/webhooks/${seg(input.id)}`);
       },
     },
 
@@ -118,7 +123,7 @@ export function webhooksTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid().describe('Webhook id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/webhooks/${input.id}/test`);
+        return client.post(`/v1/webhooks/${seg(input.id)}/test`);
       },
     },
 
@@ -132,7 +137,7 @@ export function webhooksTools(client: FoPostClient): ToolDefinition[] {
         limit: z.number().int().min(1).max(200).optional(),
       }),
       async execute(input) {
-        return client.get(`/v1/webhooks/${input.id}/deliveries`, {
+        return client.get(`/v1/webhooks/${seg(input.id)}/deliveries`, {
           status: input.status,
           limit: input.limit,
         });
@@ -147,7 +152,7 @@ export function webhooksTools(client: FoPostClient): ToolDefinition[] {
         delivery_id: z.string().uuid().describe('Delivery id (uuid)'),
       }),
       async execute(input) {
-        return client.get(`/v1/webhooks/${input.id}/deliveries/${input.delivery_id}`);
+        return client.get(`/v1/webhooks/${seg(input.id)}/deliveries/${seg(input.delivery_id)}`);
       },
     },
 
@@ -160,7 +165,9 @@ export function webhooksTools(client: FoPostClient): ToolDefinition[] {
         delivery_id: z.string().uuid().describe('Delivery id (uuid)'),
       }),
       async execute(input) {
-        return client.post(`/v1/webhooks/${input.id}/deliveries/${input.delivery_id}/redeliver`);
+        return client.post(
+          `/v1/webhooks/${seg(input.id)}/deliveries/${seg(input.delivery_id)}/redeliver`,
+        );
       },
     },
   ];

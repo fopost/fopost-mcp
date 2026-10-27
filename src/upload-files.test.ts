@@ -16,7 +16,8 @@ vi.mock('node:fs/promises', async (importOriginal) => {
     ...real,
     stat: async (p: string) => {
       const s = await real.stat(p);
-      return fakeSize === null ? s : { ...s, size: fakeSize };
+      // Keep the Stats prototype so isFile() still works on the faked copy.
+      return fakeSize === null ? s : Object.assign(Object.create(s), { size: fakeSize });
     },
   };
 });
@@ -117,6 +118,34 @@ describe('schedule_post with file_paths', () => {
     expect(files).toHaveLength(1);
     expect(files[0].name).toBe('photo.jpg');
     expect(files[0].type).toBe('image/jpeg');
+  });
+
+  it('refuses to send a large file to a non-https presigned url', async () => {
+    fakeSize = MULTIPART_MAX_FILE_BYTES + 1;
+    try {
+      const path = await smallFile('clip.mp4');
+      respond = () =>
+        json({
+          data: {
+            uploadId: 'up_1',
+            uploadUrl: 'http://169.254.169.254/x',
+            method: 'PUT',
+            headers: {},
+          },
+        });
+      await expect(
+        tool('schedule_post').execute({
+          workspace_id: UUID,
+          content: 'hi',
+          account_ids: [UUID],
+          publish_now: false,
+          file_paths: [path],
+        }),
+      ).rejects.toThrow(/non-https/);
+      expect(calls.map((c) => c.url)).toEqual(['https://api.fopost.com/v1/media/presign']);
+    } finally {
+      fakeSize = null;
+    }
   });
 
   it('presigns, PUTs and completes a large file, then attaches it by url', async () => {

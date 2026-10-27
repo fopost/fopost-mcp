@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 /**
@@ -181,7 +181,7 @@ export function googleAdsTools(client: FoPostClient): ToolDefinition[] {
         cpc_bid_minor: z.number().int().positive().optional(),
       }),
       async execute(input) {
-        return client.request('PATCH', `/v1/ads/google/keywords/${input.keyword_id}`, {
+        return client.request('PATCH', `/v1/ads/google/keywords/${seg(input.keyword_id)}`, {
           ...body(input),
           status: input.status,
           cpcBidMinor: input.cpc_bid_minor,
@@ -194,7 +194,7 @@ export function googleAdsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Remove a Google Ads keyword. Needs the ads and publish scopes.',
       inputSchema: z.object({ ...writeScope, keyword_id: objectId }),
       async execute(input) {
-        return client.delete(`/v1/ads/google/keywords/${input.keyword_id}`, body(input));
+        return client.delete(`/v1/ads/google/keywords/${seg(input.keyword_id)}`, body(input));
       },
     },
 

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 /**
@@ -68,7 +68,7 @@ export function analyticsTools(client: FoPostClient): ToolDefinition[] {
           .describe('A FoPost post id, or the permalink of a post made natively on the network'),
       }),
       async execute(input) {
-        return client.get(`/v1/analytics/posts/${encodeURIComponent(input.post)}/timeline`);
+        return client.get(`/v1/analytics/posts/${seg(input.post)}/timeline`);
       },
     },
 
@@ -106,7 +106,7 @@ export function analyticsTools(client: FoPostClient): ToolDefinition[] {
           .describe('A FoPost post id, or the permalink of a post made natively on the network'),
       }),
       async execute(input) {
-        return client.post(`/v1/posts/${encodeURIComponent(input.post)}/analytics/collect`);
+        return client.post(`/v1/posts/${seg(input.post)}/analytics/collect`);
       },
     },
 
@@ -127,7 +127,7 @@ export function analyticsTools(client: FoPostClient): ToolDefinition[] {
           .describe('Only posts published in the last this many days'),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/native-posts`, {
+        return client.get(`/v1/accounts/${seg(input.account_id)}/native-posts`, {
           page: input.page,
           per_page: input.per_page,
           days: input.days,
