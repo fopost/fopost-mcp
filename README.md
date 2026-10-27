@@ -695,7 +695,24 @@ Use the same `npx -y @fopost/mcp` command with `FOPOST_API_KEY` in the environme
 | `FOPOST_API_KEY` | yes      | required                 |
 | `FOPOST_API_URL` | no       | `https://api.fopost.com` |
 
-Self-hosted? Point `FOPOST_API_URL` at your instance.
+Self-hosted? Point `FOPOST_API_URL` at your instance. It must be a bare `https://` host;
+plain `http://` is accepted for `localhost` and `127.0.0.1` only, so the key never crosses a
+network in clear text.
+
+## Security
+
+- **Use the narrowest key you can.** Create a key bound to one workspace with only the scopes
+  your workflow needs; scopes are enforced by the API, and this server never widens them.
+- **Destructive tools are annotated.** Every tool carries MCP `readOnlyHint` /
+  `destructiveHint` annotations. Leave your client's confirmation prompt on for destructive
+  tools (deletes, publishing, replies, ad spend, webhooks): content the server reads back,
+  such as inbox messages, can contain instructions written by someone else.
+- **Bursts are capped.** More than 30 destructive calls in a minute are refused until the
+  window clears, so a looping agent stops and asks.
+- **`file_paths` reads local files** with the permissions of the MCP process. Only image and
+  video extensions are accepted, judged after following symlinks.
+
+The threat model is in [docs/security/threat-model.md](docs/security/threat-model.md).
 
 ## Example prompts
 

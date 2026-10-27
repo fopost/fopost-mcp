@@ -4,6 +4,24 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ## Unreleased
 
+### Security
+
+- Every id interpolated into a request path is percent-encoded and a lone `.` or `..` is
+  refused, so an argument like `../../v1/api-keys` or `x?workspace_id=other` can no longer
+  move a call to another route. Around 60 tools taking non-uuid ids were affected. The
+  client also refuses any path with a dot segment, query, fragment or backslash.
+- Tools publish MCP annotations (`readOnlyHint`, `destructiveHint`, `openWorldHint`) so
+  clients can require confirmation for destructive calls.
+- More than 30 destructive calls in a rolling minute are refused with a retry time.
+- `FOPOST_API_URL` must be a bare https host (http only for loopback); the server exits
+  otherwise.
+- The API key is redacted from any error text returned to the client, and error text is
+  capped at 2000 characters. 401, 403 and 429 answers explain the cause, and 429 carries
+  `Retry-After`.
+- `file_paths` judges the file type after following symlinks and refuses anything that is
+  not a regular file; a direct upload is only sent to an https presigned URL.
+- `create_webhook` and `update_webhook` only accept https URLs.
+
 ### Added
 
 - Ads tracking tools (10): `list_pixels`, `create_pixel`, `get_pixel`, `update_pixel`,

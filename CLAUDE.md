@@ -26,11 +26,13 @@ that contract changes.
 ## Architecture
 
 ```
-src/index.ts     stdio server: reads config, builds the tool list, wires ListTools + CallTool
-src/client.ts    FoPostClient (fetch) + FoPostApiError
-src/types.ts     ToolDefinition<S> — name, description, Zod inputSchema, typed execute
-src/tools/       posts.ts (7 tools), accounts.ts (26), ai.ts (4), inbox.ts (23), ads.ts (47) — 107 total
-src/globals.d.ts declares __PKG_VERSION__, injected by tsup from package.json
+src/index.ts       stdio entry: readConfig, createServer, connect the transport
+src/server.ts      readConfig, buildTools, listTools, createToolCaller (errors, redaction, burst cap)
+src/annotations.ts readOnlyHint / destructiveHint per tool, derived from the name's verb
+src/client.ts      FoPostClient (fetch) + FoPostApiError, seg() and assertSafePath()
+src/types.ts       ToolDefinition<S> — name, description, Zod inputSchema, typed execute
+src/tools/         posts.ts (7 tools), accounts.ts (26), ai.ts (4), inbox.ts (23), ads.ts (47) — 107 total
+src/globals.d.ts   declares __PKG_VERSION__, injected by tsup from package.json
 ```
 
 **Transport is stdio.** `console.error` is the only safe logging channel; anything written to
@@ -42,6 +44,9 @@ stdout corrupts the JSON-RPC stream.
 | :--------------- | :-------------------------- | :----------------------- |
 | `FOPOST_API_KEY` | yes, or the process exits 1 | —                        |
 | `FOPOST_API_URL` | no                          | `https://api.fopost.com` |
+
+`readConfig` refuses a non-https `FOPOST_API_URL` (http is allowed for loopback only) and
+anything but a bare origin.
 
 `FOPOST_API_URL` is **host-only**; the version prefix belongs to the tool paths. **That prefix is
 `/v1`, never `/api/v1`** — the API serves its routes at `/v1` on the bare host and nothing rewrites
@@ -58,15 +63,24 @@ the API's `message`, `error` code, and status; a non-JSON body becomes one carry
 timeout. The client makes one attempt. An MCP client drives the retry by asking again, so do not
 add a retry loop without a reason that survives that argument.
 
-**Errors never throw out of a tool.** `CallToolRequestSchema` catches, and answers
+**Errors never throw out of a tool.** `createToolCaller` catches, and answers
 `{ isError: true, content: [{ type: 'text', … }] }` — an unknown tool name, a Zod parse failure,
 a `FoPostApiError` rendered as `FoPost API <status> (<code>): <message>`, or any other error's
 message. Scope and workspace checks happen server-side; this server never pre-authorizes.
 
+**Every value interpolated into a path goes through `seg()`**: `/v1/ads/pixels/${seg(input.id)}`.
+It percent-encodes and refuses `.`/`..`, so a model-supplied id cannot move the request to
+another route; `assertSafePath` in the client is the backstop. `src/security.test.ts` feeds
+hostile values into every string argument of every tool and fails if a request changes shape.
+
+**Annotations come from the verb.** A new verb that only reads goes in `READ_VERBS`; a write
+is destructive unless its verb is in `ADDITIVE_VERBS`. Destructive calls share a burst cap
+(`DESTRUCTIVE_CALLS_PER_MINUTE`).
+
 **Adding a tool** is one entry in the relevant `src/tools/*.ts` array: `name` (snake_case verb
 first), a one-line `description` the model reads to choose it, a Zod `inputSchema`
 (`zodToJsonSchema` publishes it), and an `execute` that calls one client method. Register a new
-tool file in the `allTools` array in `src/index.ts`, and add the row to the README table.
+tool file in `buildTools` in `src/server.ts`, and add the row to the README table.
 
 ## Claude Code Plugin
 
@@ -129,7 +143,10 @@ by CI, so run `npm run format:check` by hand.
 
 ## Testing
 
-Vitest, one suite so far: `src/api-path.test.ts`, which executes every registered tool against a
+Vitest. Fixtures (one valid input per tool, `allTools()`) live in `src/tool-fixtures.ts`.
+`src/security.test.ts` pins path-injection resistance, config validation, auth-failure
+rendering, key redaction, the destructive burst cap, annotations and file-upload checks.
+The path suite is `src/api-path.test.ts`, which executes every registered tool against a
 stubbed `fetch` and asserts each request path starts with `/v1/` and never contains `/api/v1/`. It
 also fails when a tool is added without an input fixture, so new tools get their path pinned too.
 A second block checks the inbox and ads wire shapes: snake_case query params, camelCase bodies,
