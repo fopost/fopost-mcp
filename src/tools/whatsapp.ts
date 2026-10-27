@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 /**
@@ -23,7 +23,7 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid().describe('WhatsApp account id (uuid)'),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/whatsapp/profile`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/whatsapp/profile`);
       },
     },
 
@@ -41,7 +41,7 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         const { account_id: accountId, ...patch } = input;
-        return client.request('PATCH', `/v1/accounts/${accountId}/whatsapp/profile`, patch);
+        return client.request('PATCH', `/v1/accounts/${seg(accountId)}/whatsapp/profile`, patch);
       },
     },
 
@@ -54,7 +54,7 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
         after: z.string().optional().describe('Pagination cursor from a previous page'),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/whatsapp/templates`, {
+        return client.get(`/v1/accounts/${seg(input.account_id)}/whatsapp/templates`, {
           after: input.after,
         });
       },
@@ -69,7 +69,7 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
         search: z.string().max(120).optional(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/whatsapp/templates/library`, {
+        return client.get(`/v1/accounts/${seg(input.account_id)}/whatsapp/templates/library`, {
           search: input.search,
         });
       },
@@ -99,14 +99,18 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         const accountId = input.account_id;
         if (input.library_template_name) {
-          return client.request('POST', `/v1/accounts/${accountId}/whatsapp/templates/import`, {
-            library_template_name: input.library_template_name,
-            name: input.name,
-            language: input.language,
-            category: input.category,
-          });
+          return client.request(
+            'POST',
+            `/v1/accounts/${seg(accountId)}/whatsapp/templates/import`,
+            {
+              library_template_name: input.library_template_name,
+              name: input.name,
+              language: input.language,
+              category: input.category,
+            },
+          );
         }
-        return client.request('POST', `/v1/accounts/${accountId}/whatsapp/templates`, {
+        return client.request('POST', `/v1/accounts/${seg(accountId)}/whatsapp/templates`, {
           name: input.name,
           language: input.language,
           category: input.category,
@@ -127,7 +131,7 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/whatsapp/flows`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/whatsapp/flows`);
       },
     },
 
@@ -139,7 +143,7 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/whatsapp/flows/responses`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/whatsapp/flows/responses`);
       },
     },
 
@@ -151,7 +155,7 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/whatsapp/groups`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/whatsapp/groups`);
       },
     },
 
@@ -163,7 +167,7 @@ export function whatsappTools(client: FoPostClient): ToolDefinition[] {
         account_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.get(`/v1/accounts/${input.account_id}/whatsapp/events`);
+        return client.get(`/v1/accounts/${seg(input.account_id)}/whatsapp/events`);
       },
     },
   ];

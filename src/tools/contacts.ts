@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 /**
@@ -48,7 +48,7 @@ export function contactsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Read one contact by id. Needs the inbox scope.',
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.get(`/v1/contacts/${id}`);
+        return client.get(`/v1/contacts/${seg(id)}`);
       },
     },
 
@@ -80,7 +80,7 @@ export function contactsTools(client: FoPostClient): ToolDefinition[] {
         fields: z.record(z.string().nullable()).optional(),
       }),
       async execute({ id, ...body }) {
-        return client.request('PATCH', `/v1/contacts/${id}`, body);
+        return client.request('PATCH', `/v1/contacts/${seg(id)}`, body);
       },
     },
 
@@ -90,7 +90,7 @@ export function contactsTools(client: FoPostClient): ToolDefinition[] {
         'Remove a contact. The messages stay in the inbox, and a later one files the person again. Needs the inbox scope.',
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.delete(`/v1/contacts/${id}`);
+        return client.delete(`/v1/contacts/${seg(id)}`);
       },
     },
 
@@ -103,7 +103,7 @@ export function contactsTools(client: FoPostClient): ToolDefinition[] {
         limit: z.number().int().min(1).max(100).optional(),
       }),
       async execute({ id, ...params }) {
-        return client.get(`/v1/contacts/${id}/conversations`, params);
+        return client.get(`/v1/contacts/${seg(id)}/conversations`, params);
       },
     },
 
@@ -169,7 +169,7 @@ export function contactsTools(client: FoPostClient): ToolDefinition[] {
         position: z.number().int().min(0).max(1000).optional(),
       }),
       async execute({ id, ...body }) {
-        return client.request('PATCH', `/v1/contacts/fields/${id}`, body);
+        return client.request('PATCH', `/v1/contacts/fields/${seg(id)}`, body);
       },
     },
 
@@ -178,7 +178,7 @@ export function contactsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Remove a field and every contact answer to it. Needs the inbox scope.',
       inputSchema: z.object({ id: z.string().uuid() }),
       async execute({ id }) {
-        return client.delete(`/v1/contacts/fields/${id}`);
+        return client.delete(`/v1/contacts/fields/${seg(id)}`);
       },
     },
 

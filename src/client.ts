@@ -13,12 +13,49 @@ export class FoPostApiError extends Error {
   status: number;
   code?: string;
   details?: Record<string, unknown>;
-  constructor(message: string, status: number, code?: string, details?: Record<string, unknown>) {
+  retryAfter?: string;
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: Record<string, unknown>,
+    retryAfter?: string,
+  ) {
     super(message);
     this.status = status;
     this.code = code;
     this.details = details;
+    this.retryAfter = retryAfter;
     this.name = 'FoPostApiError';
+  }
+}
+
+/**
+ * One URL path segment from a tool argument. Encoding keeps `/`, `?` and `#`
+ * inside the segment; a lone `.` or `..` is refused because URL parsing
+ * resolves it even when encoded, which would move the request to another route.
+ */
+export function seg(value: string | number): string {
+  const s = String(value);
+  if (s === '' || s === '.' || s === '..') {
+    throw new Error(`Invalid id: ${JSON.stringify(s)}`);
+  }
+  return encodeURIComponent(s);
+}
+
+/**
+ * Last line of defence for a path built anywhere in the tools: no query,
+ * fragment, backslash, control character, or dot segment (plain or encoded).
+ */
+export function assertSafePath(path: string): void {
+  if (!path.startsWith('/v1/') || /[?#\\\u0000-\u001f\u007f]/.test(path)) {
+    throw new Error(`Refusing unsafe request path: ${path}`);
+  }
+  for (const part of path.split('/')) {
+    const lower = part.toLowerCase();
+    if (lower === '.' || lower === '..' || /^(\.|%2e){1,2}$/.test(lower)) {
+      throw new Error(`Refusing unsafe request path: ${path}`);
+    }
   }
 }
 
@@ -38,6 +75,7 @@ export class FoPostClient {
     body?: unknown,
     query?: Record<string, string | number | undefined>,
   ): Promise<T> {
+    assertSafePath(path);
     const url = new URL(this.baseUrl + path);
     if (query) {
       for (const [k, v] of Object.entries(query)) {
@@ -58,10 +96,17 @@ export class FoPostClient {
     });
 
     const contentType = res.headers.get('content-type') ?? '';
+    const retryAfter = res.headers.get('retry-after') ?? undefined;
     if (!contentType.includes('application/json')) {
       if (!res.ok) {
         const text = await res.text();
-        throw new FoPostApiError(text || `HTTP ${res.status}`, res.status);
+        throw new FoPostApiError(
+          text || `HTTP ${res.status}`,
+          res.status,
+          undefined,
+          undefined,
+          retryAfter,
+        );
       }
       throw new FoPostApiError(`Unexpected response: ${contentType}`, res.status);
     }
@@ -73,7 +118,13 @@ export class FoPostClient {
         (typeof json.message === 'string' && json.message) ||
         (typeof json.error === 'string' && json.error) ||
         `HTTP ${res.status}`;
-      throw new FoPostApiError(message, res.status, json.error as string | undefined, json);
+      throw new FoPostApiError(
+        message,
+        res.status,
+        json.error as string | undefined,
+        json,
+        retryAfter,
+      );
     }
 
     // Most endpoints wrap in `{ data: ... }`. Unwrap when single-key.

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const SOURCE_KIND = z.enum(['faq', 'text', 'url', 'file']);
@@ -69,7 +69,7 @@ export function knowledgeTools(client: FoPostClient): ToolDefinition[] {
         brand_voice_id: z.string().uuid().nullable().optional(),
       }),
       async execute({ id, ...body }) {
-        return client.patch(`/v1/knowledge/sources/${id}`, body);
+        return client.patch(`/v1/knowledge/sources/${seg(id)}`, body);
       },
     },
 
@@ -81,7 +81,7 @@ export function knowledgeTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid(),
       }),
       async execute({ id }) {
-        return client.post(`/v1/knowledge/sources/${id}/sync`);
+        return client.post(`/v1/knowledge/sources/${seg(id)}/sync`);
       },
     },
 
@@ -93,7 +93,7 @@ export function knowledgeTools(client: FoPostClient): ToolDefinition[] {
         id: z.string().uuid(),
       }),
       async execute({ id }) {
-        return client.delete(`/v1/knowledge/sources/${id}`);
+        return client.delete(`/v1/knowledge/sources/${seg(id)}`);
       },
     },
   ];

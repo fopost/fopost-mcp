@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const namedItem = z.object({ id: z.string(), name: z.string() });
@@ -63,8 +63,8 @@ const CUSTOM_CONVERSION_EVENT_TYPES = [
   'OTHER',
 ] as const;
 
-const pixelPath = (id: string) => `/v1/ads/pixels/${id}`;
-const customConversionPath = (id: string) => `/v1/ads/custom-conversions/${id}`;
+const pixelPath = (id: string) => `/v1/ads/pixels/${seg(id)}`;
+const customConversionPath = (id: string) => `/v1/ads/custom-conversions/${seg(id)}`;
 
 const adBudget = z.object({
   minor: z.number().int().positive().describe('Amount in the ad account currency, minor units'),
@@ -244,7 +244,7 @@ const CONVERSION_TYPES = [
   'other',
 ] as const;
 
-const conversionRulePath = (id: string) => `/v1/ads/linkedin/conversion-rules/${id}`;
+const conversionRulePath = (id: string) => `/v1/ads/linkedin/conversion-rules/${seg(id)}`;
 
 const adCompany = z.object({
   name: z.string().max(255).optional(),
@@ -426,7 +426,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'PATCH',
-          `/v1/ads/${input.id}`,
+          `/v1/ads/${seg(input.id)}`,
           { status: input.status },
           { workspace_id: input.workspace_id },
         );
@@ -442,7 +442,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         workspace_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.request('POST', `/v1/ads/${input.id}/refresh`, undefined, {
+        return client.request('POST', `/v1/ads/${seg(input.id)}/refresh`, undefined, {
           workspace_id: input.workspace_id,
         });
       },
@@ -457,7 +457,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         workspace_id: z.string().uuid(),
       }),
       async execute(input) {
-        return client.request('DELETE', `/v1/ads/${input.id}`, undefined, {
+        return client.request('DELETE', `/v1/ads/${seg(input.id)}`, undefined, {
           workspace_id: input.workspace_id,
         });
       },
@@ -763,7 +763,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         text: z.string().min(1).max(500),
       }),
       async execute(input) {
-        return client.post(`/v1/ads/comments/${input.id}/reply`, {
+        return client.post(`/v1/ads/comments/${seg(input.id)}/reply`, {
           workspaceId: input.workspace_id,
           connectionId: input.connection_id,
           adId: input.ad_id,
@@ -782,7 +782,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         hidden: z.boolean(),
       }),
       async execute(input) {
-        return client.post(`/v1/ads/comments/${input.id}/hide`, {
+        return client.post(`/v1/ads/comments/${seg(input.id)}/hide`, {
           workspaceId: input.workspace_id,
           connectionId: input.connection_id,
           adId: input.ad_id,
@@ -801,7 +801,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         ad_id: metaId,
       }),
       async execute(input) {
-        return client.request('DELETE', `/v1/ads/comments/${input.id}`, {
+        return client.request('DELETE', `/v1/ads/comments/${seg(input.id)}`, {
           workspaceId: input.workspace_id,
           connectionId: input.connection_id,
           adId: input.ad_id,
@@ -830,7 +830,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         after: z.string().optional().describe('Cursor from the previous page'),
       }),
       async execute(input) {
-        return client.get(`/v1/ads/lead-forms/${input.form_id}/leads`, {
+        return client.get(`/v1/ads/lead-forms/${seg(input.form_id)}/leads`, {
           workspace_id: input.workspace_id,
           connection_id: input.connection_id,
           page_id: input.page_id,
@@ -848,7 +848,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         ad_account_id: z.string().describe('Ad account id, `act_…`'),
       }),
       async execute(input) {
-        return client.get(`/v1/ads/accounts/${input.ad_account_id}/tree`, metaQuery(input));
+        return client.get(`/v1/ads/accounts/${seg(input.ad_account_id)}/tree`, metaQuery(input));
       },
     },
 
@@ -887,7 +887,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Read one campaign by its ad platform id. Needs the ads scope.',
       inputSchema: z.object({ id: metaId, ...metaRead }),
       async execute(input) {
-        return client.get(`/v1/ads/campaigns/${input.id}`, metaQuery(input));
+        return client.get(`/v1/ads/campaigns/${seg(input.id)}`, metaQuery(input));
       },
     },
 
@@ -903,7 +903,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'PATCH',
-          `/v1/ads/campaigns/${input.id}`,
+          `/v1/ads/campaigns/${seg(input.id)}`,
           { name: input.name, status: input.status },
           metaQuery(input),
         );
@@ -918,7 +918,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'DELETE',
-          `/v1/ads/campaigns/${input.id}`,
+          `/v1/ads/campaigns/${seg(input.id)}`,
           undefined,
           metaQuery(input),
         );
@@ -933,7 +933,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/ads/campaigns/${input.id}/duplicate`,
+          `/v1/ads/campaigns/${seg(input.id)}/duplicate`,
           { paused: input.paused },
           metaQuery(input),
         );
@@ -978,7 +978,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Read one ad set by its ad platform id. Needs the ads scope.',
       inputSchema: z.object({ id: metaId, ...metaRead }),
       async execute(input) {
-        return client.get(`/v1/ads/ad-sets/${input.id}`, metaQuery(input));
+        return client.get(`/v1/ads/ad-sets/${seg(input.id)}`, metaQuery(input));
       },
     },
 
@@ -1003,7 +1003,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'PATCH',
-          `/v1/ads/ad-sets/${input.id}`,
+          `/v1/ads/ad-sets/${seg(input.id)}`,
           {
             name: input.name,
             status: input.status,
@@ -1022,7 +1022,12 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         'Delete an ad set and its ads on the ad platform. Cannot be undone. Needs the ads and publish scopes.',
       inputSchema: z.object({ id: metaId, ...metaWrite }),
       async execute(input) {
-        return client.request('DELETE', `/v1/ads/ad-sets/${input.id}`, undefined, metaQuery(input));
+        return client.request(
+          'DELETE',
+          `/v1/ads/ad-sets/${seg(input.id)}`,
+          undefined,
+          metaQuery(input),
+        );
       },
     },
 
@@ -1034,7 +1039,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/ads/ad-sets/${input.id}/duplicate`,
+          `/v1/ads/ad-sets/${seg(input.id)}/duplicate`,
           { paused: input.paused },
           metaQuery(input),
         );
@@ -1069,7 +1074,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Read one ad inside an ad set by its ad platform id. Needs the ads scope.',
       inputSchema: z.object({ id: metaId, ...metaRead }),
       async execute(input) {
-        return client.get(`/v1/ads/ads/${input.id}`, metaQuery(input));
+        return client.get(`/v1/ads/ads/${seg(input.id)}`, metaQuery(input));
       },
     },
 
@@ -1087,7 +1092,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'PATCH',
-          `/v1/ads/ads/${input.id}`,
+          `/v1/ads/ads/${seg(input.id)}`,
           { name: input.name, status: input.status, creativeId: input.creative_id },
           metaQuery(input),
         );
@@ -1100,7 +1105,12 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         'Delete an ad inside an ad set on the ad platform. Cannot be undone. Needs the ads and publish scopes.',
       inputSchema: z.object({ id: metaId, ...metaWrite }),
       async execute(input) {
-        return client.request('DELETE', `/v1/ads/ads/${input.id}`, undefined, metaQuery(input));
+        return client.request(
+          'DELETE',
+          `/v1/ads/ads/${seg(input.id)}`,
+          undefined,
+          metaQuery(input),
+        );
       },
     },
 
@@ -1112,7 +1122,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/ads/ads/${input.id}/duplicate`,
+          `/v1/ads/ads/${seg(input.id)}/duplicate`,
           { paused: input.paused },
           metaQuery(input),
         );
@@ -1230,7 +1240,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       description: 'Read one creative by its ad platform id. Needs the ads scope.',
       inputSchema: z.object({ id: metaId, ...metaRead }),
       async execute(input) {
-        return client.get(`/v1/ads/creatives/${input.id}`, metaQuery(input));
+        return client.get(`/v1/ads/creatives/${seg(input.id)}`, metaQuery(input));
       },
     },
 
@@ -1241,7 +1251,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'DELETE',
-          `/v1/ads/creatives/${input.id}`,
+          `/v1/ads/creatives/${seg(input.id)}`,
           undefined,
           metaQuery(input),
         );
@@ -1254,7 +1264,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         'Read one saved audience with its size and delivery status. Needs the ads scope.',
       inputSchema: z.object({ id: metaId, ...metaRead }),
       async execute(input) {
-        return client.get(`/v1/ads/audiences/${input.id}`, metaQuery(input));
+        return client.get(`/v1/ads/audiences/${seg(input.id)}`, metaQuery(input));
       },
     },
 
@@ -1270,7 +1280,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'PATCH',
-          `/v1/ads/audiences/${input.id}`,
+          `/v1/ads/audiences/${seg(input.id)}`,
           { name: input.name, description: input.description },
           metaQuery(input),
         );
@@ -1285,7 +1295,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'DELETE',
-          `/v1/ads/audiences/${input.id}`,
+          `/v1/ads/audiences/${seg(input.id)}`,
           undefined,
           metaQuery(input),
         );
@@ -1304,7 +1314,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/ads/audiences/${input.id}/users`,
+          `/v1/ads/audiences/${seg(input.id)}/users`,
           { emails: input.emails },
           metaQuery(input),
         );
@@ -1360,7 +1370,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         ...insightsRange,
       }),
       async execute(input) {
-        return client.get(`/v1/ads/${input.id}/insights`, {
+        return client.get(`/v1/ads/${seg(input.id)}/insights`, {
           workspace_id: input.workspace_id,
           ...rangeQuery(input),
         });
@@ -1376,7 +1386,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         page_id: z.string(),
       }),
       async execute(input) {
-        return client.get(`/v1/ads/lead-forms/${input.form_id}`, {
+        return client.get(`/v1/ads/lead-forms/${seg(input.form_id)}`, {
           ...metaQuery(input),
           page_id: input.page_id,
         });
@@ -1392,7 +1402,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         page_id: z.string(),
       }),
       async execute(input) {
-        return client.post(`/v1/ads/lead-forms/${input.form_id}/archive`, {
+        return client.post(`/v1/ads/lead-forms/${seg(input.form_id)}/archive`, {
           workspaceId: input.workspace_id,
           connectionId: input.connection_id,
           pageId: input.page_id,
@@ -1465,7 +1475,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'POST',
-          `/v1/ads/audiences/${input.id}/companies`,
+          `/v1/ads/audiences/${seg(input.id)}/companies`,
           {
             companies: input.companies.map((company: z.infer<typeof adCompany>) => ({
               name: company.name,
@@ -1741,7 +1751,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'DELETE',
-          `/v1/ads/lead-pages/${input.page_id}`,
+          `/v1/ads/lead-pages/${seg(input.page_id)}`,
           undefined,
           metaQuery(input),
         );
@@ -1800,7 +1810,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         after: z.string().optional().describe('A next_cursor from a previous page'),
       }),
       async execute(input) {
-        return client.get(`/v1/ads/catalogs/${input.catalog_id}/products`, {
+        return client.get(`/v1/ads/catalogs/${seg(input.catalog_id)}/products`, {
           ...metaQuery(input),
           after: input.after,
         });
@@ -1818,7 +1828,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         products: z.array(catalogProductWrite).min(1).max(500),
       }),
       async execute(input) {
-        return client.post(`/v1/ads/catalogs/${input.catalog_id}/products`, {
+        return client.post(`/v1/ads/catalogs/${seg(input.catalog_id)}/products`, {
           workspaceId: input.workspace_id,
           connectionId: input.connection_id,
           products: input.products.map((product: CatalogProductWrite) => ({
@@ -1848,7 +1858,10 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         catalog_id: z.string().describe('From list_ad_catalogs'),
       }),
       async execute(input) {
-        return client.get(`/v1/ads/catalogs/${input.catalog_id}/product-sets`, metaQuery(input));
+        return client.get(
+          `/v1/ads/catalogs/${seg(input.catalog_id)}/product-sets`,
+          metaQuery(input),
+        );
       },
     },
 
@@ -1864,7 +1877,7 @@ export function adsTools(client: FoPostClient): ToolDefinition[] {
         filter: z.record(z.unknown()).optional().describe("The network's own product-set filter"),
       }),
       async execute(input) {
-        return client.post(`/v1/ads/catalogs/${input.catalog_id}/product-sets`, {
+        return client.post(`/v1/ads/catalogs/${seg(input.catalog_id)}/product-sets`, {
           workspaceId: input.workspace_id,
           connectionId: input.connection_id,
           name: input.name,

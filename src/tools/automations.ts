@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const automationId = z.string().uuid().describe('Automation id (uuid)');
@@ -25,7 +25,7 @@ export function automationsTools(client: FoPostClient): ToolDefinition[] {
         id: automationId,
       }),
       async execute(input) {
-        return client.get(`/v1/automations/${input.id}`);
+        return client.get(`/v1/automations/${seg(input.id)}`);
       },
     },
 
@@ -39,7 +39,7 @@ export function automationsTools(client: FoPostClient): ToolDefinition[] {
         per_page: z.number().int().min(1).max(100).optional(),
       }),
       async execute(input) {
-        return client.get(`/v1/automations/${input.id}/versions`, {
+        return client.get(`/v1/automations/${seg(input.id)}/versions`, {
           page: input.page,
           per_page: input.per_page,
         });
@@ -54,7 +54,7 @@ export function automationsTools(client: FoPostClient): ToolDefinition[] {
         version: versionNumber,
       }),
       async execute(input) {
-        return client.get(`/v1/automations/${input.id}/versions/${input.version}`);
+        return client.get(`/v1/automations/${seg(input.id)}/versions/${seg(input.version)}`);
       },
     },
 
@@ -67,7 +67,9 @@ export function automationsTools(client: FoPostClient): ToolDefinition[] {
         version: versionNumber.describe('Version number to restore'),
       }),
       async execute(input) {
-        return client.post(`/v1/automations/${input.id}/versions/${input.version}/restore`);
+        return client.post(
+          `/v1/automations/${seg(input.id)}/versions/${seg(input.version)}/restore`,
+        );
       },
     },
   ];

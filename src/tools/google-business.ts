@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FoPostClient } from '../client.js';
+import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 /**
@@ -59,7 +59,7 @@ const PLACE_ACTION_TYPES = [
 
 const accountId = z.string().uuid().describe('Google Business account id (uuid)');
 
-const gbp = (id: string, suffix: string) => `/v1/accounts/${id}/gbp${suffix}`;
+const gbp = (id: string, suffix: string) => `/v1/accounts/${seg(id)}/gbp${suffix}`;
 
 export function googleBusinessTools(client: FoPostClient): ToolDefinition[] {
   return [
@@ -250,10 +250,7 @@ export function googleBusinessTools(client: FoPostClient): ToolDefinition[] {
         media_key: z.string().min(1).describe("Google's media key for the photo"),
       }),
       async execute(input) {
-        return client.request(
-          'DELETE',
-          gbp(input.account_id, `/media/${encodeURIComponent(input.media_key)}`),
-        );
+        return client.request('DELETE', gbp(input.account_id, `/media/${seg(input.media_key)}`));
       },
     },
 
@@ -290,11 +287,7 @@ export function googleBusinessTools(client: FoPostClient): ToolDefinition[] {
         is_preferred: z.boolean().optional(),
       }),
       async execute({ account_id, link_id, ...body }) {
-        return client.request(
-          'PATCH',
-          gbp(account_id, `/place-actions/${encodeURIComponent(link_id)}`),
-          body,
-        );
+        return client.request('PATCH', gbp(account_id, `/place-actions/${seg(link_id)}`), body);
       },
     },
 
@@ -308,7 +301,7 @@ export function googleBusinessTools(client: FoPostClient): ToolDefinition[] {
       async execute(input) {
         return client.request(
           'DELETE',
-          gbp(input.account_id, `/place-actions/${encodeURIComponent(input.link_id)}`),
+          gbp(input.account_id, `/place-actions/${seg(input.link_id)}`),
         );
       },
     },
