@@ -348,9 +348,6 @@ describe('tool annotations', () => {
       .filter((n) => !toolAnnotations(n).readOnlyHint && !toolAnnotations(n).destructiveHint);
     expect(additive.sort()).toEqual(
       [
-        'blog_plan_keywords',
-        'blog_regenerate_article',
-        'blog_suggest_seeds',
         'bookmark_inbox_item',
         'collect_post_analytics',
         'generate_caption',
@@ -377,8 +374,6 @@ describe('tool annotations', () => {
       'send_broadcast',
       'reply_to_inbox_item',
       'boost_post',
-      'blog_publish_article',
-      'blog_delete_article',
       'bulk_set_ad_status',
       'replace_google_business_menus',
       'import_contacts',

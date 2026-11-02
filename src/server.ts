@@ -14,7 +14,6 @@ import { knowledgeTools } from './tools/knowledge.js';
 import { activityTools } from './tools/activity.js';
 import { googleBusinessTools } from './tools/google-business.js';
 import { googleAdsTools } from './tools/ads-google.js';
-import { blogTools } from './tools/blog.js';
 import { whatsappTools } from './tools/whatsapp.js';
 import { blogsTools } from './tools/blogs.js';
 import { connectSessionsTools } from './tools/connect-sessions.js';
@@ -77,7 +76,6 @@ export function buildTools(client: FoPostClient): ToolDefinition[] {
     ...activityTools(client),
     ...googleBusinessTools(client),
     ...googleAdsTools(client),
-    ...blogTools(client),
     ...whatsappTools(client),
     ...blogsTools(client),
     ...connectSessionsTools(client),

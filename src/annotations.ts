@@ -46,8 +46,7 @@ const ADDITIVE_VERBS = new Set([
 ]);
 
 function verbOf(name: string): string {
-  const bare = name.startsWith('blog_') ? name.slice('blog_'.length) : name;
-  return bare.split('_')[0];
+  return name.split('_')[0];
 }
 
 export function toolAnnotations(name: string): ToolAnnotations {
