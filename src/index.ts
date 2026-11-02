@@ -2,7 +2,7 @@
 /**
  * @fopost/mcp — MCP server that exposes the FoPost REST API as MCP
  * tools so users can manage social media posts, accounts, AI usage,
- * the inbox, contacts, broadcasts, ads, the blog, and the articles
+ * the inbox, contacts, broadcasts, ads, and the articles
  * and products on a connected site
  * from any MCP-aware client (Claude Desktop, Cursor, ChatGPT, etc.).
  *

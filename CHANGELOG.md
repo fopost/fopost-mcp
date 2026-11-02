@@ -4,6 +4,11 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ## Unreleased
 
+### Removed
+
+- The `blog_*` tools (17) for the retired `/v1/blog` API. Articles are published as ordinary
+  posts; the connected-site tools (`list_blogs`, `list_articles`, `create_article`, …) stay.
+
 ### Security
 
 - Every id interpolated into a request path is percent-encoded and a lone `.` or `..` is

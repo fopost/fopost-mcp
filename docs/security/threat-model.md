@@ -32,7 +32,7 @@ model ⇄ MCP client ──stdio──▶ @fopost/mcp ──HTTPS, X-API-Key─�
 | The ability to act as the brand | Publish, reply, DM, like, follow, delete live posts, message broadcast lists.                                |
 | Money                           | Ad budgets, boosts, AI balance, metered network calls.                                                       |
 | Local files                     | `file_paths` lets a tool read files from the user's disk with the MCP process's permissions.                 |
-| Secrets returned once           | Webhook signing secrets and the blog website signing secret come back in a tool result.                      |
+| Secrets returned once           | Webhook signing secrets come back in a tool result.                                                          |
 
 ## Trust boundaries
 
@@ -74,13 +74,13 @@ residual risk), **Upstream** (enforced by the API).
 
 ### Credential handling
 
-| Threat                                                           | Status    | Control                                                                                                                                     |
-| :--------------------------------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
-| Key sent in clear text through a mistyped `FOPOST_API_URL`.      | Mitigated | `readConfig` requires `https:` (plain http for loopback only) and a bare origin with no credentials, path, query or fragment.               |
-| Key leaks into tool output.                                      | Mitigated | Error text is passed through `redact()` and capped at 2000 characters; the key is only ever sent as the `X-API-Key` header, never in a URL. |
-| Key leaks into logs.                                             | Mitigated | The server logs only startup, config errors and a fatal error's message, to stderr. Request data is never logged.                           |
-| Key at rest in the MCP client's config file.                     | Accepted  | Outside this process. Use a scoped, workspace-bound, expiring key and revoke it from the dashboard when a machine is retired.               |
-| One-time secrets (webhook, blog website) land in the transcript. | Accepted  | They are returned so the user can store them; they stay in the client's conversation history. Rotate if the transcript is shared.           |
+| Threat                                                      | Status    | Control                                                                                                                                     |
+| :---------------------------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
+| Key sent in clear text through a mistyped `FOPOST_API_URL`. | Mitigated | `readConfig` requires `https:` (plain http for loopback only) and a bare origin with no credentials, path, query or fragment.               |
+| Key leaks into tool output.                                 | Mitigated | Error text is passed through `redact()` and capped at 2000 characters; the key is only ever sent as the `X-API-Key` header, never in a URL. |
+| Key leaks into logs.                                        | Mitigated | The server logs only startup, config errors and a fatal error's message, to stderr. Request data is never logged.                           |
+| Key at rest in the MCP client's config file.                | Accepted  | Outside this process. Use a scoped, workspace-bound, expiring key and revoke it from the dashboard when a machine is retired.               |
+| One-time webhook secrets land in the transcript.            | Accepted  | They are returned so the user can store them; they stay in the client's conversation history. Rotate if the transcript is shared.           |
 
 The stdio transport follows the MCP authorization spec's guidance for STDIO servers: credentials
 come from the environment, not an OAuth flow. OAuth 2.1 applies to the hosted endpoint, which
