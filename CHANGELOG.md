@@ -4,7 +4,16 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ## Unreleased
 
+### Added
+
+- `resolve_inbox` resolves every unanswered item of one type, optionally only on some accounts
+  or before a date. Nothing reaches a platform.
+- `list_inbox`, `list_inbox_threads` and `list_inbox_conversations` take `status` (`unanswered`,
+  `replied`, `resolved`), `since`, and `account_id` as one id or a list.
+
 ### Removed
+
+- **Breaking:** `platform`, `q`, `state` and the `unanswered` sort on the inbox list tools.
 
 - The `blog_*` tools (17) for the retired `/v1/blog` API. Articles are published as ordinary
   posts; the connected-site tools (`list_blogs`, `list_articles`, `create_article`, …) stay.
