@@ -140,6 +140,18 @@ describe('inbox and ads requests', () => {
     expect(url.searchParams.get('sort')).toBe('oldest');
   });
 
+  it('resolves in bulk with the accounts as a JSON array', async () => {
+    await run('resolve_inbox');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/inbox/resolve');
+    expect(requests[0].body).toEqual({
+      workspace_id: UUID,
+      type: 'comment',
+      account_id: [UUID],
+      before: '2026-10-27T00:00:00Z',
+    });
+  });
+
   it('patches an inbox item with a camelCase body', async () => {
     await run('update_inbox_item');
     expect(requests[0].method).toBe('PATCH');

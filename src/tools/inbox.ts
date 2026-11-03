@@ -107,6 +107,25 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
     },
 
     {
+      name: 'resolve_inbox',
+      description:
+        'Resolve every unanswered item of one type, optionally only on some accounts or dated before a time. Nothing reaches a platform. Needs the inbox scope.',
+      inputSchema: z.object({
+        workspace_id: z.string().uuid(),
+        type: INBOX_TYPE,
+        account_id: z.array(z.string().uuid()).min(1).max(200).optional(),
+        before: z
+          .string()
+          .datetime({ offset: true })
+          .optional()
+          .describe('ISO 8601; only items dated before it'),
+      }),
+      async execute(input) {
+        return client.post('/v1/inbox/resolve', input);
+      },
+    },
+
+    {
       name: 'reply_to_inbox_item',
       description:
         'Reply to a comment, mention, review or DM on the platform as the connected account. A DM reply may attach media_ids and quick_replies, which also need the publish scope. Needs the inbox scope.',
