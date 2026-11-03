@@ -12,10 +12,10 @@ Nothing you write here is sent without the person saying so.
 
 `list_inbox` is the entry point. Narrow it, because the whole inbox is rarely the job:
 
-- `state: "unread"` for the backlog, which is the usual ask.
+- `status: "unanswered"` for the backlog, which is the usual ask and the default.
 - `type` picks `comment`, `mention` or `dm`. DMs are conversations and usually the most
   urgent; mentions are often nothing.
-- `platform` or `account_id` when the person named one.
+- `account_id` when the person named an account.
 
 `get_inbox_analytics` gives the shape of the backlog: volume, response time, what is
 ageing. Lead with that when the pile is large, so the person knows what they are looking at
