@@ -123,6 +123,35 @@ describe('inbox and ads requests', () => {
     expect(url.searchParams.get('kind')).toBe('mentions');
   });
 
+  it('joins several accounts into one comma-separated filter', async () => {
+    const list = allTools().find((t) => t.name === 'list_inbox')!;
+    await list.execute(
+      list.inputSchema.parse({
+        account_id: [UUID, UUID],
+        status: 'unanswered',
+        since: '2026-10-01T00:00:00Z',
+        sort: 'oldest',
+      }),
+    );
+    const url = new URL(requests[0].url);
+    expect(url.searchParams.get('account_id')).toBe(`${UUID},${UUID}`);
+    expect(url.searchParams.get('status')).toBe('unanswered');
+    expect(url.searchParams.get('since')).toBe('2026-10-01T00:00:00Z');
+    expect(url.searchParams.get('sort')).toBe('oldest');
+  });
+
+  it('resolves in bulk with the accounts as a JSON array', async () => {
+    await run('resolve_inbox');
+    expect(requests[0].method).toBe('POST');
+    expect(new URL(requests[0].url).pathname).toBe('/v1/inbox/resolve');
+    expect(requests[0].body).toEqual({
+      workspace_id: UUID,
+      type: 'comment',
+      account_id: [UUID],
+      before: '2026-10-27T00:00:00Z',
+    });
+  });
+
   it('patches an inbox item with a camelCase body', async () => {
     await run('update_inbox_item');
     expect(requests[0].method).toBe('PATCH');

@@ -51,6 +51,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_inbox_conversations`              | List DM conversations                                            |
 | `get_inbox_unread_count`                | Count unread inbox items                                         |
 | `mark_inbox_thread_read`                | Mark a comment thread or DM conversation read                    |
+| `resolve_inbox`                         | Resolve every unanswered item of one type                        |
 | `reply_to_inbox_item`                   | Reply on the platform, with media or quick replies on a DM       |
 | `edit_inbox_comment`                    | Edit your own comment on the platform                            |
 | `update_inbox_item`                     | Set an item to unread, read, resolved or snoozed                 |
@@ -190,6 +191,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_inbox_conversations`              | List DM conversations                                            |
 | `get_inbox_unread_count`                | Count unread inbox items                                         |
 | `mark_inbox_thread_read`                | Mark a comment thread or DM conversation read                    |
+| `resolve_inbox`                         | Resolve every unanswered item of one type                        |
 | `reply_to_inbox_item`                   | Reply on the platform, with media or quick replies on a DM       |
 | `edit_inbox_comment`                    | Edit your own comment on the platform                            |
 | `update_inbox_item`                     | Set an item to unread, read, resolved or snoozed                 |
@@ -343,6 +345,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_inbox_conversations`              | List DM conversations                                            |
 | `get_inbox_unread_count`                | Count unread inbox items                                         |
 | `mark_inbox_thread_read`                | Mark a comment thread or DM conversation read                    |
+| `resolve_inbox`                         | Resolve every unanswered item of one type                        |
 | `reply_to_inbox_item`                   | Reply on the platform, with media or quick replies on a DM       |
 | `edit_inbox_comment`                    | Edit your own comment on the platform                            |
 | `update_inbox_item`                     | Set an item to unread, read, resolved or snoozed                 |
@@ -543,6 +546,7 @@ Prefer to run the server yourself? The stdio package below is the same product, 
 | `list_inbox_conversations`       | List DM conversations                                            |
 | `get_inbox_unread_count`         | Count unread inbox items                                         |
 | `mark_inbox_thread_read`         | Mark a comment thread or DM conversation read                    |
+| `resolve_inbox`                  | Resolve every unanswered item of one type                        |
 | `reply_to_inbox_item`            | Reply on the platform, with media or quick replies on a DM       |
 | `edit_inbox_comment`             | Edit your own comment on the platform                            |
 | `update_inbox_item`              | Set an item to unread, read, resolved or snoozed                 |

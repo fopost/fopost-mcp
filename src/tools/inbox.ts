@@ -3,18 +3,36 @@ import { seg, type FoPostClient } from '../client.js';
 import type { ToolDefinition } from '../types.js';
 
 const INBOX_STATE = z.enum(['unread', 'read', 'resolved', 'snoozed']);
-const INBOX_SORT = z.enum(['newest', 'oldest', 'unanswered']);
+const INBOX_TYPE = z.enum(['comment', 'mention', 'dm', 'review']);
 
 const threadFilters = {
   workspace_id: z.string().uuid().optional().describe('Restrict to one workspace'),
-  platform: z.string().optional(),
-  account_id: z.string().uuid().optional(),
-  state: INBOX_STATE.optional(),
-  q: z.string().optional().describe('Search text'),
-  sort: INBOX_SORT.optional(),
+  account_id: z
+    .union([z.string().uuid(), z.array(z.string().uuid()).min(1)])
+    .optional()
+    .describe('One connected account id, or several'),
+  status: z
+    .enum(['unanswered', 'replied', 'resolved'])
+    .optional()
+    .describe('A reply also resolves, so the three never overlap'),
+  since: z
+    .string()
+    .datetime({ offset: true })
+    .optional()
+    .describe('ISO 8601; only items dated at or after it'),
+  sort: z.enum(['newest', 'oldest']).optional(),
   page: z.number().int().min(1).optional(),
   per_page: z.number().int().min(1).max(100).optional(),
 };
+
+/** The API reads several accounts as one comma-separated value. */
+function listQuery<T extends { account_id?: string | string[] }>(input: T) {
+  const { account_id, ...rest } = input;
+  return {
+    ...rest,
+    account_id: Array.isArray(account_id) ? account_id.join(',') : account_id,
+  };
+}
 
 export function inboxTools(client: FoPostClient): ToolDefinition[] {
   return [
@@ -24,7 +42,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         'List inbox items (comments, mentions, reviews, DMs) newest first, with filters and pagination. A review carries a rating of 1 to 5. Needs the inbox scope.',
       inputSchema: z.object({
         ...threadFilters,
-        type: z.enum(['comment', 'mention', 'dm', 'review']).optional(),
+        type: INBOX_TYPE.optional(),
         post_id: z.string().uuid().optional().describe('Comments under one FoPost post'),
         post_external_id: z
           .string()
@@ -36,7 +54,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         direction: z.enum(['inbound', 'outbound']).optional(),
       }),
       async execute(input) {
-        return client.get('/v1/inbox', input);
+        return client.get('/v1/inbox', listQuery(input));
       },
     },
 
@@ -49,7 +67,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
         kind: z.enum(['comments', 'mentions', 'reviews']).optional(),
       }),
       async execute(input) {
-        return client.get('/v1/inbox/posts', input);
+        return client.get('/v1/inbox/posts', listQuery(input));
       },
     },
 
@@ -58,7 +76,7 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
       description: 'List DM conversations across connected accounts. Needs the inbox scope.',
       inputSchema: z.object(threadFilters),
       async execute(input) {
-        return client.get('/v1/inbox/conversations', input);
+        return client.get('/v1/inbox/conversations', listQuery(input));
       },
     },
 
@@ -85,6 +103,25 @@ export function inboxTools(client: FoPostClient): ToolDefinition[] {
       }),
       async execute(input) {
         return client.post('/v1/inbox/read', input);
+      },
+    },
+
+    {
+      name: 'resolve_inbox',
+      description:
+        'Resolve every unanswered item of one type, optionally only on some accounts or dated before a time. Nothing reaches a platform. Needs the inbox scope.',
+      inputSchema: z.object({
+        workspace_id: z.string().uuid(),
+        type: INBOX_TYPE,
+        account_id: z.array(z.string().uuid()).min(1).max(200).optional(),
+        before: z
+          .string()
+          .datetime({ offset: true })
+          .optional()
+          .describe('ISO 8601; only items dated before it'),
+      }),
+      async execute(input) {
+        return client.post('/v1/inbox/resolve', input);
       },
     },
 

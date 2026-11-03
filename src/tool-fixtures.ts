@@ -230,6 +230,12 @@ export const TOOL_INPUTS: Record<string, unknown> = {
   list_inbox_conversations: { workspace_id: UUID },
   get_inbox_unread_count: {},
   mark_inbox_thread_read: { workspace_id: UUID, account_id: UUID, post_external_id: 'p1' },
+  resolve_inbox: {
+    workspace_id: UUID,
+    type: 'comment',
+    account_id: [UUID],
+    before: '2026-10-27T00:00:00Z',
+  },
   reply_to_inbox_item: { id: UUID, text: 'hi' },
   update_inbox_item: { id: UUID, state: 'snoozed', snoozed_until: '2030-01-01T00:00:00Z' },
   hide_inbox_item: { id: UUID },
