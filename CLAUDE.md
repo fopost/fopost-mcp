@@ -29,6 +29,8 @@ that contract changes.
 src/index.ts       stdio entry: readConfig, createServer, connect the transport
 src/server.ts      readConfig, buildTools, listTools, createToolCaller (errors, redaction, burst cap)
 src/annotations.ts readOnlyHint / destructiveHint per tool, derived from the name's verb
+src/prompts.ts     slash-command prompts; a copy of the hosted list in fopost/fopost
+                   apps/api/src/services/mcp-prompts.ts, so change both. Never name a tool in one
 src/client.ts      FoPostClient (fetch) + FoPostApiError, seg() and assertSafePath()
 src/types.ts       ToolDefinition<S> — name, description, Zod inputSchema, typed execute
 src/tools/         posts.ts (7 tools), accounts.ts (26), ai.ts (4), inbox.ts (23), ads.ts (47) — 107 total

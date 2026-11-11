@@ -1,5 +1,13 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  CallToolRequestSchema,
+  ErrorCode,
+  GetPromptRequestSchema,
+  ListPromptsRequestSchema,
+  ListToolsRequestSchema,
+  McpError,
+} from '@modelcontextprotocol/sdk/types.js';
+import { getPrompt, listPrompts, PromptError } from './prompts.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { FoPostClient, FoPostApiError } from './client.js';
 import { postsTools } from './tools/posts.js';
@@ -159,11 +167,23 @@ export function createToolCaller(
 export function createServer(config: Config, version: string): Server {
   const tools = buildTools(new FoPostClient(config));
   const call = createToolCaller(tools, { apiKey: config.apiKey });
-  const server = new Server({ name: 'fopost-mcp', version }, { capabilities: { tools: {} } });
+  const server = new Server(
+    { name: 'fopost-mcp', version },
+    { capabilities: { tools: {}, prompts: {} } },
+  );
   const listed = listTools(tools);
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: listed }));
   server.setRequestHandler(CallToolRequestSchema, async (request) =>
     call(request.params.name, request.params.arguments),
   );
+  server.setRequestHandler(ListPromptsRequestSchema, async () => ({ prompts: listPrompts() }));
+  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    try {
+      return getPrompt(request.params.name, request.params.arguments);
+    } catch (err) {
+      if (err instanceof PromptError) throw new McpError(ErrorCode.InvalidParams, err.message);
+      throw err;
+    }
+  });
   return server;
 }

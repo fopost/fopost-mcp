@@ -701,6 +701,26 @@ network in clear text.
 
 The threat model is in [docs/security/threat-model.md](docs/security/threat-model.md).
 
+## Slash commands
+
+The server ships ready-made prompts that MCP clients show as slash commands. Pick one, fill in
+the blanks, and the assistant does the rest. Nothing is published, sent or switched on until
+you approve it in the conversation.
+
+| Command           | What it does                                                  | Arguments                     |
+| ----------------- | ------------------------------------------------------------- | ----------------------------- |
+| `draft-post`      | One idea, shaped into a post for each network                 | `idea`, `networks`            |
+| `schedule-week`   | Plan a week of posts in your posting slots                    | `focus`, `week`               |
+| `repurpose`       | Turn an article, video or link into posts for every network   | `source`, `networks`          |
+| `launch-feature`  | A launch pack: posts per network, an image and a video script | `feature`, `link`, `audience` |
+| `create-workflow` | Describe an automation in plain words, built switched off     | `description`                 |
+| `triage-inbox`    | Sort unread comments and DMs, draft the replies               | `scope`                       |
+| `weekly-report`   | What published, how it did, what failed, what to do next      | `period`                      |
+| `check-accounts`  | Which accounts are healthy and which need reconnecting        | none                          |
+
+In Claude Code they appear as `/mcp__fopost__draft-post` and so on (the middle part is the name
+you gave the server). The hosted server serves the same commands.
+
 ## Example prompts
 
 > "List my failed posts from this week and tell me which accounts are unhealthy."
