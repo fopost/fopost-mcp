@@ -4,6 +4,8 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ## Unreleased
 
+## 0.7.0
+
 ### Added
 
 - `resolve_inbox` resolves every unanswered item of one type, optionally only on some accounts
