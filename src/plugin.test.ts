@@ -42,6 +42,7 @@ describe('claude code plugin', () => {
       const body = readFileSync(join(ROOT, 'skills', skill, 'SKILL.md'), 'utf8');
       expect(body).not.toMatch(/OwlStack/i);
       expect(body).not.toMatch(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
+      expect(body).not.toMatch(/\b(app|docs)\.fopost\.com/i);
     }
   });
 });

@@ -4,6 +4,11 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ## Unreleased
 
+### Fixed
+
+- Claude Code plugin 0.2.1: the `fopost` skill links to the dashboard and docs on fopost.com, and
+  the plugin test refuses an `app.` or `docs.` subdomain link in any skill.
+
 ### Added
 
 - Claude Code plugin 0.2.0: the `fopost` skill, which drafts, schedules and publishes through

@@ -19,7 +19,7 @@ metadata:
         description: FoPost API key, created in the dashboard under Developers → API Keys.
       - name: FOPOST_BASE_URL
         required: false
-        description: API address. Leave unset to use https://api.fopost.com.
+        description: API address. Leave unset to use the default.
     install:
       - kind: brew
         formula: fopost/tap/fopost
@@ -49,7 +49,7 @@ brew install fopost/tap/fopost
 go install github.com/fopost/fopost-cli@latest
 ```
 
-Authenticate with an API key. The person creates one at https://app.fopost.com/api-keys
+Authenticate with an API key. The person creates one at https://fopost.com/dashboard/api-keys
 (Developers → API Keys) and gives it the scopes the task needs (`posts`, `accounts`, `labels`,
 `analytics`; `publish` only if you may publish).
 
