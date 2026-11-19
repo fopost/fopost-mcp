@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 const ROOT = new URL('..', import.meta.url).pathname;
 const readJson = (path: string) => JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
 
-const SKILLS = ['schedule-a-week', 'triage-the-inbox', 'weekly-report'];
+const SKILLS = ['fopost', 'schedule-a-week', 'triage-the-inbox', 'weekly-report'];
 
 describe('claude code plugin', () => {
   it('declares the plugin and the marketplace entry that installs it', () => {
