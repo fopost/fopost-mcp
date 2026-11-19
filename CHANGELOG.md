@@ -4,6 +4,12 @@ All notable changes to `@fopost/mcp` are documented here.
 
 ## Unreleased
 
+### Added
+
+- Claude Code plugin 0.2.0: the `fopost` skill, which drafts, schedules and publishes through
+  the `fopost` CLI and works in any agent that runs shell commands. Drafts first, publishes only
+  after approval; network-specific commands in `skills/fopost/references/networks.md`.
+
 ## 0.7.0
 
 ### Added

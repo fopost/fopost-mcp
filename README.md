@@ -466,7 +466,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 
 ## Claude Code plugin
 
-This repo is also a Claude Code plugin. Installing it wires up FoPost's **hosted** MCP server at `https://api.fopost.com/mcp`: no API key to copy, no local process. It also adds three skills for the flows people run every week.
+This repo is also a Claude Code plugin. Installing it wires up FoPost's **hosted** MCP server at `https://api.fopost.com/mcp`: no API key to copy, no local process. It also adds the `fopost` skill and three skills for the flows people run every week.
 
 ```bash
 claude plugin marketplace add fopost/fopost-mcp
@@ -477,6 +477,7 @@ Claude Code opens your browser to sign in the first time a tool runs. Pick the w
 
 | Skill              | Fires when you ask to                                               |
 | ------------------ | ------------------------------------------------------------------- |
+| `fopost`           | Post, schedule, queue or cross-post; check accounts; read analytics |
 | `schedule-a-week`  | Fill next week's calendar, draft a batch of posts, top up the queue |
 | `triage-the-inbox` | Triage or clear the inbox, draft replies, find what needs an answer |
 | `weekly-report`    | Summarise the week, recap performance, see what failed              |
