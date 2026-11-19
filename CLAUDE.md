@@ -92,7 +92,7 @@ The repo doubles as a Claude Code plugin, installed straight from git:
 .claude-plugin/plugin.json       name, version, description — the plugin's own version
 .claude-plugin/marketplace.json  the single-plugin marketplace `claude plugin install` reads
 .mcp.json                        the hosted server, `{"type":"http","url":"…/mcp"}`
-skills/<name>/SKILL.md           schedule-a-week, triage-the-inbox, weekly-report
+skills/<name>/SKILL.md           fopost, schedule-a-week, triage-the-inbox, weekly-report
 ```
 
 **The plugin installs the hosted server, not this package.** `.mcp.json` points at
