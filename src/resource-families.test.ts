@@ -5,6 +5,7 @@ import { connectSessionsTools } from './tools/connect-sessions.js';
 import { webhooksTools } from './tools/webhooks.js';
 import { queueTools } from './tools/queue.js';
 import { automationsTools } from './tools/automations.js';
+import { createTools } from './tools/create.js';
 import type { ToolDefinition } from './types.js';
 
 /**
@@ -28,6 +29,7 @@ function tools(): ToolDefinition[] {
     ...webhooksTools(client),
     ...queueTools(client),
     ...automationsTools(client),
+    ...createTools(client),
   ];
 }
 
@@ -348,5 +350,30 @@ describe('automation versions', () => {
       body: undefined,
     });
     expect(restored).toMatchObject({ version: 3 });
+  });
+});
+
+describe('video edits', () => {
+  it('starts a job with the ordered operations and returns it unwrapped', async () => {
+    const job = { id: UUID, status: 'queued', progress: 0, source_media_id: OTHER };
+    respond = () => job;
+    const input = {
+      media_id: OTHER,
+      operations: [
+        { op: 'trim', params: { startSec: 0, endSec: 3 } },
+        { op: 'reframe', params: { aspect: '9:16' } },
+      ],
+      workspace_id: UUID,
+    };
+    expect(await run('edit_video', input)).toEqual(job);
+    expect(calls[0]).toEqual({ method: 'POST', url: `${BASE}/v1/video-edits`, body: input });
+  });
+
+  it('refuses an unknown operation before any request', () => {
+    const tool = tools().find((t) => t.name === 'edit_video')!;
+    expect(() =>
+      tool.inputSchema.parse({ media_id: OTHER, operations: [{ op: 'explode' }] }),
+    ).toThrow();
+    expect(calls).toHaveLength(0);
   });
 });

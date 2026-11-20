@@ -638,6 +638,7 @@ export const TOOL_INPUTS: Record<string, unknown> = {
   list_automation_versions: { id: UUID },
   get_automation_version: { id: UUID, version: 2 },
   restore_automation_version: { id: UUID, version: 2 },
+  edit_video: { media_id: UUID, operations: [{ op: 'trim', params: { startSec: 0, endSec: 3 } }] },
 };
 
 export function allTools(baseUrl = 'https://api.fopost.com'): ToolDefinition[] {

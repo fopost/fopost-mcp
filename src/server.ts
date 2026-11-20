@@ -28,6 +28,7 @@ import { connectSessionsTools } from './tools/connect-sessions.js';
 import { webhooksTools } from './tools/webhooks.js';
 import { queueTools } from './tools/queue.js';
 import { automationsTools } from './tools/automations.js';
+import { createTools } from './tools/create.js';
 import { toolAnnotations } from './annotations.js';
 import type { ToolDefinition } from './types.js';
 
@@ -90,6 +91,7 @@ export function buildTools(client: FoPostClient): ToolDefinition[] {
     ...webhooksTools(client),
     ...queueTools(client),
     ...automationsTools(client),
+    ...createTools(client),
   ];
 }
 
