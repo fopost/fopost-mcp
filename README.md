@@ -463,6 +463,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_automation_versions`              | Every saved version of an automation graph, newest first         |
 | `get_automation_version`                | The graph as it was saved at one version                         |
 | `restore_automation_version`            | Save an old version's graph as a new version on top              |
+| `edit_video`                            | Edit a library video into a new file: trim, subtitles, clips     |
 
 ## Claude Code plugin
 
@@ -650,7 +651,7 @@ Prefer to run the server yourself? The stdio package below is the same product, 
 
 ### 1. Get an API key
 
-Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`, and liking, pinning, reacting, editing, starting a conversation, the typing indicator, reply media and quick replies, and deleting your own reply also need `publish`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status`, `delete_ad`, `bulk_set_ad_status` and every create, update, delete and duplicate tool for campaigns, ad sets and network ads also need `publish`. A boost, ad, campaign, ad set or copy starts paused unless `paused` is `false`. The analytics tools need `analytics`; `collect_post_analytics` needs `posts` too, and `list_native_posts` needs `accounts`. Blog tools read with `posts`, and `create_article`, `update_article`, `delete_article` and `update_product` also need `publish`, because a change there is visible to the site's own readers.
+Generate one at <https://fopost.com/dashboard/api-keys> with the scopes you need (`posts`, `publish`, `accounts`, `workspaces` are most common; `publish` is required to publish, retry or cancel a post). Inbox tools need `inbox`, and liking, pinning, reacting, editing, starting a conversation, the typing indicator, reply media and quick replies, and deleting your own reply also need `publish`; ads tools need `ads`, and `boost_post`, `create_ad`, `set_ad_status`, `delete_ad`, `bulk_set_ad_status` and every create, update, delete and duplicate tool for campaigns, ad sets and network ads also need `publish`. A boost, ad, campaign, ad set or copy starts paused unless `paused` is `false`. The analytics tools need `analytics`; `collect_post_analytics` needs `posts` too, and `list_native_posts` needs `accounts`. Blog tools read with `posts`, and `create_article`, `update_article`, `delete_article` and `update_product` also need `publish`, because a change there is visible to the site's own readers. `edit_video` needs `posts`, plus `ai` for subtitles, translation, clips and voiceover.
 
 ### 2. Add to your MCP client
 

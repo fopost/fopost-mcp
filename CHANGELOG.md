@@ -14,6 +14,9 @@ All notable changes to `@fopost/mcp` are documented here.
 - Claude Code plugin 0.2.0: the `fopost` skill, which drafts, schedules and publishes through
   the `fopost` CLI and works in any agent that runs shell commands. Drafts first, publishes only
   after approval; network-specific commands in `skills/fopost/references/networks.md`.
+- `edit_video` edits a library video into a new library file: trim, cut, speed, merge, volume,
+  silence removal, denoise, subtitles, translation, clips, music, voiceover, watermark, cover,
+  reframe and audiogram, run in order as a background job. Nothing is published.
 
 ## 0.7.0
 
