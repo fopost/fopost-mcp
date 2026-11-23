@@ -87,27 +87,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `search_ad_targeting`                   | Search locations, interests, behaviors and income brackets       |
 | `list_lead_forms`                       | List lead forms on connected pages                               |
 | `list_leads`                            | List one page of leads from a lead form                          |
-| `get_ad_account_tree`                   | Read campaigns, ad sets and ads on an ad account                 |
-| `create_ad_campaign`                    | Create a campaign (starts paused, needs `publish`)               |
-| `get_ad_campaign`                       | Read one campaign                                                |
-| `update_ad_campaign`                    | Rename, pause or resume a campaign (needs `publish`)             |
-| `delete_ad_campaign`                    | Delete a campaign and its contents (needs `publish`)             |
-| `duplicate_ad_campaign`                 | Copy a campaign (starts paused, needs `publish`)                 |
-| `create_ad_set`                         | Create an ad set (starts paused, needs `publish`)                |
-| `get_ad_set`                            | Read one ad set                                                  |
-| `update_ad_set`                         | Change an ad set's status, budget or targeting (needs `publish`) |
-| `delete_ad_set`                         | Delete an ad set and its ads (needs `publish`)                   |
-| `duplicate_ad_set`                      | Copy an ad set (starts paused, needs `publish`)                  |
-| `create_network_ad`                     | Create an ad inside an ad set (starts paused, needs `publish`)   |
-| `get_network_ad`                        | Read one ad inside an ad set                                     |
-| `update_network_ad`                     | Rename, pause, resume or swap an ad's creative (needs `publish`) |
-| `delete_network_ad`                     | Delete an ad inside an ad set (needs `publish`)                  |
-| `duplicate_network_ad`                  | Copy an ad (starts paused, needs `publish`)                      |
 | `bulk_set_ad_status`                    | Pause or resume up to 50 objects (needs `publish`)               |
-| `list_ad_creatives`                     | List creatives on an ad account                                  |
-| `create_ad_creative`                    | Create an image, video or carousel creative                      |
-| `get_ad_creative`                       | Read one creative                                                |
-| `delete_ad_creative`                    | Delete a creative                                                |
 | `get_audience`                          | Read one saved audience                                          |
 | `update_audience`                       | Rename or redescribe a saved audience                            |
 | `delete_audience`                       | Delete a saved audience                                          |
@@ -247,14 +227,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `list_boostable_posts`                  | List published posts that can be boosted                         |
 | `list_ad_sources`                       | List ad connections, ad accounts and pages                       |
 | `list_ad_goals`                         | List the goals this connection can run right now                 |
-| `list_ad_catalogs`                      | List product catalogs the connection reaches                     |
-| `create_ad_catalog`                     | Create a product catalog (needs `publish`)                       |
-| `list_catalog_products`                 | List one page of a catalog's products                            |
-| `write_catalog_products`                | Upsert or delete up to 500 products (needs `publish`)            |
-| `list_catalog_product_sets`             | List the product sets a catalog ad can run from                  |
-| `create_catalog_product_set`            | Create a product set (needs `publish`)                           |
 | `list_reach_frequency`                  | List reach-and-frequency predictions on an ad account            |
-| `search_ad_library`                     | Search the public ad archive, read live and never stored         |
 | `list_ad_account_activity`              | Read an ad account's change log                                  |
 | `boost_post`                            | Boost a published post (starts paused, needs `publish`)          |
 | `create_ad`                             | Create an ad (starts paused, needs `publish`)                    |
@@ -265,27 +238,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `search_ad_targeting`                   | Search locations, interests, behaviors and income brackets       |
 | `list_lead_forms`                       | List lead forms on connected pages                               |
 | `list_leads`                            | List one page of leads from a lead form                          |
-| `get_ad_account_tree`                   | Read campaigns, ad sets and ads on an ad account                 |
-| `create_ad_campaign`                    | Create a campaign (starts paused, needs `publish`)               |
-| `get_ad_campaign`                       | Read one campaign                                                |
-| `update_ad_campaign`                    | Rename, pause or resume a campaign (needs `publish`)             |
-| `delete_ad_campaign`                    | Delete a campaign and its contents (needs `publish`)             |
-| `duplicate_ad_campaign`                 | Copy a campaign (starts paused, needs `publish`)                 |
-| `create_ad_set`                         | Create an ad set (starts paused, needs `publish`)                |
-| `get_ad_set`                            | Read one ad set                                                  |
-| `update_ad_set`                         | Change an ad set's status, budget or targeting (needs `publish`) |
-| `delete_ad_set`                         | Delete an ad set and its ads (needs `publish`)                   |
-| `duplicate_ad_set`                      | Copy an ad set (starts paused, needs `publish`)                  |
-| `create_network_ad`                     | Create an ad inside an ad set (starts paused, needs `publish`)   |
-| `get_network_ad`                        | Read one ad inside an ad set                                     |
-| `update_network_ad`                     | Rename, pause, resume or swap an ad's creative (needs `publish`) |
-| `delete_network_ad`                     | Delete an ad inside an ad set (needs `publish`)                  |
-| `duplicate_network_ad`                  | Copy an ad (starts paused, needs `publish`)                      |
 | `bulk_set_ad_status`                    | Pause or resume up to 50 objects (needs `publish`)               |
-| `list_ad_creatives`                     | List creatives on an ad account                                  |
-| `create_ad_creative`                    | Create an image, video or carousel creative                      |
-| `get_ad_creative`                       | Read one creative                                                |
-| `delete_ad_creative`                    | Delete a creative                                                |
 | `get_audience`                          | Read one saved audience                                          |
 | `update_audience`                       | Rename or redescribe a saved audience                            |
 | `delete_audience`                       | Delete a saved audience                                          |
@@ -380,27 +333,7 @@ Runs via `npx -y @fopost/mcp`, no install step. Requires Node 18 or newer.
 | `search_ad_targeting`                   | Search locations, interests, behaviors and income brackets       |
 | `list_lead_forms`                       | List lead forms on connected pages                               |
 | `list_leads`                            | List one page of leads from a lead form                          |
-| `get_ad_account_tree`                   | Read campaigns, ad sets and ads on an ad account                 |
-| `create_ad_campaign`                    | Create a campaign (starts paused, needs `publish`)               |
-| `get_ad_campaign`                       | Read one campaign                                                |
-| `update_ad_campaign`                    | Rename, pause or resume a campaign (needs `publish`)             |
-| `delete_ad_campaign`                    | Delete a campaign and its contents (needs `publish`)             |
-| `duplicate_ad_campaign`                 | Copy a campaign (starts paused, needs `publish`)                 |
-| `create_ad_set`                         | Create an ad set (starts paused, needs `publish`)                |
-| `get_ad_set`                            | Read one ad set                                                  |
-| `update_ad_set`                         | Change an ad set's status, budget or targeting (needs `publish`) |
-| `delete_ad_set`                         | Delete an ad set and its ads (needs `publish`)                   |
-| `duplicate_ad_set`                      | Copy an ad set (starts paused, needs `publish`)                  |
-| `create_network_ad`                     | Create an ad inside an ad set (starts paused, needs `publish`)   |
-| `get_network_ad`                        | Read one ad inside an ad set                                     |
-| `update_network_ad`                     | Rename, pause, resume or swap an ad's creative (needs `publish`) |
-| `delete_network_ad`                     | Delete an ad inside an ad set (needs `publish`)                  |
-| `duplicate_network_ad`                  | Copy an ad (starts paused, needs `publish`)                      |
 | `bulk_set_ad_status`                    | Pause or resume up to 50 objects (needs `publish`)               |
-| `list_ad_creatives`                     | List creatives on an ad account                                  |
-| `create_ad_creative`                    | Create an image, video or carousel creative                      |
-| `get_ad_creative`                       | Read one creative                                                |
-| `delete_ad_creative`                    | Delete a creative                                                |
 | `get_audience`                          | Read one saved audience                                          |
 | `update_audience`                       | Rename or redescribe a saved audience                            |
 | `delete_audience`                       | Delete a saved audience                                          |
@@ -487,165 +420,145 @@ The hosted server serves the same tools as the FoPost Agent, and anything that p
 
 Prefer to run the server yourself? The stdio package below is the same product, driven by an API key.
 
-| Tool                             | What it does                                                     |
-| -------------------------------- | ---------------------------------------------------------------- |
-| `list_posts`                     | List posts in a workspace, filter by status                      |
-| `get_post`                       | Fetch a post by id                                               |
-| `schedule_post`                  | Create a post for accounts or an account group                   |
-| `edit_post`                      | Update an existing post                                          |
-| `get_upload_limits`              | Largest file the account may upload, and the allowed types       |
-| `cancel_post`                    | Cancel a scheduled post                                          |
-| `delete_post`                    | Permanently delete a post                                        |
-| `list_post_deliveries`           | Per-account delivery status for a post                           |
-| `list_accounts`                  | List connected social accounts, optionally by group              |
-| `get_account_health`             | Check token freshness and rate-limit headroom                    |
-| `list_workspaces`                | List workspaces the user can access                              |
-| `rename_account`                 | Set or clear an account's display name                           |
-| `list_account_groups`            | List account groups and their members                            |
-| `get_account_group`              | Fetch an account group                                           |
-| `create_account_group`           | Create an account group                                          |
-| `rename_account_group`           | Rename an account group                                          |
-| `set_account_group_members`      | Replace the accounts in a group                                  |
-| `delete_account_group`           | Delete a group (its accounts stay connected)                     |
-| `create_telegram_connect_code`   | Mint a one-time code to connect a Telegram chat                  |
-| `get_telegram_connect_status`    | Check whether a Telegram connect code was used                   |
-| `get_telegram_bot_commands`      | List the bot command menu in a Telegram chat                     |
-| `set_telegram_bot_commands`      | Replace the bot command menu in a Telegram chat                  |
-| `clear_telegram_bot_commands`    | Clear the bot command menu in a Telegram chat                    |
-| `list_slack_channels`            | List the channels a Slack account can post to                    |
-| `list_slack_members`             | List members of a Slack workspace, for DMs                       |
-| `get_slack_identity`             | Show the name and icon a Slack account posts under               |
-| `set_slack_identity`             | Set the name and icon a Slack account posts under                |
-| `list_pinterest_boards`          | List the boards a Pinterest account can pin to                   |
-| `create_pinterest_board`         | Create a board on a Pinterest account                            |
-| `list_youtube_playlists`         | List a channel's playlists, with its default marked              |
-| `create_youtube_playlist`        | Create a playlist on a YouTube channel                           |
-| `set_default_youtube_playlist`   | Set the playlist new videos join by default                      |
-| `list_youtube_captions`          | List the caption tracks on a published video                     |
-| `upload_youtube_captions`        | Upload an SRT or WebVTT track to a published video               |
-| `read_youtube_transcript`        | Read one caption track back as text                              |
-| `get_bluesky_languages`          | Show a Bluesky connection's default post languages               |
-| `set_bluesky_languages`          | Set a Bluesky connection's default post languages                |
-| `get_tiktok_creator_info`        | Read the switches TikTok enforces at publish time                |
-| `search_tiktok_music`            | Search TikTok's Commercial Music Library                         |
-| `search_tiktok_locations`        | Search the places a TikTok post can be tagged with               |
-| `lookup_tiktok_video`            | Resolve a share link to one of the account's own videos          |
-| `search_instagram_audio`         | Search the tracks a Reel can carry                               |
-| `get_instagram_publishing_limit` | Posts left before Instagram refuses the next one                 |
-| `list_instagram_stories`         | List the stories still inside their 24 hours                     |
-| `get_instagram_story_insights`   | Read the insight set for one live story                          |
-| `search_linkedin_mentions`       | Find the organizations a LinkedIn post can mention               |
-| `follow_x_user`                  | Follow a user from a connected X account                         |
-| `unfollow_x_user`                | Unfollow a user from a connected X account                       |
-| `get_x_post`                     | Look up one X post by id                                         |
-| `search_x_posts`                 | Search recent X posts, paged by next_token                       |
-| `generate_caption`               | AI-generate or improve a caption (1 credit)                      |
-| `rewrite_for_platforms`          | Rewrite content per target platform (1 credit each)              |
-| `repurpose_url`                  | Turn a blog URL into N platform-optimized posts (6 credits)      |
-| `get_ai_credits`                 | Show current AI credit balance                                   |
-| `list_inbox`                     | List comments, mentions and DMs with filters                     |
-| `list_inbox_threads`             | List comment threads under your posts, or mentions               |
-| `list_inbox_conversations`       | List DM conversations                                            |
-| `get_inbox_unread_count`         | Count unread inbox items                                         |
-| `mark_inbox_thread_read`         | Mark a comment thread or DM conversation read                    |
-| `resolve_inbox`                  | Resolve every unanswered item of one type                        |
-| `reply_to_inbox_item`            | Reply on the platform, with media or quick replies on a DM       |
-| `edit_inbox_comment`             | Edit your own comment on the platform                            |
-| `update_inbox_item`              | Set an item to unread, read, resolved or snoozed                 |
-| `hide_inbox_item`                | Hide a comment on the platform                                   |
-| `unhide_inbox_item`              | Unhide a comment on the platform                                 |
-| `delete_inbox_item`              | Delete a comment, or your own reply, on the platform             |
-| `like_inbox_item`                | Like a comment or message on the platform                        |
-| `unlike_inbox_item`              | Remove your like                                                 |
-| `repost_inbox_item`              | Repost a post on X, where can_repost is true                     |
-| `unrepost_inbox_item`            | Undo your repost on X                                            |
-| `bookmark_inbox_item`            | Bookmark a post on X, where can_bookmark is true                 |
-| `unbookmark_inbox_item`          | Remove your bookmark on X                                        |
-| `pin_inbox_item`                 | Pin your own comment                                             |
-| `unpin_inbox_item`               | Unpin your own comment                                           |
-| `react_to_inbox_item`            | React to a DM, or remove your reaction                           |
-| `start_inbox_conversation`       | Send a new DM, or answer a comment privately                     |
-| `set_inbox_typing`               | Show or clear the typing indicator in a DM                       |
-| `list_inbox_approvals`           | List drafted replies waiting for approval                        |
-| `approve_inbox_reply`            | Approve and send a drafted reply                                 |
-| `reject_inbox_reply`             | Reject a drafted reply                                           |
-| `refresh_inbox`                  | Poll every inbox-capable account now                             |
-| `list_ads`                       | List boosts and ads created through FoPost                       |
-| `list_external_ads`              | List ads on connected ad accounts made elsewhere                 |
-| `list_boostable_posts`           | List published posts that can be boosted                         |
-| `list_ad_sources`                | List ad connections, ad accounts and pages                       |
-| `boost_post`                     | Boost a published post (starts paused, needs `publish`)          |
-| `create_ad`                      | Create an ad (starts paused, needs `publish`)                    |
-| `set_ad_status`                  | Pause or resume an ad (needs `publish`)                          |
-| `refresh_ad`                     | Re-read delivery status and insights                             |
-| `delete_ad`                      | End delivery and delete an ad (needs `publish`)                  |
-| `list_audiences`                 | List saved audiences and pixels on an ad account                 |
-| `search_ad_targeting`            | Search locations, interests, behaviors and income brackets       |
-| `list_lead_forms`                | List lead forms on connected pages                               |
-| `list_leads`                     | List one page of leads from a lead form                          |
-| `get_ad_account_tree`            | Read campaigns, ad sets and ads on an ad account                 |
-| `create_ad_campaign`             | Create a campaign (starts paused, needs `publish`)               |
-| `get_ad_campaign`                | Read one campaign                                                |
-| `update_ad_campaign`             | Rename, pause or resume a campaign (needs `publish`)             |
-| `delete_ad_campaign`             | Delete a campaign and its contents (needs `publish`)             |
-| `duplicate_ad_campaign`          | Copy a campaign (starts paused, needs `publish`)                 |
-| `create_ad_set`                  | Create an ad set (starts paused, needs `publish`)                |
-| `get_ad_set`                     | Read one ad set                                                  |
-| `update_ad_set`                  | Change an ad set's status, budget or targeting (needs `publish`) |
-| `delete_ad_set`                  | Delete an ad set and its ads (needs `publish`)                   |
-| `duplicate_ad_set`               | Copy an ad set (starts paused, needs `publish`)                  |
-| `create_network_ad`              | Create an ad inside an ad set (starts paused, needs `publish`)   |
-| `get_network_ad`                 | Read one ad inside an ad set                                     |
-| `update_network_ad`              | Rename, pause, resume or swap an ad's creative (needs `publish`) |
-| `delete_network_ad`              | Delete an ad inside an ad set (needs `publish`)                  |
-| `duplicate_network_ad`           | Copy an ad (starts paused, needs `publish`)                      |
-| `bulk_set_ad_status`             | Pause or resume up to 50 objects (needs `publish`)               |
-| `list_ad_creatives`              | List creatives on an ad account                                  |
-| `create_ad_creative`             | Create an image, video or carousel creative                      |
-| `get_ad_creative`                | Read one creative                                                |
-| `delete_ad_creative`             | Delete a creative                                                |
-| `get_audience`                   | Read one saved audience                                          |
-| `update_audience`                | Rename or redescribe a saved audience                            |
-| `delete_audience`                | Delete a saved audience                                          |
-| `add_audience_users`             | Add customer emails to a custom audience                         |
-| `estimate_ad_reach`              | Estimate the reach of a targeting                                |
-| `get_ad_object_insights`         | Insights for a campaign, ad set or ad                            |
-| `get_ad_insights`                | Insights for an ad created through FoPost                        |
-| `get_lead_form`                  | Read one lead form                                               |
-| `archive_lead_form`              | Archive a lead form                                              |
-| `list_leads_feed`                | List stored leads from subscribed pages                          |
-| `list_lead_pages`                | List pages subscribed to new leads                               |
-| `subscribe_lead_page`            | Subscribe a page to new leads and backfill                       |
-| `unsubscribe_lead_page`          | Unsubscribe a page from new leads                                |
-| `list_ad_networks`               | List the ad networks and what each one supports                  |
-| `add_audience_companies`         | Add companies to a company-list audience                         |
-| `get_ad_bid_pricing`             | Quote what an audience costs at auction                          |
-| `get_ad_supply_forecast`         | Forecast what a budget would deliver                             |
-| `list_conversion_rules`          | List the conversion rules on an ad account                       |
-| `create_conversion_rule`         | Create a conversion rule                                         |
-| `get_conversion_rule`            | Read one conversion rule                                         |
-| `update_conversion_rule`         | Change a conversion rule                                         |
-| `delete_conversion_rule`         | Turn a conversion rule off                                       |
-| `set_conversion_rule_ad_set`     | Attach or detach a conversion rule and an ad set                 |
-| `get_conversion_metrics`         | Read what a conversion rule recorded                             |
-| `send_conversion_events`         | Send off-site conversions back to the network                    |
-| `upload_ad_conversions`          | Send offline conversions against a pixel                         |
-| `list_conversion_events`         | List the conversion batches sent to the network                  |
-| `list_pixels`                    | List the pixels on an ad account                                 |
-| `create_pixel`                   | Create a pixel and get its install script                        |
-| `get_pixel`                      | Read one pixel                                                   |
-| `update_pixel`                   | Rename a pixel or change its data-use setting                    |
-| `get_pixel_stats`                | What a pixel fired over the last 28 days                         |
-| `get_event_match_quality`        | How well each pixel event matches people                         |
-| `list_custom_conversions`        | List the custom conversions on an ad account                     |
-| `create_custom_conversion`       | Create a custom conversion on a pixel                            |
-| `delete_custom_conversion`       | Delete a custom conversion                                       |
-| `get_content_decay`              | How long a post keeps earning, by age band                       |
-| `get_posting_frequency`          | What each weekly posting cadence earned per post                 |
-| `get_post_timeline`              | Every metric reading held for one post, oldest first             |
-| `get_analytics_changes`          | Readings since a cursor, for mirroring metrics elsewhere         |
-| `collect_post_analytics`         | Refresh one post's metrics now                                   |
-| `list_native_posts`              | Posts on an account that never went out through FoPost           |
+| Tool                             | What it does                                                |
+| -------------------------------- | ----------------------------------------------------------- |
+| `list_posts`                     | List posts in a workspace, filter by status                 |
+| `get_post`                       | Fetch a post by id                                          |
+| `schedule_post`                  | Create a post for accounts or an account group              |
+| `edit_post`                      | Update an existing post                                     |
+| `get_upload_limits`              | Largest file the account may upload, and the allowed types  |
+| `cancel_post`                    | Cancel a scheduled post                                     |
+| `delete_post`                    | Permanently delete a post                                   |
+| `list_post_deliveries`           | Per-account delivery status for a post                      |
+| `list_accounts`                  | List connected social accounts, optionally by group         |
+| `get_account_health`             | Check token freshness and rate-limit headroom               |
+| `list_workspaces`                | List workspaces the user can access                         |
+| `rename_account`                 | Set or clear an account's display name                      |
+| `list_account_groups`            | List account groups and their members                       |
+| `get_account_group`              | Fetch an account group                                      |
+| `create_account_group`           | Create an account group                                     |
+| `rename_account_group`           | Rename an account group                                     |
+| `set_account_group_members`      | Replace the accounts in a group                             |
+| `delete_account_group`           | Delete a group (its accounts stay connected)                |
+| `create_telegram_connect_code`   | Mint a one-time code to connect a Telegram chat             |
+| `get_telegram_connect_status`    | Check whether a Telegram connect code was used              |
+| `get_telegram_bot_commands`      | List the bot command menu in a Telegram chat                |
+| `set_telegram_bot_commands`      | Replace the bot command menu in a Telegram chat             |
+| `clear_telegram_bot_commands`    | Clear the bot command menu in a Telegram chat               |
+| `list_slack_channels`            | List the channels a Slack account can post to               |
+| `list_slack_members`             | List members of a Slack workspace, for DMs                  |
+| `get_slack_identity`             | Show the name and icon a Slack account posts under          |
+| `set_slack_identity`             | Set the name and icon a Slack account posts under           |
+| `list_pinterest_boards`          | List the boards a Pinterest account can pin to              |
+| `create_pinterest_board`         | Create a board on a Pinterest account                       |
+| `list_youtube_playlists`         | List a channel's playlists, with its default marked         |
+| `create_youtube_playlist`        | Create a playlist on a YouTube channel                      |
+| `set_default_youtube_playlist`   | Set the playlist new videos join by default                 |
+| `list_youtube_captions`          | List the caption tracks on a published video                |
+| `upload_youtube_captions`        | Upload an SRT or WebVTT track to a published video          |
+| `read_youtube_transcript`        | Read one caption track back as text                         |
+| `get_bluesky_languages`          | Show a Bluesky connection's default post languages          |
+| `set_bluesky_languages`          | Set a Bluesky connection's default post languages           |
+| `get_tiktok_creator_info`        | Read the switches TikTok enforces at publish time           |
+| `search_tiktok_music`            | Search TikTok's Commercial Music Library                    |
+| `search_tiktok_locations`        | Search the places a TikTok post can be tagged with          |
+| `lookup_tiktok_video`            | Resolve a share link to one of the account's own videos     |
+| `search_instagram_audio`         | Search the tracks a Reel can carry                          |
+| `get_instagram_publishing_limit` | Posts left before Instagram refuses the next one            |
+| `list_instagram_stories`         | List the stories still inside their 24 hours                |
+| `get_instagram_story_insights`   | Read the insight set for one live story                     |
+| `search_linkedin_mentions`       | Find the organizations a LinkedIn post can mention          |
+| `follow_x_user`                  | Follow a user from a connected X account                    |
+| `unfollow_x_user`                | Unfollow a user from a connected X account                  |
+| `get_x_post`                     | Look up one X post by id                                    |
+| `search_x_posts`                 | Search recent X posts, paged by next_token                  |
+| `generate_caption`               | AI-generate or improve a caption (1 credit)                 |
+| `rewrite_for_platforms`          | Rewrite content per target platform (1 credit each)         |
+| `repurpose_url`                  | Turn a blog URL into N platform-optimized posts (6 credits) |
+| `get_ai_credits`                 | Show current AI credit balance                              |
+| `list_inbox`                     | List comments, mentions and DMs with filters                |
+| `list_inbox_threads`             | List comment threads under your posts, or mentions          |
+| `list_inbox_conversations`       | List DM conversations                                       |
+| `get_inbox_unread_count`         | Count unread inbox items                                    |
+| `mark_inbox_thread_read`         | Mark a comment thread or DM conversation read               |
+| `resolve_inbox`                  | Resolve every unanswered item of one type                   |
+| `reply_to_inbox_item`            | Reply on the platform, with media or quick replies on a DM  |
+| `edit_inbox_comment`             | Edit your own comment on the platform                       |
+| `update_inbox_item`              | Set an item to unread, read, resolved or snoozed            |
+| `hide_inbox_item`                | Hide a comment on the platform                              |
+| `unhide_inbox_item`              | Unhide a comment on the platform                            |
+| `delete_inbox_item`              | Delete a comment, or your own reply, on the platform        |
+| `like_inbox_item`                | Like a comment or message on the platform                   |
+| `unlike_inbox_item`              | Remove your like                                            |
+| `repost_inbox_item`              | Repost a post on X, where can_repost is true                |
+| `unrepost_inbox_item`            | Undo your repost on X                                       |
+| `bookmark_inbox_item`            | Bookmark a post on X, where can_bookmark is true            |
+| `unbookmark_inbox_item`          | Remove your bookmark on X                                   |
+| `pin_inbox_item`                 | Pin your own comment                                        |
+| `unpin_inbox_item`               | Unpin your own comment                                      |
+| `react_to_inbox_item`            | React to a DM, or remove your reaction                      |
+| `start_inbox_conversation`       | Send a new DM, or answer a comment privately                |
+| `set_inbox_typing`               | Show or clear the typing indicator in a DM                  |
+| `list_inbox_approvals`           | List drafted replies waiting for approval                   |
+| `approve_inbox_reply`            | Approve and send a drafted reply                            |
+| `reject_inbox_reply`             | Reject a drafted reply                                      |
+| `refresh_inbox`                  | Poll every inbox-capable account now                        |
+| `list_ads`                       | List boosts and ads created through FoPost                  |
+| `list_external_ads`              | List ads on connected ad accounts made elsewhere            |
+| `list_boostable_posts`           | List published posts that can be boosted                    |
+| `list_ad_sources`                | List ad connections, ad accounts and pages                  |
+| `boost_post`                     | Boost a published post (starts paused, needs `publish`)     |
+| `create_ad`                      | Create an ad (starts paused, needs `publish`)               |
+| `set_ad_status`                  | Pause or resume an ad (needs `publish`)                     |
+| `refresh_ad`                     | Re-read delivery status and insights                        |
+| `delete_ad`                      | End delivery and delete an ad (needs `publish`)             |
+| `list_audiences`                 | List saved audiences and pixels on an ad account            |
+| `search_ad_targeting`            | Search locations, interests, behaviors and income brackets  |
+| `list_lead_forms`                | List lead forms on connected pages                          |
+| `list_leads`                     | List one page of leads from a lead form                     |
+| `bulk_set_ad_status`             | Pause or resume up to 50 objects (needs `publish`)          |
+| `get_audience`                   | Read one saved audience                                     |
+| `update_audience`                | Rename or redescribe a saved audience                       |
+| `delete_audience`                | Delete a saved audience                                     |
+| `add_audience_users`             | Add customer emails to a custom audience                    |
+| `estimate_ad_reach`              | Estimate the reach of a targeting                           |
+| `get_ad_object_insights`         | Insights for a campaign, ad set or ad                       |
+| `get_ad_insights`                | Insights for an ad created through FoPost                   |
+| `get_lead_form`                  | Read one lead form                                          |
+| `archive_lead_form`              | Archive a lead form                                         |
+| `list_leads_feed`                | List stored leads from subscribed pages                     |
+| `list_lead_pages`                | List pages subscribed to new leads                          |
+| `subscribe_lead_page`            | Subscribe a page to new leads and backfill                  |
+| `unsubscribe_lead_page`          | Unsubscribe a page from new leads                           |
+| `list_ad_networks`               | List the ad networks and what each one supports             |
+| `add_audience_companies`         | Add companies to a company-list audience                    |
+| `get_ad_bid_pricing`             | Quote what an audience costs at auction                     |
+| `get_ad_supply_forecast`         | Forecast what a budget would deliver                        |
+| `list_conversion_rules`          | List the conversion rules on an ad account                  |
+| `create_conversion_rule`         | Create a conversion rule                                    |
+| `get_conversion_rule`            | Read one conversion rule                                    |
+| `update_conversion_rule`         | Change a conversion rule                                    |
+| `delete_conversion_rule`         | Turn a conversion rule off                                  |
+| `set_conversion_rule_ad_set`     | Attach or detach a conversion rule and an ad set            |
+| `get_conversion_metrics`         | Read what a conversion rule recorded                        |
+| `send_conversion_events`         | Send off-site conversions back to the network               |
+| `upload_ad_conversions`          | Send offline conversions against a pixel                    |
+| `list_conversion_events`         | List the conversion batches sent to the network             |
+| `list_pixels`                    | List the pixels on an ad account                            |
+| `create_pixel`                   | Create a pixel and get its install script                   |
+| `get_pixel`                      | Read one pixel                                              |
+| `update_pixel`                   | Rename a pixel or change its data-use setting               |
+| `get_pixel_stats`                | What a pixel fired over the last 28 days                    |
+| `get_event_match_quality`        | How well each pixel event matches people                    |
+| `list_custom_conversions`        | List the custom conversions on an ad account                |
+| `create_custom_conversion`       | Create a custom conversion on a pixel                       |
+| `delete_custom_conversion`       | Delete a custom conversion                                  |
+| `get_content_decay`              | How long a post keeps earning, by age band                  |
+| `get_posting_frequency`          | What each weekly posting cadence earned per post            |
+| `get_post_timeline`              | Every metric reading held for one post, oldest first        |
+| `get_analytics_changes`          | Readings since a cursor, for mirroring metrics elsewhere    |
+| `collect_post_analytics`         | Refresh one post's metrics now                              |
+| `list_native_posts`              | Posts on an account that never went out through FoPost      |
 
 ## Setup
 
@@ -753,16 +666,8 @@ MIT
 ### Google Ads
 
 The shared ads tools work across networks. What only Google has is its own set:
-`list_google_recommendations`, `get_google_optimization_score`,
-`apply_google_recommendations`, `dismiss_google_recommendations`,
-`list_google_keywords`, `create_google_keyword`, `set_google_keyword_status`,
-`delete_google_keyword`, `google_keyword_ideas`, `list_google_search_terms`,
-`list_google_negative_keywords`, `list_google_assets`, `create_google_asset`,
-`list_google_asset_groups`, `list_google_local_services_leads`,
-`list_google_conversion_actions`, and `run_google_ads_query` for a raw read-only GAQL
-SELECT.
+`list_google_local_services_leads`, `list_google_conversion_actions`, and
+`run_google_ads_query` for a raw read-only GAQL SELECT.
 
 Each names `connection_id` and `customer_id`; the customer has to be an account the
-connection's grant reaches. Changes need the `publish` scope as well as `ads`.
-Applying a recommendation changes what the live account serves or bids straight
-away; dismissing one only hides it.
+connection's grant reaches.
