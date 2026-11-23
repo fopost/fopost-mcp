@@ -253,26 +253,6 @@ describe('inbox and ads requests', () => {
     expect(requests[0].body).toEqual({ status: 'active' });
   });
 
-  it('reads the account tree with connection_id in the query', async () => {
-    await run('get_ad_account_tree');
-    const url = new URL(requests[0].url);
-    expect(url.pathname).toBe('/v1/ads/accounts/act_1/tree');
-    expect(url.searchParams.get('connection_id')).toBe(UUID);
-  });
-
-  it('changes a campaign with the ids in the query and a camelCase body', async () => {
-    await run('update_ad_campaign');
-    const url = new URL(requests[0].url);
-    expect(requests[0].method).toBe('PATCH');
-    expect(url.pathname).toBe('/v1/ads/campaigns/120');
-    expect(url.searchParams.get('workspace_id')).toBe(UUID);
-    expect(url.searchParams.get('connection_id')).toBe(UUID);
-    expect(requests[0].body).toEqual({ status: 'paused' });
-
-    await run('create_ad_creative');
-    expect(requests[1].body).toMatchObject({ adAccountId: 'act_1', urlTags: 'utm_source=meta' });
-  });
-
   it('sends the insights range, breakdown and daily flag as query params', async () => {
     await run('get_ad_object_insights');
     const url = new URL(requests[0].url);

@@ -23,7 +23,7 @@ const READ_VERBS = new Set([
   'validate',
 ]);
 
-const READ_TOOLS = new Set(['run_google_ads_query', 'google_keyword_ideas']);
+const READ_TOOLS = new Set(['run_google_ads_query']);
 
 /**
  * Writes that only add drafts or bookkeeping inside the workspace. Every other
