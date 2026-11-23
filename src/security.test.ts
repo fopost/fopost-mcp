@@ -316,7 +316,6 @@ describe('destructive call rate limit', () => {
 /** Read-only tools whose query goes in a POST body; none of them changes anything. */
 const POST_QUERIES = new Set([
   'run_google_ads_query',
-  'google_keyword_ideas',
   'lookup_tiktok_video',
   'estimate_ad_reach',
   'get_ad_bid_pricing',

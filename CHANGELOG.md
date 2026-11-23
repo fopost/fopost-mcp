@@ -18,6 +18,18 @@ All notable changes to `@fopost/mcp` are documented here.
   silence removal, denoise, subtitles, translation, clips, music, voiceover, watermark, cover,
   reframe and audiogram, run in order as a background job. Nothing is published.
 
+### Removed
+
+- Ads tools for the account tree, campaigns, ad sets and network ads (`get_ad_account_tree`,
+  `create_ad_campaign` through `duplicate_network_ad`), creatives (`list_ad_creatives`,
+  `create_ad_creative`, `get_ad_creative`, `delete_ad_creative`), product catalogs
+  (`list_ad_catalogs`, `create_ad_catalog`, `list_catalog_products`, `write_catalog_products`,
+  `list_catalog_product_sets`, `create_catalog_product_set`) and `search_ad_library`. The API
+  no longer serves these routes.
+- Google Ads tools for recommendations, the optimization score, keywords, keyword ideas, search
+  terms, negative keyword lists, assets and asset groups. `list_google_local_services_leads`,
+  `list_google_conversion_actions` and `run_google_ads_query` stay.
+
 ## 0.7.0
 
 ### Added
